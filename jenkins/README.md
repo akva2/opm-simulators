@@ -24,3 +24,8 @@ and/or opm-material=&lt;pull request number&gt;
 and/or opm-core=&lt;pull request number&gt;
 and/or dune-cornerpoint=&lt;pull request number&gt;
 and/or opm-output=&lt;pull request number&gt;.
+
+**run-spe.sh**:
+This script will execute the SPE1/SPE9 cases and compare against
+OPM and Eclipse reference results. It is meant to be executed after either of the two
+build scripts above.
