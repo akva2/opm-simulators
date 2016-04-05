@@ -11,18 +11,18 @@ It is intended for post-merge builds of the master branch.
 **build-pr.sh**:
 This script will build dependencies, then build opm-autodiff and execute its tests.
 It inspects the $ghbPrBuildComment environmental variable to obtain a pull request
-to use for ert, opm-common, opm-parser, opm-material, opm-core and
-dune-cornerpoint (defaults to master) and then builds $sha1 of opm-autodiff.
+to use for ert, opm-common, opm-parser, opm-material, opm-core, opm-output 
+and opm-grid (defaults to master) and then builds $sha1 of opm-autodiff.
 
 It is intended for pre-merge builds of pull requests.
 
 You can optionally specify a given pull request to use for ert, opm-common,
-opm-parser, opm-material, opm-core and dune-cornerpoint through the trigger.
+opm-parser, opm-material, opm-core, opm-output and opm-grid through the trigger.
 The trigger line needs to contain ert=&lt;pull request number&gt; and/or
 opm-common=&lt;pull request number&gt; and/or opm-parser=&lt;pull request number&gt;
 and/or opm-material=&lt;pull request number&gt;
 and/or opm-core=&lt;pull request number&gt;
-and/or dune-cornerpoint=&lt;pull request number&gt;
+and/or opm-grid=&lt;pull request number&gt;
 and/or opm-output=&lt;pull request number&gt;.
 
 **run-spe.sh**:
