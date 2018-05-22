@@ -16,7 +16,7 @@ BuildRequires:  blas-devel lapack-devel dune-common-devel dune-geometry-devel
 BuildRequires:  git suitesparse-devel doxygen bc devtoolset-6-toolchain 
 BuildRequires:  opm-grid-devel opm-grid-openmpi-devel dune-grid-devel dune-localfunctions-devel
 BuildRequires:  ewoms-devel ewoms-openmpi-devel opm-common-devel opm-common-openmpi-devel
-BuildRequires:  opm-material-devel opm-material-openmpi-devel
+BuildRequires:  opm-material-devel opm-material-openmpi-devel zlib-devel
 BuildRequires:  tinyxml-devel dune-istl-devel eigen3-devel ecl-devel
 BuildRequires:  openmpi-devel trilinos-openmpi-devel ptscotch-openmpi-devel scotch-devel
 %{?el6:BuildRequires: cmake3 boost148-devel}
