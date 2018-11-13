@@ -70,9 +70,7 @@ END_PROPERTIES
 namespace Opm {
 
         /// Class for handling the blackoil well model.
-        template<typename TypeTag,
-                 typename VFPInjProp=VFPInjProperties,
-                 typename VFPProdProp=VFPProdProperties>
+        template<typename TypeTag>
         class BlackoilWellModel : public Ewoms::BaseAuxiliaryModule<TypeTag>
         {
         public:
@@ -275,7 +273,7 @@ namespace Opm {
 
             bool wells_active_;
 
-            using WellInterfacePtr = std::unique_ptr<WellInterface<TypeTag,VFPInjProperties,VFPProdProperties>>;
+            using WellInterfacePtr = std::unique_ptr<WellInterface<TypeTag> >;
             // a vector of all the wells.
             std::vector<WellInterfacePtr > well_container_;
 
@@ -304,7 +302,7 @@ namespace Opm {
             bool initial_step_;
 
             std::unique_ptr<RateConverterType> rateConverter_;
-            std::unique_ptr<VFPProperties<VFPInjProp,VFPProdProp>> vfp_properties_;
+            std::unique_ptr<VFPProperties<VFPInjProperties,VFPProdProperties>> vfp_properties_;
 
             SimulatorReport last_report_;
 

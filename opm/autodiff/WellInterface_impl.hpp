@@ -24,8 +24,8 @@ namespace Opm
 {
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
+    template<typename TypeTag>
+    WellInterface<TypeTag>::
     WellInterface(const Well* well, const int time_step, const Wells* wells,
                   const ModelParameters& param,
                   const RateConverterType& rate_converter,
@@ -110,9 +110,9 @@ namespace Opm
 
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     void
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
+    WellInterface<TypeTag>::
     init(const PhaseUsage* phase_usage_arg,
          const std::vector<double>& /* depth_arg */,
          const double gravity_arg,
@@ -126,10 +126,10 @@ namespace Opm
 
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     void
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
-    setVFPProperties(const VFPProperties<VFPInjProp,VFPProdProp>* vfp_properties_arg)
+    WellInterface<TypeTag>::
+    setVFPProperties(const VFPProperties<VFPInjProperties,VFPProdProperties>* vfp_properties_arg)
     {
         vfp_properties_ = vfp_properties_arg;
     }
@@ -138,9 +138,9 @@ namespace Opm
 
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     const std::string&
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
+    WellInterface<TypeTag>::
     name() const
     {
         return well_ecl_->name();
@@ -150,9 +150,9 @@ namespace Opm
 
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     WellType
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
+    WellInterface<TypeTag>::
     wellType() const
     {
         return well_type_;
@@ -162,17 +162,17 @@ namespace Opm
 
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     WellControls*
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
+    WellInterface<TypeTag>::
     wellControls() const
     {
         return well_controls_;
     }
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     const int
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
+    WellInterface<TypeTag>::
     indexOfWell() const
     {
         return index_of_well_;
@@ -183,9 +183,9 @@ namespace Opm
 
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     bool
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
+    WellInterface<TypeTag>::
     getAllowCrossFlow() const
     {
         return well_ecl_->getAllowCrossFlow();
@@ -194,9 +194,9 @@ namespace Opm
 
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     void
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
+    WellInterface<TypeTag>::
     setWellEfficiencyFactor(const double efficiency_factor)
     {
         well_efficiency_factor_ = efficiency_factor;
@@ -204,9 +204,9 @@ namespace Opm
 
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     const Well*
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
+    WellInterface<TypeTag>::
     wellEcl() const
     {
         return well_ecl_;
@@ -214,9 +214,9 @@ namespace Opm
 
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     const PhaseUsage&
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
+    WellInterface<TypeTag>::
     phaseUsage() const
     {
         assert(phase_usage_);
@@ -228,9 +228,9 @@ namespace Opm
 
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     int
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
+    WellInterface<TypeTag>::
     flowPhaseToEbosCompIdx( const int phaseIdx ) const
     {
         const auto& pu = phaseUsage();
@@ -245,9 +245,9 @@ namespace Opm
         return phaseIdx;
     }
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     int
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
+    WellInterface<TypeTag>::
     ebosCompIdxToFlowCompIdx( const unsigned compIdx ) const
     {
         const auto& pu = phaseUsage();
@@ -265,9 +265,9 @@ namespace Opm
 
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     double
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
+    WellInterface<TypeTag>::
     wsolvent() const
     {
         if (!has_solvent) {
@@ -288,9 +288,9 @@ namespace Opm
 
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     double
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
+    WellInterface<TypeTag>::
     wpolymer() const
     {
         if (!has_polymer) {
@@ -313,9 +313,9 @@ namespace Opm
 
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     double
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
+    WellInterface<TypeTag>::
     mostStrictBhpFromBhpLimits() const
     {
         double bhp;
@@ -364,9 +364,9 @@ namespace Opm
 
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     bool
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
+    WellInterface<TypeTag>::
     wellHasTHPConstraints() const
     {
         const int nwc = well_controls_get_num(well_controls_);
@@ -382,9 +382,9 @@ namespace Opm
 
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     void
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
+    WellInterface<TypeTag>::
     updateWellControl(WellState& well_state,
                       wellhelpers::WellSwitchingLogger& logger) const
     {
@@ -446,9 +446,9 @@ namespace Opm
 
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     bool
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
+    WellInterface<TypeTag>::
     checkRateEconLimits(const WellEconProductionLimits& econ_production_limits,
                         const WellState& well_state) const
     {
@@ -497,9 +497,9 @@ namespace Opm
 
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
-    typename WellInterface<TypeTag,VFPInjProp,VFPProdProp>::RatioCheckTuple
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
+    template<typename TypeTag>
+    typename WellInterface<TypeTag>::RatioCheckTuple
+    WellInterface<TypeTag>::
     checkMaxWaterCutLimit(const WellEconProductionLimits& econ_production_limits,
                           const WellState& well_state) const
     {
@@ -583,9 +583,9 @@ namespace Opm
 
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
-    typename WellInterface<TypeTag,VFPInjProp,VFPProdProp>::RatioCheckTuple
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
+    template<typename TypeTag>
+    typename WellInterface<TypeTag>::RatioCheckTuple
+    WellInterface<TypeTag>::
     checkRatioEconLimits(const WellEconProductionLimits& econ_production_limits,
                          const WellState& well_state) const
     {
@@ -638,9 +638,9 @@ namespace Opm
 
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     void
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
+    WellInterface<TypeTag>::
     updateWellTestState(const WellState& well_state,
                         const double& simulationTime,
                         const bool& writeMessageToOPMLog,
@@ -661,9 +661,9 @@ namespace Opm
 
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     void
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
+    WellInterface<TypeTag>::
     updateWellTestStateEconomic(const WellState& well_state,
                                 const double simulation_time,
                                 const bool write_message_to_opmlog,
@@ -800,9 +800,9 @@ namespace Opm
 
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     void
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
+    WellInterface<TypeTag>::
     wellTesting(Simulator& simulator, const std::vector<double>& B_avg,
                 const double simulation_time, const int report_step, const bool terminal_output,
                 const WellTestConfig::Reason testing_reason, const WellState& well_state,
@@ -818,9 +818,9 @@ namespace Opm
 
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     void
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
+    WellInterface<TypeTag>::
     wellTestingEconomic(Simulator& simulator, const std::vector<double>& B_avg,
                         const double simulation_time, const int report_step, const bool terminal_output,
                         const WellState& well_state, WellTestState& welltest_state)
@@ -872,9 +872,9 @@ namespace Opm
 
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     void
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::
+    WellInterface<TypeTag>::
     computeRepRadiusPerfLength(const Grid& grid,
                                const std::vector<int>& cartesian_to_compressed)
     {
@@ -944,9 +944,9 @@ namespace Opm
         }
     }
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     double
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::scalingFactor(const int phaseIdx) const
+    WellInterface<TypeTag>::scalingFactor(const int phaseIdx) const
     {
         const WellControls* wc = well_controls_;
         const double* distr = well_controls_get_current_distr(wc);
@@ -979,9 +979,9 @@ namespace Opm
 
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     void
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::calculateReservoirRates(WellState& well_state) const
+    WellInterface<TypeTag>::calculateReservoirRates(WellState& well_state) const
     {
         const int fipreg = 0; // not considering the region for now
         const int np = number_of_phases_;
@@ -1000,9 +1000,9 @@ namespace Opm
         }    
     }
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     void
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::closeCompletions(WellTestState& wellTestState)
+    WellInterface<TypeTag>::closeCompletions(WellTestState& wellTestState)
     {
         const auto& connections = well_ecl_->getConnections(current_step_);
         int perfIdx = 0;
@@ -1014,9 +1014,9 @@ namespace Opm
         }
     }
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     void
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::solveWellForTesting(Simulator& ebosSimulator, WellState& well_state, const std::vector<double>& B_avg, bool terminal_output)
+    WellInterface<TypeTag>::solveWellForTesting(Simulator& ebosSimulator, WellState& well_state, const std::vector<double>& B_avg, bool terminal_output)
     {
         const int max_iter = param_.max_welleq_iter_;
         int it = 0;
@@ -1052,9 +1052,9 @@ namespace Opm
         }
     }
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     void
-    WellInterface<TypeTag,VFPInjProp,VFPProdProp>::scaleProductivityIndex(const int perfIdx, double& productivity_index) const
+    WellInterface<TypeTag>::scaleProductivityIndex(const int perfIdx, double& productivity_index) const
     {
 
         const auto& connection = well_ecl_->getConnections(current_step_)[perfIdx];

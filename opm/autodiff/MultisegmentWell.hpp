@@ -28,11 +28,11 @@
 namespace Opm
 {
 
-    template<typename TypeTag, typename VFPInjProps, typename VFPProdProps>
-    class MultisegmentWell: public WellInterface<TypeTag,VFPInjProps,VFPProdProps>
+    template<typename TypeTag>
+    class MultisegmentWell: public WellInterface<TypeTag>
     {
     public:
-        typedef WellInterface<TypeTag,VFPInjProps,VFPProdProps> Base;
+        typedef WellInterface<TypeTag> Base;
         typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
 
         using typename Base::WellState;

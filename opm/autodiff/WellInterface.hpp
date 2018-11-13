@@ -61,7 +61,7 @@ namespace Opm
 {
 
 
-    template<typename TypeTag, typename VFPInjProp, typename VFPProdProp>
+    template<typename TypeTag>
     class WellInterface
     {
     public:
@@ -128,7 +128,7 @@ namespace Opm
         /// Well controls
         WellControls* wellControls() const;
 
-        void setVFPProperties(const VFPProperties<VFPInjProp,VFPProdProp>* vfp_properties_arg);
+        void setVFPProperties(const VFPProperties<VFPInjProperties,VFPProdProperties>* vfp_properties_arg);
 
         virtual void init(const PhaseUsage* phase_usage_arg,
                           const std::vector<double>& depth_arg,
@@ -285,7 +285,7 @@ namespace Opm
 
         bool getAllowCrossFlow() const;
 
-        const VFPProperties<VFPInjProp,VFPProdProp>* vfp_properties_;
+        const VFPProperties<VFPInjProperties,VFPProdProperties>* vfp_properties_;
 
         double gravity_;
 
