@@ -25,8 +25,8 @@ namespace Opm
 {
 
 
-    template <typename TypeTag>
-    MultisegmentWell<TypeTag>::
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     MultisegmentWell(const Well* well, const int time_step, const Wells* wells,
                      const ModelParameters& param,
                      const RateConverterType& rate_converter,
@@ -104,9 +104,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     init(const PhaseUsage* phase_usage_arg,
          const std::vector<double>& depth_arg,
          const double gravity_arg,
@@ -139,9 +139,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     initMatrixAndVectors(const int num_cells) const
     {
         duneB_.setBuildMode( OffDiagMatWell::row_wise );
@@ -213,9 +213,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     initPrimaryVariablesEvaluation() const
     {
         for (int seg = 0; seg < numberOfSegments(); ++seg) {
@@ -231,9 +231,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     assembleWellEq(const Simulator& ebosSimulator,
                    const double dt,
                    WellState& well_state)
@@ -251,9 +251,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     updateWellStateWithTarget(WellState& well_state) const
     {
         // Updating well state bas on well control
@@ -379,9 +379,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     initSegmentRatesWithWellRates(WellState& well_state) const
     {
         for (int phase = 0; phase < number_of_phases_; ++phase) {
@@ -407,9 +407,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     ConvergenceReport
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     getWellConvergence(const std::vector<double>& B_avg) const
     {
         assert(int(B_avg.size()) == num_components_);
@@ -504,9 +504,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     apply(const BVector& x, BVector& Ax) const
     {
         BVectorWell Bx(duneB_.N());
@@ -524,9 +524,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     apply(BVector& r) const
     {
         // invDrw_ = duneD^-1 * resWell_
@@ -539,9 +539,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     recoverWellSolutionAndUpdateWellState(const BVector& x,
                                           WellState& well_state) const
     {
@@ -554,9 +554,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     computeWellPotentials(const Simulator& /* ebosSimulator */,
                           const WellState& /* well_state */,
                           std::vector<double>& /* well_potentials */)
@@ -568,9 +568,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     updatePrimaryVariables(const WellState& well_state) const
     {
         // TODO: to test using rate conversion coefficients to see if it will be better than
@@ -639,9 +639,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     recoverSolutionWell(const BVector& x, BVectorWell& xw) const
     {
         BVectorWell resWell = resWell_;
@@ -655,9 +655,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     solveEqAndUpdateWellState(WellState& well_state)
     {
         // We assemble the well equations, then we check the convergence,
@@ -671,9 +671,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     computePerfCellPressDiffs(const Simulator& ebosSimulator)
     {
         for (int perf = 0; perf < number_of_perforations_; ++perf) {
@@ -726,9 +726,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     computeInitialComposition()
     {
         for (int seg = 0; seg < numberOfSegments(); ++seg) {
@@ -744,9 +744,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     updateWellState(const BVectorWell& dwells,
                     const bool inner_iteration,
                     WellState& well_state) const
@@ -796,9 +796,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     calculateExplicitQuantities(const Simulator& ebosSimulator,
                                 const WellState& /* well_state */)
     {
@@ -810,9 +810,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     const WellSegments&
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     segmentSet() const
     {
         return well_ecl_->getWellSegments(current_step_);
@@ -822,9 +822,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     int
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     numberOfSegments() const
     {
         return segmentSet().size();
@@ -834,9 +834,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     int
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     numberOfPerforations() const
     {
         return segmentSet().number_of_perforations_;
@@ -846,9 +846,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     WellSegment::CompPressureDropEnum
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     compPressureDrop() const
     {
         return segmentSet().compPressureDrop();
@@ -858,9 +858,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     WellSegment::MultiPhaseModelEnum
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     multiphaseModel() const
     {
         return segmentSet().multiPhaseModel();
@@ -870,9 +870,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     int
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     segmentNumberToIndex(const int segment_number) const
     {
         return segmentSet().segmentNumberToIndex(segment_number);
@@ -882,9 +882,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
-    typename MultisegmentWell<TypeTag>::EvalWell
-    MultisegmentWell<TypeTag>::
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
+    typename MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::EvalWell
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     volumeFraction(const int seg, const unsigned compIdx) const
     {
 
@@ -914,9 +914,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
-    typename MultisegmentWell<TypeTag>::EvalWell
-    MultisegmentWell<TypeTag>::
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
+    typename MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::EvalWell
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     volumeFractionScaled(const int seg, const int comp_idx) const
     {
         // For reservoir rate control, the distr in well control is used for the
@@ -934,9 +934,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
-    typename MultisegmentWell<TypeTag>::EvalWell
-    MultisegmentWell<TypeTag>::
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
+    typename MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::EvalWell
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     surfaceVolumeFraction(const int seg, const int comp_idx) const
     {
         EvalWell sum_volume_fraction_scaled = 0.;
@@ -953,9 +953,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     computePerfRate(const IntensiveQuantities& int_quants,
                     const std::vector<EvalWell>& mob_perfcells,
                     const int seg,
@@ -1082,9 +1082,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
-    typename MultisegmentWell<TypeTag>::EvalWell
-    MultisegmentWell<TypeTag>::
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
+    typename MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::EvalWell
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     extendEval(const Eval& in) const
     {
         EvalWell out = 0.0;
@@ -1099,9 +1099,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     computeSegmentFluidProperties(const Simulator& ebosSimulator)
     {
         // TODO: the concept of phases and components are rather confusing in this function.
@@ -1269,9 +1269,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
-    typename MultisegmentWell<TypeTag>::EvalWell
-    MultisegmentWell<TypeTag>::
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
+    typename MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::EvalWell
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     getSegmentPressure(const int seg) const
     {
         return primary_variables_evaluation_[seg][SPres];
@@ -1281,9 +1281,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
-    typename MultisegmentWell<TypeTag>::EvalWell
-    MultisegmentWell<TypeTag>::
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
+    typename MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::EvalWell
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     getSegmentRate(const int seg,
                    const int comp_idx) const
     {
@@ -1294,9 +1294,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
-    typename MultisegmentWell<TypeTag>::EvalWell
-    MultisegmentWell<TypeTag>::
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
+    typename MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::EvalWell
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     getSegmentGTotal(const int seg) const
     {
         return primary_variables_evaluation_[seg][GTotal];
@@ -1306,9 +1306,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     getMobility(const Simulator& ebosSimulator,
                 const int perf,
                 std::vector<EvalWell>& mob) const
@@ -1362,9 +1362,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     assembleControlEq() const
     {
         EvalWell control_eq(0.0);
@@ -1446,9 +1446,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     assemblePressureEq(const int seg) const
     {
         assert(seg != 0); // not top segment
@@ -1487,9 +1487,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
-    typename MultisegmentWell<TypeTag>::EvalWell
-    MultisegmentWell<TypeTag>::
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
+    typename MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::EvalWell
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     getHydroPressureLoss(const int seg) const
     {
         return segment_densities_[seg] * gravity_ * segment_depth_diffs_[seg];
@@ -1499,9 +1499,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
-    typename MultisegmentWell<TypeTag>::EvalWell
-    MultisegmentWell<TypeTag>::
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
+    typename MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::EvalWell
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     getFrictionPressureLoss(const int seg) const
     {
         const EvalWell mass_rate = segment_mass_rates_[seg];
@@ -1523,9 +1523,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     handleAccelerationPressureLoss(const int seg) const
     {
         // TODO: this pressure loss is not significant enough to be well tested yet.
@@ -1565,9 +1565,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     processFractions(const int seg) const
     {
         const PhaseUsage& pu = phaseUsage();
@@ -1635,9 +1635,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     updateWellStateFromPrimaryVariables(WellState& well_state) const
     {
         const PhaseUsage& pu = phaseUsage();
@@ -1694,9 +1694,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     bool
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     frictionalPressureLossConsidered() const
     {
         // HF- and HFA needs to consider frictional pressure loss
@@ -1707,9 +1707,9 @@ namespace Opm
 
 
 
-    template <typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     bool
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     accelerationalPressureLossConsidered() const
     {
         return (segmentSet().compPressureDrop() == WellSegment::HFA);
@@ -1719,9 +1719,9 @@ namespace Opm
 
 
 
-    template<typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     iterateWellEquations(const Simulator& ebosSimulator,
                          const double dt,
                          WellState& well_state)
@@ -1762,9 +1762,9 @@ namespace Opm
 
 
 
-    template<typename TypeTag>
+    template <typename TypeTag, typename VFPInjProps, typename VFPProdProps>
     void
-    MultisegmentWell<TypeTag>::
+    MultisegmentWell<TypeTag,VFPInjProps,VFPProdProps>::
     assembleWellEqWithoutIteration(const Simulator& ebosSimulator,
                                    const double dt,
                                    WellState& well_state)
