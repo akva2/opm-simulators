@@ -117,7 +117,12 @@ public:
      * same as the grid which is used for the actual simulation.
      */
     const EquilGrid& equilGrid() const
-    { return *equilGrid_; }
+    {
+        int mpiRank;
+        MPI_Comm_rank(MPI_COMM_WORLD, &mpiRank);
+        assert(mpiRank == 0);
+        return *equilGrid_;
+    }
 
     /*!
      * \brief Indicates that the initial condition has been computed and the memory used
@@ -230,7 +235,12 @@ public:
      * \brief Returns mapper from compressed to cartesian indices for the EQUIL grid
      */
     const CartesianIndexMapper& equilCartesianIndexMapper() const
-    { return *equilCartesianIndexMapper_; }
+    {
+        int mpiRank;
+        MPI_Comm_rank(MPI_COMM_WORLD, &mpiRank);
+        assert(mpiRank == 0);
+        return *equilCartesianIndexMapper_;
+    }
 
     std::unordered_set<std::string> defunctWellNames() const
     { return defunctWellNames_; }
