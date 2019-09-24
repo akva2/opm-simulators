@@ -44,7 +44,7 @@ namespace Opm {
     BlackoilWellModel<TypeTag>::
     init()
     {
-        const Opm::EclipseState& eclState = ebosSimulator_.vanguard().eclState();
+        const Opm::EclipseState& eclState = ebosSimulator_.vanguard().eclState(false); // this is hit
 
         gravity_ = ebosSimulator_.problem().gravity()[2];
 
@@ -211,7 +211,7 @@ namespace Opm {
 
         const Grid& grid = ebosSimulator_.vanguard().grid();
         const auto& defunct_well_names = ebosSimulator_.vanguard().defunctWellNames();
-        const auto& eclState = ebosSimulator_.vanguard().eclState();
+        const auto& eclState = ebosSimulator_.vanguard().eclState(false); // this is hit
         const auto& summaryState = ebosSimulator_.vanguard().summaryState();
         wells_ecl_ = schedule().getWells(timeStepIdx);
 
@@ -544,10 +544,10 @@ namespace Opm {
         // time step. Wells that are added at the same time step as RESTART is initiated
         // will not be present in a restart file. Use the previous time step to retrieve
         // wells that have information written to the restart file.
-        const int report_step = std::max(eclState().getInitConfig().getRestartStep() - 1, 0);
+        const int report_step = std::max(eclState(true).getInitConfig().getRestartStep() - 1, 0);
         const auto& summaryState = ebosSimulator_.vanguard().summaryState();
 
-        WellsManager wellsmanager(eclState(),
+        WellsManager wellsmanager(eclState(true),
                                   schedule(),
                                   summaryState,
                                   report_step,
@@ -566,7 +566,7 @@ namespace Opm {
 
         const int nw = wells->number_of_wells;
         if (nw > 0) {
-            const auto phaseUsage = phaseUsageFromDeck(eclState());
+            const auto phaseUsage = phaseUsageFromDeck(eclState(true));
             const size_t numCells = Opm::UgGridHelpers::numCells(grid());
             const bool handle_ms_well = (param_.use_multisegment_well_ && anyMSWellOpenLocal(wells));
             well_state_.resize(wells, wells_ecl_, schedule(), handle_ms_well, numCells, phaseUsage); // Resize for restart step
@@ -1177,7 +1177,7 @@ namespace Opm {
         computeAverageFormationFactor(B_avg);
 
         const Opm::SummaryConfig& summaryConfig = ebosSimulator_.vanguard().summaryConfig();
-        const bool write_restart_file = ebosSimulator_.vanguard().eclState().getRestartConfig().getWriteRestartFile(reportStepIdx);
+        const bool write_restart_file = ebosSimulator_.vanguard().eclState(false).getRestartConfig().getWriteRestartFile(reportStepIdx); // this is hit
         int exception_thrown = 0;
         try {
             for (const auto& well : well_container_) {

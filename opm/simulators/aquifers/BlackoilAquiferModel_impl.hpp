@@ -159,7 +159,7 @@ namespace Opm {
     if(deck.hasKeyword("AQUFETP"))
     {
       //updateConnectionIntensiveQuantities();
-      const auto& eclState = this->simulator_.vanguard().eclState();
+      const auto& eclState = this->simulator_.vanguard().eclState(true);
 
       // Get all the carter tracy aquifer properties data and put it in aquifers vector
       const Aquifetp aquifetp = Aquifetp(deck);
