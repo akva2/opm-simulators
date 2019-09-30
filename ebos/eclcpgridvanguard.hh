@@ -118,9 +118,11 @@ public:
      */
     const EquilGrid& equilGrid() const
     {
+#if HAVE_MPI
         int mpiRank;
         MPI_Comm_rank(MPI_COMM_WORLD, &mpiRank);
         assert(mpiRank == 0);
+#endif
         return *equilGrid_;
     }
 
@@ -236,9 +238,11 @@ public:
      */
     const CartesianIndexMapper& equilCartesianIndexMapper() const
     {
+#if HAVE_MPI
         int mpiRank;
         MPI_Comm_rank(MPI_COMM_WORLD, &mpiRank);
         assert(mpiRank == 0);
+#endif
         return *equilCartesianIndexMapper_;
     }
 
