@@ -202,7 +202,7 @@ public:
                 // for processes that do not hold the global grid we filter here using the local grid.
                 // If we would filter in filterConnection_ our partition would be empty and the connections of all
                 // wells would be removed.
-                const auto eclipseGrid = Opm::UgGridHelpers::createEclipseGrid(grid(), this->eclState().getInputGrid());
+                const auto eclipseGrid = Opm::UgGridHelpers::createEclipseGrid(grid(), this->eclState(false).getInputGrid()); // this is hit
                 this->schedule().filterConnections(eclipseGrid);
             }
         }
@@ -290,7 +290,7 @@ protected:
         // here would remove all well connections.
         if (equilGrid_)
         {
-            const auto eclipseGrid = Opm::UgGridHelpers::createEclipseGrid(equilGrid(), this->eclState().getInputGrid());
+            const auto eclipseGrid = Opm::UgGridHelpers::createEclipseGrid(equilGrid(), this->eclState(true).getInputGrid());
             this->schedule().filterConnections(eclipseGrid);
         }
     }
