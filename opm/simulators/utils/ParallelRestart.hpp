@@ -113,6 +113,7 @@ class ViscrefTable;
 class WATDENTRecord;
 class WatdentTable;
 class Welldims;
+class WellFoamProperties;
 class WellPolymerProperties;
 class WellSegmentDims;
 
@@ -669,6 +670,7 @@ ADD_PACK_PROTOTYPES(ViscrefTable)
 ADD_PACK_PROTOTYPES(WATDENTRecord)
 ADD_PACK_PROTOTYPES(WatdentTable)
 ADD_PACK_PROTOTYPES(Welldims)
+ADD_PACK_PROTOTYPES(WellFoamProperties)
 ADD_PACK_PROTOTYPES(WellPolymerProperties)
 ADD_PACK_PROTOTYPES(WellSegmentDims)
 ADD_PACK_PROTOTYPES(WellTestConfig)
