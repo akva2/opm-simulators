@@ -954,6 +954,14 @@ std::size_t packSize(const WellTracerProperties& data,
     return packSize(data.getConcentrations(), comm);
 }
 
+std::size_t packSize(const UDAValue& data,
+                     Dune::MPIHelper::MPICommunicator comm)
+{
+    return packSize(data.is<double>(), comm) +
+           (data.is<double>() ? packSize(data.get<double>(), comm) :
+                                packSize(data.get<std::string>(), comm));
+}
+
 template<class T>
 std::size_t fluidSystemPackSize(Dune::MPIHelper::MPICommunicator comm)
 {
@@ -1933,6 +1941,17 @@ void pack(const WellTracerProperties& data,
           Dune::MPIHelper::MPICommunicator comm)
 {
     pack(data.getConcentrations(), buffer, position, comm);
+}
+
+void pack(const UDAValue& data,
+          std::vector<char>& buffer, int& position,
+          Dune::MPIHelper::MPICommunicator comm)
+{
+    pack(data.is<double>(), buffer, position, comm);
+    if (data.is<double>())
+        pack(data.get<double>(), buffer, position, comm);
+    else
+        pack(data.get<std::string>(), buffer, position, comm);
 }
 
 template<class T>
@@ -3276,6 +3295,25 @@ void unpack(WellTracerProperties& data,
     WellTracerProperties::ConcentrationMap ddata;
     unpack(ddata, buffer, position, comm);
     data = WellTracerProperties(ddata);
+}
+
+void unpack(Well::WellInjectionProperties& data,
+            std::vector<char>& buffer, int& position,
+            Dune::MPIHelper::MPICommunicator comm)
+{
+    unpack(data.name, buffer, position, comm);
+    unpack(data.surfaceInjectionRate, buffer, position, comm);
+    unpack(data.reservoirInjectionRate, buffer, position, comm);
+    unpack(data.BHPLimit, buffer, position, comm);
+    unpack(data.THPLimit, buffer, position, comm);
+    unpack(data.temperature, buffer, position, comm);
+    unpack(data.BHPH, buffer, position, comm);
+    unpack(data.THPH, buffer, position, comm);
+    unpack(data.VFPTableNumber, buffer, position, comm);
+    unpack(data.predictionMode, buffer, position, comm);
+    unpack(data.injectionControls, buffer, position, comm);
+    unpack(data.injectorType, buffer, position, comm);
+    unpack(data.controlMode, buffer, position, comm);
 }
 
 template<class T>
