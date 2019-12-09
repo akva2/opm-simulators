@@ -962,6 +962,31 @@ std::size_t packSize(const UDAValue& data,
                                 packSize(data.get<std::string>(), comm));
 }
 
+std::size_t packSize(const Connection& data,
+                     Dune::MPIHelper::MPICommunicator comm)
+{
+    return packSize(data.dir(), comm) +
+           packSize(data.depth(), comm) +
+           packSize(data.state(), comm) +
+           packSize(data.satTableId(), comm) +
+           packSize(data.complnum(), comm) +
+           packSize(data.CF(), comm) +
+           packSize(data.Kh(), comm) +
+           packSize(data.rw(), comm) +
+           packSize(data.r0(), comm) +
+           packSize(data.skinFactor(), comm) +
+           packSize(data.getI(), comm) +
+           packSize(data.getJ(), comm) +
+           packSize(data.getK(), comm) +
+           packSize(data.getSeqIndex(), comm) +
+           packSize(data.getSegDistStart(), comm) +
+           packSize(data.getSegDistEnd(), comm) +
+           packSize(data.getDefaultSatTabId(), comm) +
+           packSize(data.getCompSegSeqIndex(), comm) +
+           packSize(data.segment(), comm) +
+           packSize(data.wellPi(), comm);
+}
+
 template<class T>
 std::size_t fluidSystemPackSize(Dune::MPIHelper::MPICommunicator comm)
 {
@@ -1952,6 +1977,32 @@ void pack(const UDAValue& data,
         pack(data.get<double>(), buffer, position, comm);
     else
         pack(data.get<std::string>(), buffer, position, comm);
+}
+
+void pack(const Connection& data,
+          std::vector<char>& buffer, int& position,
+          Dune::MPIHelper::MPICommunicator comm)
+{
+    pack(data.dir(), buffer, position, comm);
+    pack(data.depth(), buffer, position, comm);
+    pack(data.state(), buffer, position, comm);
+    pack(data.satTableId(), buffer, position, comm);
+    pack(data.complnum(), buffer, position, comm);
+    pack(data.CF(), buffer, position, comm);
+    pack(data.Kh(), buffer, position, comm);
+    pack(data.rw(), buffer, position, comm);
+    pack(data.r0(), buffer, position, comm);
+    pack(data.skinFactor(), buffer, position, comm);
+    pack(data.getI(), buffer, position, comm);
+    pack(data.getJ(), buffer, position, comm);
+    pack(data.getK(), buffer, position, comm);
+    pack(data.getSeqIndex(), buffer, position, comm);
+    pack(data.getSegDistStart(), buffer, position, comm);
+    pack(data.getSegDistEnd(), buffer, position, comm);
+    pack(data.getDefaultSatTabId(), buffer, position, comm);
+    pack(data.getCompSegSeqIndex(), buffer, position, comm);
+    pack(data.segment(), buffer, position, comm);
+    pack(data.wellPi(), buffer, position, comm);
 }
 
 template<class T>
@@ -3315,6 +3366,32 @@ void unpack(Well::WellInjectionProperties& data,
     unpack(data.injectorType, buffer, position, comm);
     unpack(data.controlMode, buffer, position, comm);
 }
+
+//void unpack(Connection& data,
+//            std::vector<char>& buffer, int& position,
+//            Dune::MPIHelper::MPICommunicator comm)
+//{
+//    pack(data.dir(), buffer, position, comm);
+//    pack(data.depth(), buffer, position, comm);
+//    pack(data.state(), buffer, position, comm);
+//    pack(data.satTableId(), buffer, position, comm);
+//    pack(data.complnum(), buffer, position, comm);
+//    pack(data.CF(), buffer, position, comm);
+//    pack(data.Kh(), buffer, position, comm);
+//    pack(data.rw(), buffer, position, comm);
+//    pack(data.r0(), buffer, position, comm);
+//    pack(data.skinFactor(), buffer, position, comm);
+//    pack(data.getI(), buffer, position, comm);
+//    pack(data.getJ(), buffer, position, comm);
+//    pack(data.getK(), buffer, position, comm);
+//    pack(data.getSeqIndex(), buffer, position, comm);
+//    pack(data.getSegDistStart(), buffer, position, comm);
+//    pack(data.getSegDistEnd(), buffer, position, comm);
+//    pack(data.getDefaultSatTabId(), buffer, position, comm);
+//    pack(data.getCompSegSeqIndex(), buffer, position, comm);
+//    pack(data.segment(), buffer, position, comm);
+//    pack(data.wellPi(), buffer, position, comm);
+//}
 
 template<class T>
 void unpackFluidSystem(std::vector<char>& buffer, int& position,
