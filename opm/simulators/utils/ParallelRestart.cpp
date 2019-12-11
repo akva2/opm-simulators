@@ -169,6 +169,18 @@ std::size_t packSize(const std::vector<bool,A>& data, Dune::MPIHelper::MPICommun
     return packSize(data.size(), comm) + data.size()*packSize(entry,comm);
 }
 
+template<class T, class H, class KE, class A>
+std::size_t packSize(const std::unordered_set<T,H,KE,A>& data,
+                     Dune::MPIHelper::MPICommunicator comm)
+{
+    std::size_t totalSize = packSize(data.size(), comm);
+    for (const auto& entry : data)
+    {
+        totalSize += packSize(entry, comm);
+    }
+    return totalSize;
+}
+
 template std::size_t packSize(const std::vector<Rock2dTable>& data,
                               Dune::MPIHelper::MPICommunicator comm);
 
@@ -1256,6 +1268,19 @@ void pack(const std::vector<T, A>& data, std::vector<char>& buffer, int& positio
 
     for (const auto& entry: data)
         pack(entry, buffer, position, comm);
+}
+
+template<class T, class H, class KE, class A>
+void pack(const std::unordered_set<T,H,KE,A>& data,
+          std::vector<char>& buffer, int& position,
+          Dune::MPIHelper::MPICommunicator comm)
+{
+    pack(data.size(), buffer, position, comm);
+
+    for (const auto& entry : data)
+    {
+        pack(entry, buffer, position, comm);
+    }
 }
 
 template<class A>
@@ -2449,6 +2474,22 @@ void unpack(std::vector<bool,A>& data, std::vector<char>& buffer, int& position,
         bool entry;
         unpack(entry, buffer, position, comm);
         data.push_back(entry);
+    }
+}
+
+template<class T, class H, class KE, class A>
+void unpack(std::unordered_set<T,H,KE,A>& data,
+            std::vector<char>& buffer, int& position,
+            Dune::MPIHelper::MPICommunicator comm)
+{
+    std::size_t size=0;
+    unpack(size, buffer, position, comm);
+
+    for (;size>0; size--)
+    {
+        T entry;
+        unpack(entry, buffer, position, comm);
+        data.insert(entry);
     }
 }
 
