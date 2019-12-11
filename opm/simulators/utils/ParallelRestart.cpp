@@ -43,6 +43,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellPolymerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTracerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WList.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Aqudims.hpp>
@@ -1243,6 +1244,12 @@ std::size_t packSize(const WList& data,
                      Dune::MPIHelper::MPICommunicator comm)
 {
     return packSize(data.wellList(), comm);
+}
+
+std::size_t packSize(const WListManager& data,
+                     Dune::MPIHelper::MPICommunicator comm)
+{
+    return packSize(data.lists(), comm);
 }
 
 ////// pack routines
@@ -2502,6 +2509,13 @@ void pack(const WList& data,
           Dune::MPIHelper::MPICommunicator comm)
 {
     pack(data.wellList(), buffer, position, comm);
+}
+
+void pack(const WListManager& data,
+          std::vector<char>& buffer, int& position,
+          Dune::MPIHelper::MPICommunicator comm)
+{
+    pack(data.lists(), buffer, position, comm);
 }
 
 /// unpack routines
@@ -4271,6 +4285,15 @@ void unpack(WList& data,
     WList::storage ddata;
     unpack(ddata, buffer, position, comm);
     data = WList(ddata);
+}
+
+void unpack(WListManager& data,
+            std::vector<char>& buffer, int& position,
+            Dune::MPIHelper::MPICommunicator comm)
+{
+    std::map<std::string,WList> lists;
+    unpack(lists, buffer, position, comm);
+    data = WListManager(lists);
 }
 
 #define INSTANTIATE_PACK_VECTOR(T) \
