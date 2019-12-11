@@ -124,6 +124,7 @@ class WellEconProductionLimits;
 class WellFoamProperties;
 class WellPolymerProperties;
 class WellSegmentDims;
+class WellSegments;
 class WellTracerProperties;
 
 namespace Mpi
@@ -687,6 +688,7 @@ ADD_PACK_PROTOTYPES(WellEconProductionLimits)
 ADD_PACK_PROTOTYPES(WellFoamProperties)
 ADD_PACK_PROTOTYPES(WellPolymerProperties)
 ADD_PACK_PROTOTYPES(WellSegmentDims)
+ADD_PACK_PROTOTYPES(WellSegments)
 ADD_PACK_PROTOTYPES(WellTestConfig)
 ADD_PACK_PROTOTYPES(WellTestConfig::WTESTWell)
 ADD_PACK_PROTOTYPES(WellTracerProperties)
