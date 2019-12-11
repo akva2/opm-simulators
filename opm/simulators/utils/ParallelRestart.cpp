@@ -35,6 +35,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SpiralICD.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunction.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
@@ -1250,6 +1251,13 @@ std::size_t packSize(const WListManager& data,
                      Dune::MPIHelper::MPICommunicator comm)
 {
     return packSize(data.lists(), comm);
+}
+
+std::size_t packSize(const UDQFunction& data,
+                     Dune::MPIHelper::MPICommunicator comm)
+{
+    return packSize(data.name(), comm) +
+           packSize(data.type(), comm);
 }
 
 ////// pack routines
@@ -2516,6 +2524,14 @@ void pack(const WListManager& data,
           Dune::MPIHelper::MPICommunicator comm)
 {
     pack(data.lists(), buffer, position, comm);
+}
+
+void pack(const UDQFunction& data,
+          std::vector<char>& buffer, int& position,
+          Dune::MPIHelper::MPICommunicator comm)
+{
+    pack(data.name(), buffer, position, comm);
+    pack(data.type(), buffer, position, comm);
 }
 
 /// unpack routines
@@ -4294,6 +4310,17 @@ void unpack(WListManager& data,
     std::map<std::string,WList> lists;
     unpack(lists, buffer, position, comm);
     data = WListManager(lists);
+}
+
+void unpack(UDQFunction& data,
+            std::vector<char>& buffer, int& position,
+            Dune::MPIHelper::MPICommunicator comm)
+{
+    std::string name;
+    UDQTokenType type;
+    unpack(name, buffer, position, comm);
+    unpack(type, buffer, position, comm);
+    data = UDQFunction(name, type);
 }
 
 #define INSTANTIATE_PACK_VECTOR(T) \
