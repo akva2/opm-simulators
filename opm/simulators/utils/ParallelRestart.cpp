@@ -1050,7 +1050,6 @@ std::size_t packSize(const Well::WellProductionProperties& data,
            packSize(data.predictionMode, comm) +
            packSize(data.controlMode, comm) +
            packSize(data.whistctl_cmode, comm) +
-           packSize(data.whistctl_cmode, comm) +
            packSize(data.m_productionControls, comm);
 }
 
@@ -2161,7 +2160,6 @@ void pack(const Well::WellProductionProperties& data,
     pack(data.ALQValue, buffer, position, comm);
     pack(data.predictionMode, buffer, position, comm);
     pack(data.controlMode, buffer, position, comm);
-    pack(data.whistctl_cmode, buffer, position, comm);
     pack(data.whistctl_cmode, buffer, position, comm);
     pack(data.m_productionControls, buffer, position, comm);
 }
@@ -3673,7 +3671,6 @@ void unpack(Well::WellProductionProperties& data,
     unpack(data.ALQValue, buffer, position, comm);
     unpack(data.predictionMode, buffer, position, comm);
     unpack(data.controlMode, buffer, position, comm);
-    unpack(data.whistctl_cmode, buffer, position, comm);
     unpack(data.whistctl_cmode, buffer, position, comm);
     unpack(data.m_productionControls, buffer, position, comm);
 }
