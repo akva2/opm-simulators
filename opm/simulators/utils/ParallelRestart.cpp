@@ -36,6 +36,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQASTNode.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQDefine.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunction.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
@@ -1278,6 +1279,15 @@ std::size_t packSize(const UDQASTNode& data,
            packSize(data.scalarValue(), comm) +
            packSize(data.getSelectors(), comm) +
            packSize(data.getArgList(), comm);
+}
+
+std::size_t packSize(const UDQDefine& data,
+                     Dune::MPIHelper::MPICommunicator comm)
+{
+    return packSize(data.keyword(), comm) +
+           packSize(data.getAst(), comm) +
+           packSize(data.var_type(), comm) +
+           packSize(data.input_string(), comm);
 }
 
 ////// pack routines
@@ -2572,6 +2582,16 @@ void pack(const UDQASTNode& data,
     pack(data.scalarValue(), buffer, position, comm);
     pack(data.getSelectors(), buffer, position, comm);
     pack(data.getArgList(), buffer, position, comm);
+}
+
+void pack(const UDQDefine& data,
+          std::vector<char>& buffer, int& position,
+          Dune::MPIHelper::MPICommunicator comm)
+{
+    pack(data.keyword(), buffer, position, comm);
+    pack(data.getAst(), buffer, position, comm);
+    pack(data.var_type(), buffer, position, comm);
+    pack(data.input_string(), buffer, position, comm);
 }
 
 /// unpack routines
@@ -4392,6 +4412,22 @@ void unpack(UDQASTNode& data,
     unpack(selectors, buffer, position, comm);
     unpack(argList, buffer, position, comm);
     data = UDQASTNode(type, var_type, stringValue, scalarValue, selectors, argList);
+}
+
+void unpack(UDQDefine& data,
+            std::vector<char>& buffer, int& position,
+            Dune::MPIHelper::MPICommunicator comm)
+{
+    std::string keyword;
+    std::shared_ptr<UDQASTNode> ast;
+    UDQVarType varType;
+    std::string string_data;
+
+    unpack(keyword, buffer, position, comm);
+    unpack(ast, buffer, position, comm);
+    unpack(varType, buffer, position, comm);
+    unpack(string_data, buffer, position, comm);
+    data = UDQDefine(keyword, ast, varType, string_data);
 }
 
 #define INSTANTIATE_PACK_VECTOR(T) \

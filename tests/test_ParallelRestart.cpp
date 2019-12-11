@@ -43,6 +43,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQASTNode.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQDefine.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunction.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
@@ -1669,6 +1670,20 @@ BOOST_AUTO_TEST_CASE(UDQASTNode)
     Opm::UDQASTNode val1(Opm::UDQTokenType::error,
                          Opm::UDQVarType::NONE,
                          "test", 1.0, {"test1", "test2"},{n1, n1});
+    auto val2 = PackUnpack(val1);
+    BOOST_CHECK(std::get<1>(val2) == std::get<2>(val2));
+    BOOST_CHECK(val1 == std::get<0>(val2));
+#endif
+}
+
+BOOST_AUTO_TEST_CASE(UDQDefine)
+{
+#ifdef HAVE_MPI
+    Opm::UDQASTNode n1(Opm::UDQTokenType::error,
+                         Opm::UDQVarType::NONE,
+                         "test", 1.0, {"test1", "test2"},{});
+    Opm::UDQDefine val1("test", std::make_shared<Opm::UDQASTNode>(n1),
+                        Opm::UDQVarType::NONE, "test2");
     auto val2 = PackUnpack(val1);
     BOOST_CHECK(std::get<1>(val2) == std::get<2>(val2));
     BOOST_CHECK(val1 == std::get<0>(val2));
