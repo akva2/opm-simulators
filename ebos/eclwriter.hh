@@ -428,7 +428,15 @@ public:
     void beginRestart()
     {
         bool enableHysteresis = simulator_.problem().materialLawManager()->enableHysteresis();
-        bool enableSwatinit = simulator_.vanguard().eclState(false).get3DProperties().hasDeckDoubleGridProperty("SWATINIT"); // this is hit
+        int enableSwatinit = false;
+
+        if (eclIO_.get())
+        {
+            assert(0==simulator_.gridView().comm().rank());
+            enableSwatinit = simulator_.vanguard().eclState(true).get3DProperties().hasDeckDoubleGridProperty("SWATINIT");
+        }
+        simulator_.gridView().comm().broadcast(&enableSwatinit, 1, 0);
+
         std::vector<Opm::RestartKey> solutionKeys{
             {"PRESSURE", Opm::UnitSystem::measure::pressure},
             {"SWAT", Opm::UnitSystem::measure::identity, static_cast<bool>(FluidSystem::phaseIsActive(FluidSystem::waterPhaseIdx))},
@@ -591,10 +599,12 @@ private:
 
     Opm::NNC exportNncStructure_(const std::unordered_map<int,int>& cartesianToActive) const
     {
-        std::size_t nx = eclState(false).getInputGrid().getNX();
-        std::size_t ny = eclState(false).getInputGrid().getNY();
-        auto nncData = sortNncAndApplyEditnnc(eclState(false).getInputNNC().data(),
-                                              eclState(false).getInputEDITNNC().data());
+        // Only run on the IO process!
+        assert(0==simulator_.gridView().comm().rank());
+        std::size_t nx = eclState(true).getInputGrid().getNX();
+        std::size_t ny = eclState(true).getInputGrid().getNY();
+        auto nncData = sortNncAndApplyEditnnc(eclState(true).getInputNNC().data(),
+                                              eclState(true).getInputEDITNNC().data());
         const auto& unitSystem = simulator_.vanguard().deck().getActiveUnitSystem();
         std::vector<Opm::NNCdata> outputNnc;
         std::size_t index = 0;
