@@ -177,10 +177,7 @@ template<class A>
 std::size_t packSize(const std::vector<bool,A>& data, Dune::MPIHelper::MPICommunicator comm);
 
 template<class T, std::size_t N>
-std::size_t packSize(const std::array<T,N>& data, Dune::MPIHelper::MPICommunicator comm)
-{
-    return N*packSize(data[0], comm);
-}
+std::size_t packSize(const std::array<T,N>& data, Dune::MPIHelper::MPICommunicator comm);
 
 template<std::size_t I = 0, typename Tuple>
 typename std::enable_if<I == std::tuple_size<Tuple>::value, std::size_t>::type
@@ -329,11 +326,7 @@ void pack(const std::unordered_set<T,H,KE,A>& data,
 
 template<class T, size_t N>
 void pack(const std::array<T,N>& data, std::vector<char>& buffer, int& position,
-          Dune::MPIHelper::MPICommunicator comm)
-{
-    for (const T& entry : data)
-        pack(entry, buffer, position, comm);
-}
+          Dune::MPIHelper::MPICommunicator comm);
 
 template<std::size_t I = 0, typename Tuple>
 typename std::enable_if<I == std::tuple_size<Tuple>::value, void>::type
@@ -506,11 +499,7 @@ void unpack(std::unordered_set<T,H,KE,A>& data,
 
 template<class T, size_t N>
 void unpack(std::array<T,N>& data, std::vector<char>& buffer, int& position,
-          Dune::MPIHelper::MPICommunicator comm)
-{
-    for (T& entry : data)
-        unpack(entry, buffer, position, comm);
-}
+          Dune::MPIHelper::MPICommunicator comm);
 
 template<std::size_t I = 0, typename Tuple>
 typename std::enable_if<I == std::tuple_size<Tuple>::value, void>::type
