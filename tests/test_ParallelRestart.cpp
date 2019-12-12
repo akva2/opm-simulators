@@ -44,6 +44,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQASTNode.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQDefine.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunction.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
@@ -1710,6 +1711,39 @@ BOOST_AUTO_TEST_CASE(UDQIndex)
 {
 #ifdef HAVE_MPI
     Opm::UDQIndex val1(1, 2, Opm::UDQAction::ASSIGN, Opm::UDQVarType::WELL_VAR);
+    auto val2 = PackUnpack(val1);
+    BOOST_CHECK(std::get<1>(val2) == std::get<2>(val2));
+    BOOST_CHECK(val1 == std::get<0>(val2));
+#endif
+}
+
+
+BOOST_AUTO_TEST_CASE(UDQConfig)
+{
+#ifdef HAVE_MPI
+    Opm::UDQParams params(true, 1, 2.0, 3.0, 4.0);
+    Opm::UDQFunctionTable::FunctionMap map{{"test", std::make_shared<Opm::UDQFunction>()}};
+    Opm::UDQASTNode n1(Opm::UDQTokenType::error,
+                       Opm::UDQVarType::NONE,
+                       "test", 1.0, {"test1", "test2"},{});
+    Opm::UDQDefine def("test", std::make_shared<Opm::UDQASTNode>(n1),
+                       Opm::UDQVarType::NONE, "test2");
+    Opm::UDQAssign ass("test", Opm::UDQVarType::NONE,
+                       {Opm::UDQAssign::AssignRecord{{"test1"}, 1.0},
+                        Opm::UDQAssign::AssignRecord{{"test2"}, 2.0}});
+    Opm::OrderedMap<std::string, Opm::UDQIndex> omap;
+    omap.insert({"test8", Opm::UDQIndex(1, 2, Opm::UDQAction::ASSIGN,
+                                        Opm::UDQVarType::WELL_VAR)});
+    omap.insert({"test9", Opm::UDQIndex(3, 4, Opm::UDQAction::ASSIGN,
+                                        Opm::UDQVarType::WELL_VAR)});
+    Opm::UDQConfig val1(params,
+                        Opm::UDQFunctionTable(params, map),
+                        {{"test1", def}, {"test2", def}},
+                        {{"test3", ass}, {"test4", ass}},
+                        {{"test5", "test6"}, {"test7", "test8"}},
+                        omap,
+                        {{Opm::UDQVarType::SCALAR, 5}, {Opm::UDQVarType::WELL_VAR, 6}});
+
     auto val2 = PackUnpack(val1);
     BOOST_CHECK(std::get<1>(val2) == std::get<2>(val2));
     BOOST_CHECK(val1 == std::get<0>(val2));
