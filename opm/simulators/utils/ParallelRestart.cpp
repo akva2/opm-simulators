@@ -1860,6 +1860,17 @@ std::size_t packSize(const SummaryConfig& data,
            packSize(data.getSmryKwds(), comm);
 }
 
+std::size_t packSize(const MULTREGTRecord& data,
+                     Dune::MPIHelper::MPICommunicator comm)
+{
+    return packSize(data.src_value, comm) +
+           packSize(data.target_value, comm) +
+           packSize(data.trans_mult, comm) +
+           packSize(data.directions, comm) +
+           packSize(data.nnc_behaviour, comm) +
+           packSize(data.region_name, comm);
+}
+
 ////// pack routines
 
 template<class T>
@@ -3603,7 +3614,17 @@ void pack(const SummaryConfig& data,
     pack(data.getSmryKwds(), buffer, position, comm);
 }
  
-
+void pack(const MULTREGTRecord& data,
+          std::vector<char>& buffer, int& position,
+          Dune::MPIHelper::MPICommunicator comm)
+{
+    pack(data.src_value, buffer, position, comm);
+    pack(data.target_value, buffer, position, comm);
+    pack(data.trans_mult, buffer, position, comm);
+    pack(data.directions, buffer, position, comm);
+    pack(data.nnc_behaviour, buffer, position, comm);
+    pack(data.region_name, buffer, position, comm);
+}
 
 /// unpack routines
 
@@ -6113,6 +6134,18 @@ void unpack(SummaryConfig& data,
     unpack(shortKwds, buffer, position, comm);
     unpack(smryKwds, buffer, position, comm);
     data = SummaryConfig(kwds, shortKwds, smryKwds);
+}
+
+void unpack(MULTREGTRecord& data,
+            std::vector<char>& buffer, int& position,
+            Dune::MPIHelper::MPICommunicator comm)
+{
+    unpack(data.src_value, buffer, position, comm);
+    unpack(data.target_value, buffer, position, comm);
+    unpack(data.trans_mult, buffer, position, comm);
+    unpack(data.directions, buffer, position, comm);
+    unpack(data.nnc_behaviour, buffer, position, comm);
+    unpack(data.region_name, buffer, position, comm);
 }
 
 #define INSTANTIATE_PACK_VECTOR(T) \
