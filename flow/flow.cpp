@@ -34,6 +34,7 @@
 #include <opm/simulators/flow/SimulatorFullyImplicitBlackoilEbos.hpp>
 #include <opm/simulators/flow/FlowMainEbos.hpp>
 #include <opm/simulators/utils/moduleVersion.hpp>
+#include <opm/simulators/utils/ParallelEclipseState.hpp>
 #include <opm/models/utils/propertysystem.hh>
 #include <opm/models/utils/parametersystem.hh>
 #include <opm/simulators/flow/MissingFeatures.hpp>
@@ -346,7 +347,17 @@ int main(int argc, char** argv)
             if ( outputCout )
                 Opm::checkDeck(*deck, parser, parseContext, errorGuard);
 
-            eclipseState.reset( new Opm::EclipseState(*deck, parseContext, errorGuard ));
+            Opm::ParallelEclipseState* parState;
+            if (mpiRank == 0) {
+                parState = new Opm::ParallelEclipseState(*deck, parseContext, errorGuard);
+            } else {
+                parState = new Opm::ParallelEclipseState;
+//                Opm::EclipseState tmp(*deck, parseContext, errorGuard);
+//                parState->setFP(tmp.fieldProps());
+            }
+            parState->broadcast(mpiHelper.getCollectiveCommunication());
+            eclipseState.reset(parState);
+
             if (mpiRank == 0) {
             schedule.reset(new Opm::Schedule(*deck, *eclipseState, parseContext, errorGuard));
                 setupMessageLimiter(schedule->getMessageLimits(), "STDOUT_LOGGER");

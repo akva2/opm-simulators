@@ -1744,25 +1744,72 @@ private:
 
     void createLocalFipnum_()
     {
-        const std::vector<int> fipnumGlobal = simulator_.vanguard().eclState().fieldProps().get_global_int("FIPNUM");
+        const auto& comm = simulator_.vanguard().gridView().comm();
         // Get compressed cell fipnum.
         const auto& gridView = simulator_.vanguard().gridView();
-        unsigned numElements = gridView.size(/*codim=*/0);
-        fipnum_.resize(numElements, 0.0);
-        if (!fipnumGlobal.empty()) {
+        size_t numElements = gridView.size(/*codim=*/0);
+        fipnum_.resize(numElements, 0);
+        if (comm.rank() == 0) {
+            const std::vector<int> fipnumGlobal = simulator_.vanguard().eclState().fieldProps().get_global_int("FIPNUM");
+            if (!fipnumGlobal.empty()) {
+                ElementContext elemCtx(simulator_);
+                ElementIterator elemIt = gridView.template begin</*codim=*/0>();
+                const ElementIterator& elemEndIt = gridView.template end</*codim=*/0>();
+                for (; elemIt != elemEndIt; ++elemIt) {
+                    const Element& elem = *elemIt;
+                    if (elem.partitionType() != Dune::InteriorEntity)
+                        continue; // assign no fipnum regions to ghost elements
+
+                    elemCtx.updatePrimaryStencil(elem);
+                    const unsigned elemIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/0, /*timeIdx=*/0);
+                    fipnum_[elemIdx] = fipnumGlobal[simulator_.vanguard().cartesianIndex(elemIdx)];
+                }
+#if HAVE_MPI
+                if (comm.size() > 1) {
+                    std::vector<size_t> sizes(comm.size());
+                    comm.gather(&numElements, sizes.data(), 1, 0);
+                    for (int i = 1; i < comm.size(); ++i) {
+                        std::vector<int> cell_ids(sizes[i]);
+                        MPI_Recv(cell_ids.data(), sizes[i], MPI_INT,
+                                 i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                        std::vector<int> fipnum;
+                        fipnum.reserve(sizes[i]);
+                        for (int cell : cell_ids) {
+                            if (cell != -1) {
+                                fipnum.push_back(fipnumGlobal[cell]);
+                            } else {
+                                fipnum.push_back(0);
+                            }
+                        }
+                        MPI_Send(fipnum.data(), sizes[i], MPI_INT, i, 0, MPI_COMM_WORLD);
+                    }
+                }
+            }
+#endif
+        } 
+#if HAVE_MPI
+        else {
+            comm.gather(&numElements, &numElements, 1, 0);
             ElementContext elemCtx(simulator_);
             ElementIterator elemIt = gridView.template begin</*codim=*/0>();
             const ElementIterator& elemEndIt = gridView.template end</*codim=*/0>();
+            std::vector<int> cell_ids;
+            cell_ids.reserve(numElements);
             for (; elemIt != elemEndIt; ++elemIt) {
                 const Element& elem = *elemIt;
-                if (elem.partitionType() != Dune::InteriorEntity)
+                if (elem.partitionType() != Dune::InteriorEntity) {
+                    cell_ids.push_back(-1);
                     continue; // assign no fipnum regions to ghost elements
+                }
 
                 elemCtx.updatePrimaryStencil(elem);
-                const unsigned elemIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/0, /*timeIdx=*/0);
-                fipnum_[elemIdx] = fipnumGlobal[simulator_.vanguard().cartesianIndex(elemIdx)];
+                const int elemIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/0, /*timeIdx=*/0);
+                cell_ids.push_back(simulator_.vanguard().cartesianIndex(elemIdx));
             }
+            MPI_Send(cell_ids.data(), numElements, MPI_INT, 0, 0, MPI_COMM_WORLD);
+            MPI_Recv(fipnum_.data(), numElements, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
+#endif
     }
 
     // Sum Fip values over regions.
