@@ -96,6 +96,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableSchema.hpp>
 #include <opm/output/eclipse/RestartValue.hpp>
 #include <opm/simulators/utils/ParallelRestart.hpp>
+#include <opm/simulators/utils/RockParams.hpp>
 
 
 namespace {
@@ -2519,6 +2520,17 @@ BOOST_AUTO_TEST_CASE(FaultCollection)
     Opm::OrderedMap<std::string, Opm::Fault> faults;
     faults.insert({"test2", fault});
     Opm::FaultCollection val1(faults);
+    auto val2 = PackUnpack(val1);
+    BOOST_CHECK(std::get<1>(val2) == std::get<2>(val2));
+    BOOST_CHECK(val1 == std::get<0>(val2));
+#endif
+}
+
+
+BOOST_AUTO_TEST_CASE(RockParams)
+{
+#ifdef HAVE_MPI
+    Opm::RockParams<double> val1{1.0, 2.0};
     auto val2 = PackUnpack(val1);
     BOOST_CHECK(std::get<1>(val2) == std::get<2>(val2));
     BOOST_CHECK(val1 == std::get<0>(val2));

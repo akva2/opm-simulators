@@ -123,6 +123,7 @@ class RestartConfig;
 class RestartSchedule;
 class RFTConfig;
 class ROCKRecord;
+template<class Scalar> class RockParams;
 class RockTable;
 class Rock2dTable;
 class Rock2dtrTable;
@@ -303,6 +304,9 @@ std::size_t packSize(const WaterPvtThermal<Scalar>& data, Dune::MPIHelper::MPICo
 template<class T>
 std::size_t packSize(const IOrderSet<T>& data, Dune::MPIHelper::MPICommunicator comm);
 
+template<class Scalar>
+std::size_t packSize(const RockParams<Scalar>& data, Dune::MPIHelper::MPICommunicator comm);
+
 ////// pack routines
 
 template<class T>
@@ -463,6 +467,10 @@ template<class T>
 void pack(const IOrderSet<T>& data, std::vector<char>& buffer,
           int& position, Dune::MPIHelper::MPICommunicator comm);
 
+template<class Scalar>
+void pack(const RockParams<Scalar>& data, std::vector<char>& buffer,
+          int& position, Dune::MPIHelper::MPICommunicator comm);
+
 void pack(const char* str, std::vector<char>& buffer, int& position,
           Dune::MPIHelper::MPICommunicator comm);
 
@@ -620,6 +628,10 @@ void unpack(ConstantCompressibilityWaterPvt<Scalar>& data, std::vector<char>& bu
 
 template<class T>
 void unpack(IOrderSet<T>& data, std::vector<char>& buffer,
+            int& position, Dune::MPIHelper::MPICommunicator comm);
+
+template<class Scalar>
+void unpack(RockParams<Scalar>& data, std::vector<char>& buffer,
             int& position, Dune::MPIHelper::MPICommunicator comm);
 
 void unpack(char* str, std::size_t length, std::vector<char>& buffer, int& position,

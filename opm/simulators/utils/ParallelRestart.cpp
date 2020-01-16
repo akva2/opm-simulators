@@ -84,6 +84,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableSchema.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/IOrderSet.hpp>
+#include <opm/simulators/utils/RockParams.hpp>
 #include <dune/common/parallel/mpitraits.hh>
 
 #define HANDLE_AS_POD(T) \
@@ -1088,6 +1089,17 @@ std::size_t packSize(const WaterPvtThermal<Scalar>& data,
 }
 
 template std::size_t packSize(const WaterPvtThermal<double>& data,
+                              Dune::MPIHelper::MPICommunicator comm);
+
+template<class Scalar>
+std::size_t packSize(const RockParams<Scalar>& data,
+                     Dune::MPIHelper::MPICommunicator comm)
+{
+    return packSize(data.referencePressure, comm) +
+           packSize(data.compressibility, comm);
+}
+
+template std::size_t packSize(const RockParams<double>& data,
                               Dune::MPIHelper::MPICommunicator comm);
 
 std::size_t packSize(const OilVaporizationProperties& data,
@@ -2098,6 +2110,18 @@ void pack(const DynamicVector<T>& data, std::vector<char>& buffer, int& position
 {
     pack(data.data(), buffer, position, comm);
 }
+
+template<class Scalar>
+void pack(const RockParams<Scalar>& data, std::vector<char>& buffer, int& position,
+          Dune::MPIHelper::MPICommunicator comm)
+{
+    pack(data.referencePressure, buffer, position, comm);
+    pack(data.compressibility, buffer, position, comm);
+}
+
+template void pack(const RockParams<double>& data, std::vector<char>& buffer,
+                   int& position, Dune::MPIHelper::MPICommunicator comm);
+
 
 void pack(const char* str, std::vector<char>& buffer, int& position,
           Dune::MPIHelper::MPICommunicator comm)
@@ -3924,6 +3948,17 @@ void unpack(DynamicVector<T>& data, std::vector<char>& buffer, int& position,
     unpack(ddata, buffer, position, comm);
     data = DynamicVector<T>(ddata);
 }
+
+template<class Scalar>
+void unpack(RockParams<Scalar>& data, std::vector<char>& buffer, int& position,
+            Dune::MPIHelper::MPICommunicator comm)
+{
+    unpack(data.referencePressure, buffer, position, comm);
+    unpack(data.compressibility, buffer, position, comm);
+}
+
+template void unpack(RockParams<double>& data, std::vector<char>& buffer, int& position,
+                     Dune::MPIHelper::MPICommunicator comm);
 
 void unpack(char* str, std::size_t length, std::vector<char>& buffer, int& position,
             Dune::MPIHelper::MPICommunicator comm)
@@ -6350,6 +6385,7 @@ INSTANTIATE_PACK_VECTOR(std::vector<double>);
 INSTANTIATE_PACK_VECTOR(bool);
 INSTANTIATE_PACK_VECTOR(char);
 INSTANTIATE_PACK_VECTOR(Opm::Tabulated1DFunction<double>);
+INSTANTIATE_PACK_VECTOR(RockParams<double>);
 #undef INSTANTIATE_PACK_VECTOR
 
 #define INSTANTIATE_PACK(T) \
