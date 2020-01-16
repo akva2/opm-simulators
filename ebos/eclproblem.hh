@@ -100,6 +100,7 @@
 #include <dune/common/version.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
+#include <dune/common/parallel/mpitraits.hh>
 
 #include <opm/output/eclipse/EclipseIO.hpp>
 
@@ -2190,80 +2191,11 @@ private:
         const auto& simulator = this->simulator();
         const auto& vanguard = simulator.vanguard();
         const auto& deck = vanguard.deck();
+        const auto& comm = vanguard.gridView().comm();
         auto& eclState = vanguard.eclState();
 
-        // read the rock compressibility parameters
-        if (deck.hasKeyword("ROCK")) {
-            const auto& rockKeyword = deck.getKeyword("ROCK");
-            rockParams_.resize(rockKeyword.size());
-            for (size_t rockRecordIdx = 0; rockRecordIdx < rockKeyword.size(); ++ rockRecordIdx) {
-                const auto& rockRecord = rockKeyword.getRecord(rockRecordIdx);
-                rockParams_[rockRecordIdx].referencePressure =
-                        rockRecord.getItem("PREF").getSIDouble(0);
-                rockParams_[rockRecordIdx].compressibility =
-                        rockRecord.getItem("COMPRESSIBILITY").getSIDouble(0);
-            }
-        }
-
-        // read the parameters for water-induced rock compaction
-        readRockCompactionParameters_();
-
-        // check the kind of region which is supposed to be used by checking the ROCKOPTS
-        // keyword. note that for some funny reason, the ROCK keyword uses PVTNUM by
-        // default, *not* ROCKNUM!
-        std::string propName = "PVTNUM";
-        if (deck.hasKeyword("ROCKOPTS")) {
-            const auto& rockoptsKeyword = deck.getKeyword("ROCKOPTS");
-            std::string rockTableType =
-                rockoptsKeyword.getRecord(0).getItem("TABLE_TYPE").getTrimmedString(0);
-            if (rockTableType == "PVTNUM")
-                propName = "PVTNUM";
-            else if (rockTableType == "SATNUM")
-                propName = "SATNUM";
-            else if (rockTableType == "ROCKNUM")
-                propName = "ROCKNUM";
-            else {
-                throw std::runtime_error("Unknown table type '"+rockTableType
-                                         +" for the ROCKOPTS keyword given");
-            }
-        }
-
-        // If ROCKCOMP is used and ROCKNUM is specified ROCK2D ROCK2DTR ROCKTAB etc. uses ROCKNUM
-        // to give the correct table index.
-        if (deck.hasKeyword("ROCKCOMP") && eclState.fieldProps().has_int("ROCKNUM"))
-            propName = "ROCKNUM";
-
-        if (eclState.fieldProps().has_int(propName)) {
-            const auto& tmp = eclState.fieldProps().get_global_int(propName);
-            unsigned numElem = vanguard.gridView().size(0);
-            rockTableIdx_.resize(numElem);
-            for (size_t elemIdx = 0; elemIdx < numElem; ++ elemIdx) {
-                unsigned cartElemIdx = vanguard.cartesianIndex(elemIdx);
-
-                // reminder: Eclipse uses FORTRAN-style indices
-                rockTableIdx_[elemIdx] = tmp[cartElemIdx] - 1;
-            }
-        }
-
-        // Store overburden pressure pr element
-        const auto& overburdTables = eclState.getTableManager().getOverburdTables();
-        if (!overburdTables.empty()) {
-            unsigned numElem = vanguard.gridView().size(0);
-            overburdenPressure_.resize(numElem,0.0);
-
-            const auto& rockcomp = deck.getKeyword("ROCKCOMP");
-            const auto& rockcompRecord = rockcomp.getRecord(0);
-            size_t numRocktabTables = rockcompRecord.getItem("NTROCC").template get< int >(0);
-
-            if (overburdTables.size() != numRocktabTables)
-                throw std::runtime_error(std::to_string(numRocktabTables) +" OVERBURD tables is expected, but " + std::to_string(overburdTables.size()) +" is provided");
-
-            std::vector<Opm::Tabulated1DFunction<Scalar>> overburdenTables(numRocktabTables);
-            for (size_t regionIdx = 0; regionIdx < numRocktabTables; ++regionIdx) {
-                const Opm::OverburdTable& overburdTable =  overburdTables.template getTable<Opm::OverburdTable>(regionIdx);
-                overburdenTables[regionIdx].setXYContainers(overburdTable.getDepthColumn(),overburdTable.getOverburdenPressureColumn());
-            }
-
+        auto&& initOverburdenTables = [&](size_t numElem,
+                                          const std::vector<Opm::Tabulated1DFunction<Scalar>>& overburdenTables) {
             for (size_t elemIdx = 0; elemIdx < numElem; ++ elemIdx) {
                 unsigned tableIdx = 0;
                 if (!rockTableIdx_.empty()) {
@@ -2271,8 +2203,136 @@ private:
                 }
                 overburdenPressure_[elemIdx] = overburdenTables[tableIdx].eval(elementCenterDepth_[elemIdx], /*extrapolation=*/true);
             }
-        }
+        };
 
+        if (comm.rank() == 0) {
+            // read the rock compressibility parameters
+            if (deck.hasKeyword("ROCK")) {
+                const auto& rockKeyword = deck.getKeyword("ROCK");
+                rockParams_.resize(rockKeyword.size());
+                for (size_t rockRecordIdx = 0; rockRecordIdx < rockKeyword.size(); ++ rockRecordIdx) {
+                    const auto& rockRecord = rockKeyword.getRecord(rockRecordIdx);
+                    rockParams_[rockRecordIdx].referencePressure =
+                            rockRecord.getItem("PREF").getSIDouble(0);
+                    rockParams_[rockRecordIdx].compressibility =
+                            rockRecord.getItem("COMPRESSIBILITY").getSIDouble(0);
+                }
+            }
+
+            // read the parameters for water-induced rock compaction
+            readRockCompactionParameters_();
+
+            // check the kind of region which is supposed to be used by checking the ROCKOPTS
+            // keyword. note that for some funny reason, the ROCK keyword uses PVTNUM by
+            // default, *not* ROCKNUM!
+            std::string propName = "PVTNUM";
+            if (deck.hasKeyword("ROCKOPTS")) {
+                const auto& rockoptsKeyword = deck.getKeyword("ROCKOPTS");
+                std::string rockTableType =
+                    rockoptsKeyword.getRecord(0).getItem("TABLE_TYPE").getTrimmedString(0);
+                if (rockTableType == "PVTNUM")
+                    propName = "PVTNUM";
+                else if (rockTableType == "SATNUM")
+                    propName = "SATNUM";
+                else if (rockTableType == "ROCKNUM")
+                    propName = "ROCKNUM";
+                else {
+                    throw std::runtime_error("Unknown table type '"+rockTableType
+                                             +" for the ROCKOPTS keyword given");
+                }
+            }
+
+            // If ROCKCOMP is used and ROCKNUM is specified ROCK2D ROCK2DTR ROCKTAB etc. uses ROCKNUM
+            // to give the correct table index.
+            if (deck.hasKeyword("ROCKCOMP") && eclState.fieldProps().has_int("ROCKNUM"))
+                propName = "ROCKNUM";
+
+            if (!eclState.fieldProps().has_int(propName)) {
+                propName.clear();
+            } else {
+                const auto& tmp = eclState.fieldProps().get_global_int(propName);
+                unsigned numElem = vanguard.gridView().size(0);
+                rockTableIdx_.resize(numElem);
+                for (size_t elemIdx = 0; elemIdx < numElem; ++ elemIdx) {
+                    unsigned cartElemIdx = vanguard.cartesianIndex(elemIdx);
+
+                    // reminder: Eclipse uses FORTRAN-style indices
+                    rockTableIdx_[elemIdx] = tmp[cartElemIdx] - 1;
+                }
+            }
+
+            // Store overburden pressure pr element
+            std::vector<Opm::Tabulated1DFunction<Scalar>> overburdenTables;
+            const auto& overburdTables = eclState.getTableManager().getOverburdTables();
+            if (!overburdTables.empty()) {
+                unsigned numElem = vanguard.gridView().size(0);
+                overburdenPressure_.resize(numElem,0.0);
+
+                const auto& rockcomp = deck.getKeyword("ROCKCOMP");
+                const auto& rockcompRecord = rockcomp.getRecord(0);
+                size_t numRocktabTables = rockcompRecord.getItem("NTROCC").template get< int >(0);
+                if (overburdTables.size() != numRocktabTables)
+                    throw std::runtime_error(std::to_string(numRocktabTables) +" OVERBURD tables is expected, but " + std::to_string(overburdTables.size()) +" is provided");
+
+                overburdenTables.resize(numRocktabTables);
+
+                for (size_t regionIdx = 0; regionIdx < numRocktabTables; ++regionIdx) {
+                    const Opm::OverburdTable& overburdTable =  overburdTables.template getTable<Opm::OverburdTable>(regionIdx);
+                    overburdenTables[regionIdx].setXYContainers(overburdTable.getDepthColumn(),overburdTable.getOverburdenPressureColumn());
+                }
+
+                initOverburdenTables(numElem, overburdenTables);
+            }
+
+            Mpi::packAndSend(rockParams_, comm);
+            Mpi::packAndSend(rockCompPoroMult_, comm);
+            Mpi::packAndSend(rockCompTransMult_, comm);
+            Mpi::packAndSend(propName, comm);
+            Mpi::packAndSend(overburdenTables, comm);
+
+            int numElem = vanguard.gridView().size(0);
+            if (!propName.empty()) {
+                const auto& tmp = eclState.fieldProps().get_global_int(propName);
+                std::vector<int> sizes(comm.size());
+                comm.gather(&numElem, sizes.data(), 1, 0);
+                for (int i = 1; i < comm.size(); ++i) {
+                    std::vector<int> cell_ids(sizes[i]);
+                    MPI_Recv(cell_ids.data(), sizes[i], MPI_INT,
+                             i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                    std::vector<unsigned short> rockIdx;
+                    rockIdx.reserve(sizes[i]);
+                    for (int cell : cell_ids)
+                        rockIdx.push_back(tmp[cell] - 1);
+                    MPI_Send(rockIdx.data(), sizes[i], MPI_UNSIGNED_SHORT,
+                             i, 0, MPI_COMM_WORLD);
+                }
+            }
+        } else {
+            Mpi::receiveAndUnpack(rockParams_, comm);
+            Mpi::receiveAndUnpack(rockCompPoroMult_, comm);
+            Mpi::receiveAndUnpack(rockCompTransMult_, comm);
+            std::string propName;
+            Mpi::receiveAndUnpack(propName, comm);
+            std::vector<Opm::Tabulated1DFunction<Scalar>> overburdenTables;
+            Mpi::receiveAndUnpack(overburdenTables, comm);
+
+            unsigned numElem = vanguard.gridView().size(0);
+            if (!propName.empty()) {
+                comm.gather(&numElem, &numElem, 1, 0);
+                rockTableIdx_.resize(numElem);
+                std::vector<int> cell_ids;
+                cell_ids.reserve(numElem);
+                for (size_t elemIdx = 0; elemIdx < numElem; ++ elemIdx) {
+                    cell_ids.push_back(vanguard.cartesianIndex(elemIdx));
+                }
+                MPI_Send(cell_ids.data(), numElem, MPI_INT, 0, 0, MPI_COMM_WORLD);
+                MPI_Recv(rockTableIdx_.data(), numElem, MPI_UNSIGNED_SHORT,
+                         0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            }
+
+            if (!overburdenTables.empty())
+                initOverburdenTables(numElem, overburdenTables);
+        }
     }
 
     void readRockCompactionParameters_()
@@ -2480,7 +2540,8 @@ private:
         const auto& deck = simulator.vanguard().deck();
         const auto& eclState = simulator.vanguard().eclState();
 
-        FluidSystem::initFromDeck(deck, eclState);
+//        if (simulator.gridView().comm().rank() == 0)
+            FluidSystem::initFromDeck(deck, eclState);
    }
 
     void readInitialCondition_()
@@ -2938,78 +2999,75 @@ private:
 
     void updatePvtnum_()
     {
-        const auto& simulator = this->simulator();
-        const auto& eclState = simulator.vanguard().eclState();
-
-        if (!has_int_prop(eclState, "PVTNUM"))
-            return;
-
-        const auto& pvtnumData = get_int_prop(eclState, "PVTNUM");
-        const auto& vanguard = simulator.vanguard();
-
-        unsigned numElems = vanguard.gridView().size(/*codim=*/0);
-        pvtnum_.resize(numElems);
-        for (unsigned elemIdx = 0; elemIdx < numElems; ++elemIdx) {
-            unsigned cartElemIdx = vanguard.cartesianIndex(elemIdx);
-            pvtnum_[elemIdx] = pvtnumData[cartElemIdx] - 1;
-        }
+        updateNum("PVTNUM", pvtnum_);
     }
 
     void updateSatnum_()
     {
-        const auto& simulator = this->simulator();
-        const auto& eclState = simulator.vanguard().eclState();
-
-        if (!has_int_prop(eclState, "SATNUM"))
-            return;
-
-        const auto& satnumData = get_int_prop(eclState, "SATNUM");
-        const auto& vanguard = simulator.vanguard();
-
-        unsigned numElems = vanguard.gridView().size(/*codim=*/0);
-        satnum_.resize(numElems);
-        for (unsigned elemIdx = 0; elemIdx < numElems; ++elemIdx) {
-            unsigned cartElemIdx = vanguard.cartesianIndex(elemIdx);
-            satnum_[elemIdx] = satnumData[cartElemIdx] - 1;
-        }
+        updateNum("SATNUM", satnum_);
     }
 
     void updateMiscnum_()
     {
+        updateNum("MISCNUM", miscnum_);
+    }
+
+    template<class T>
+    void updateNum(const std::string& kword,
+                   std::vector<T>& numbers)
+    {
         const auto& simulator = this->simulator();
         const auto& eclState = simulator.vanguard().eclState();
+        const auto& comm = simulator.gridView().comm();
 
-        if (!has_int_prop(eclState, "MISCNUM"))
+        bool has;
+        if (comm.rank() == 0) {
+            has = has_int_prop(eclState, kword);
+        }
+        comm.broadcast(&has, 1, 0);
+        if (!has)
             return;
 
-        const auto& miscnumData = get_int_prop(eclState, "MISCNUM");
         const auto& vanguard = simulator.vanguard();
+        int numElems = vanguard.gridView().size(/*codim=*/0);
+        if (comm.rank() == 0) {
+            const auto& intData = get_int_prop(eclState, kword);
 
-        unsigned numElems = vanguard.gridView().size(/*codim=*/0);
-        miscnum_.resize(numElems);
-        for (unsigned elemIdx = 0; elemIdx < numElems; ++elemIdx) {
-            unsigned cartElemIdx = vanguard.cartesianIndex(elemIdx);
-            miscnum_[elemIdx] = miscnumData[cartElemIdx] - 1;
+            numbers.resize(numElems);
+            for (int elemIdx = 0; elemIdx < numElems; ++elemIdx) {
+                unsigned cartElemIdx = vanguard.cartesianIndex(elemIdx);
+                numbers[elemIdx] = intData[cartElemIdx] - 1;
+            }
+            std::vector<int> sizes(comm.size());
+            comm.gather(&numElems, sizes.data(), 1, 0);
+            for (int i = 1; i < comm.size(); ++i) {
+                std::vector<int> cell_ids(sizes[i]); 
+                MPI_Recv(cell_ids.data(), sizes[i], MPI_INT,
+                         i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                std::vector<T> sendData;
+                sendData.reserve(sizes[i]);
+                for (int cell : cell_ids)
+                    sendData.push_back(numbers[cell] - 1);
+                MPI_Send(sendData.data(), sizes[i], Dune::MPITraits<T>::getType(),
+                         i, 0, MPI_COMM_WORLD);
+            }
+        } else {
+            comm.gather(&numElems, &numElems, 1, 0);
+            std::vector<int> cell_ids;
+            cell_ids.reserve(numElems);
+            for (int elemIdx = 0; elemIdx < numElems; ++elemIdx) {
+                cell_ids.push_back(vanguard.cartesianIndex(elemIdx));
+            }
+            MPI_Send(cell_ids.data(), numElems, MPI_INT, 0, 0, MPI_COMM_WORLD);
+            numbers.resize(numElems);
+            MPI_Recv(numbers.data(), numElems, Dune::MPITraits<T>::getType(),
+                     0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
     }
 
     void updatePlmixnum_()
     {
-        const auto& simulator = this->simulator();
-        const auto& eclState = simulator.vanguard().eclState();
-
-        if (!has_int_prop(eclState, "PLMIXNUM"))
-            return;
-
-        const auto& plmixnumData = get_int_prop(eclState, "PLMIXNUM");
-        const auto& vanguard = simulator.vanguard();
-
-        unsigned numElems = vanguard.gridView().size(/*codim=*/0);
-        plmixnum_.resize(numElems);
-        for (unsigned elemIdx = 0; elemIdx < numElems; ++elemIdx) {
-            unsigned cartElemIdx = vanguard.cartesianIndex(elemIdx);
-            plmixnum_[elemIdx] = plmixnumData[cartElemIdx] - 1;
-        }
+        updateNum("PLXMIXNUM", plmixnum_);
     }
 
     struct PffDofData_
