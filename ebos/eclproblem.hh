@@ -688,7 +688,14 @@ public:
         const auto& deck = simulator.vanguard().deck();
         if (EWOMS_GET_PARAM(TypeTag, bool, EnableGravity))
             this->gravity_[dim - 1] = 9.80665;
-        if (deck.hasKeyword("NOGRAV"))
+
+        const auto& comm = simulator.gridView().comm();
+        bool noGrav;
+        if (comm.rank() == 0) {
+            noGrav = deck.hasKeyword("NOGRAV");
+        }
+        comm.broadcast(&noGrav, 1, 0);
+        if (noGrav)
             this->gravity_[dim - 1] = 0.0;
 
         if (enableTuning_) {
