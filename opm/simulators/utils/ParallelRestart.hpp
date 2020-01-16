@@ -124,6 +124,7 @@ class RestartConfig;
 class RestartSchedule;
 class RFTConfig;
 class ROCKRecord;
+template<class Scalar> class RockParams;
 class RockTable;
 class Rock2dTable;
 class Rock2dtrTable;
@@ -309,6 +310,9 @@ template<class Scalar>
 std::size_t packSize(const EclEpsScalingPointsInfo<Scalar>& data,
                      Dune::MPIHelper::MPICommunicator comm);
 
+template<class Scalar>
+std::size_t packSize(const RockParams<Scalar>& data, Dune::MPIHelper::MPICommunicator comm);
+
 ////// pack routines
 
 template<class T>
@@ -473,6 +477,10 @@ template<class Scalar>
 void pack(const EclEpsScalingPointsInfo<Scalar>& data, std::vector<char>& buffer,
           int& position, Dune::MPIHelper::MPICommunicator comm);
 
+template<class Scalar>
+void pack(const RockParams<Scalar>& data, std::vector<char>& buffer,
+          int& position, Dune::MPIHelper::MPICommunicator comm);
+
 void pack(const char* str, std::vector<char>& buffer, int& position,
           Dune::MPIHelper::MPICommunicator comm);
 
@@ -634,6 +642,10 @@ void unpack(IOrderSet<T>& data, std::vector<char>& buffer,
 
 template<class Scalar>
 void unpack(EclEpsScalingPointsInfo<Scalar>& data, std::vector<char>& buffer,
+            int& position, Dune::MPIHelper::MPICommunicator comm);
+
+template<class Scalar>
+void unpack(RockParams<Scalar>& data, std::vector<char>& buffer,
             int& position, Dune::MPIHelper::MPICommunicator comm);
 
 void unpack(char* str, std::size_t length, std::vector<char>& buffer, int& position,

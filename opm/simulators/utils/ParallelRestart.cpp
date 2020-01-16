@@ -87,6 +87,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableSchema.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/IOrderSet.hpp>
+#include <opm/simulators/utils/RockParams.hpp>
 #include <dune/common/parallel/mpitraits.hh>
 
 #define HANDLE_AS_POD(T) \
@@ -1108,6 +1109,14 @@ std::size_t packSize(const EclEpsScalingPointsInfo<Scalar>& data,
            packSize(data.maxKrow, comm) +
            packSize(data.maxKrog, comm) +
            packSize(data.maxKrg, comm);
+}
+
+template<class Scalar>
+std::size_t packSize(const RockParams<Scalar>& data,
+                     Dune::MPIHelper::MPICommunicator comm)
+{
+    return packSize(data.referencePressure, comm) +
+           packSize(data.compressibility, comm);
 }
 
 std::size_t packSize(const OilVaporizationProperties& data,
@@ -2211,6 +2220,14 @@ void pack(const DynamicVector<T>& data, std::vector<char>& buffer, int& position
           Dune::MPIHelper::MPICommunicator comm)
 {
     pack(data.data(), buffer, position, comm);
+}
+
+template<class Scalar>
+void pack(const RockParams<Scalar>& data, std::vector<char>& buffer, int& position,
+          Dune::MPIHelper::MPICommunicator comm)
+{
+    pack(data.referencePressure, buffer, position, comm);
+    pack(data.compressibility, buffer, position, comm);
 }
 
 void pack(const char* str, std::vector<char>& buffer, int& position,
@@ -4194,6 +4211,14 @@ void unpack(EclEpsScalingPointsInfo<Scalar>& data, std::vector<char>& buffer,
     unpack(data.maxKrow, buffer, position, comm);
     unpack(data.maxKrog, buffer, position, comm);
     unpack(data.maxKrg, buffer, position, comm);
+}
+
+template<class Scalar>
+void unpack(RockParams<Scalar>& data, std::vector<char>& buffer, int& position,
+            Dune::MPIHelper::MPICommunicator comm)
+{
+    unpack(data.referencePressure, buffer, position, comm);
+    unpack(data.compressibility, buffer, position, comm);
 }
 
 void unpack(char* str, std::size_t length, std::vector<char>& buffer, int& position,
@@ -6757,6 +6782,7 @@ INSTANTIATE_PACK_VECTOR(int)
 INSTANTIATE_PACK_VECTOR(Opm::Tabulated1DFunction<double>)
 INSTANTIATE_PACK_VECTOR(std::array<double, 3>)
 INSTANTIATE_PACK_VECTOR(EclEpsScalingPointsInfo<double>)
+INSTANTIATE_PACK_VECTOR(RockParams<double>)
 #undef INSTANTIATE_PACK_VECTOR
 
 #define INSTANTIATE_PACK_SHARED_PTR(...) \
@@ -6795,6 +6821,7 @@ INSTANTIATE_PACK(unsigned char)
 INSTANTIATE_PACK(EclEpsScalingPointsInfo<double>)
 INSTANTIATE_PACK(EclTwoPhaseApproach)
 INSTANTIATE_PACK(EclMultiplexerApproach)
+INSTANTIATE_PACK(RockParams<double>)
 #undef INSTANTIATE_PACK
 
 } // end namespace Mpi
