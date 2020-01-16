@@ -95,6 +95,8 @@
 #include <opm/material/common/Exceptions.hpp>
 #include <opm/material/common/ConditionalStorage.hpp>
 
+#include <opm/simulators/utils/RockParams.hpp>
+
 #include <dune/common/version.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -459,11 +461,6 @@ class EclProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
     typedef Opm::UniformXTabulated2DFunction<Scalar> TabulatedTwoDFunction;
-
-    struct RockParams {
-        Scalar referencePressure;
-        Scalar compressibility;
-    };
 
 public:
     /*!
@@ -3193,7 +3190,7 @@ private:
     std::vector<unsigned short> plmixnum_;
 
     std::vector<unsigned short> rockTableIdx_;
-    std::vector<RockParams> rockParams_;
+    std::vector<RockParams<Scalar>> rockParams_;
 
     std::vector<Scalar> maxPolymerAdsorption_;
 
