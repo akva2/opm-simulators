@@ -1744,9 +1744,19 @@ private:
 
     void createLocalFipnum_()
     {
-        const std::vector<int> fipnumGlobal = simulator_.vanguard().eclState().fieldProps().get_global_int("FIPNUM");
-        // Get compressed cell fipnum.
         const auto& gridView = simulator_.vanguard().gridView();
+        const auto& comm = gridView.comm();
+
+        // Get compressed cell fipnum.
+        std::vector<int> fipnumGlobal;
+        if (comm.rank() == 0) {
+            fipnumGlobal = simulator_.vanguard().eclState().fieldProps().get_global_int("FIPNUM");
+        }
+        size_t size = fipnumGlobal.size();
+        comm.broadcast(&size, 1, 0);
+        fipnumGlobal.resize(size);
+        comm.broadcast(fipnumGlobal.data(), size, 0);
+
         unsigned numElements = gridView.size(/*codim=*/0);
         fipnum_.resize(numElements, 0.0);
         if (!fipnumGlobal.empty()) {
