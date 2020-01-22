@@ -172,7 +172,12 @@ BlackoilAquiferModel<TypeTag>::init()
                 aquifer_connection.at(i), cartesian_to_compressed_, this->simulator_, aquifersData.at(i)));
         }
     }
-    if (deck.hasKeyword("AQUFETP")) {
+    if (comm.rank() == 0)
+        has = deck.hasKeyword("AQUFETP");
+    comm.broadcast(&has, 1, 0);
+
+    if (has) {
+        assert(comm.rank() == 0); // TODO
         // updateConnectionIntensiveQuantities();
         const auto& eclState = this->simulator_.vanguard().eclState();
 
