@@ -426,7 +426,7 @@ public:
         }
 
         // potentially overwrite and/or modify  transmissibilities based on input from deck
-        updateFromEclState_();
+        updateFromEclState_(global);
 
         // Create mapping from global to local index
         const size_t cartesianSize = cartMapper.cartesianSize();
@@ -535,21 +535,40 @@ private:
             applyMultipliers_(trans, insideFaceIdx, insideCartElemIdx, transMult);
     }
 
-    void updateFromEclState_()
+    void updateFromEclState_(bool global)
     {
         const auto& gridView = vanguard_.gridView();
         const auto& cartMapper = vanguard_.cartesianIndexMapper();
         const auto& cartDims = cartMapper.cartesianDimensions();
+        const auto& comm = gridView.comm();
 #if DUNE_VERSION_NEWER(DUNE_GRID, 2,6)
         ElementMapper elemMapper(gridView, Dune::mcmgElementLayout());
 #else
         ElementMapper elemMapper(gridView);
 #endif
 
-        const auto& fp = vanguard_.eclState().fieldProps();
-        const auto& inputTranxData = fp.get_global_double("TRANX");
-        const auto& inputTranyData = fp.get_global_double("TRANY");
-        const auto& inputTranzData = fp.get_global_double("TRANZ");
+        std::vector<double> inputTranxData, inputTranyData, inputTranzData;
+        if (comm.rank() == 0) {
+            const auto& fp = vanguard_.eclState().fieldProps();
+            inputTranxData = fp.get_global_double("TRANX");
+            inputTranyData = fp.get_global_double("TRANY");
+            inputTranzData = fp.get_global_double("TRANZ");
+        }
+        if (global) {
+            size_t size = inputTranxData.size();
+            comm.broadcast(&size, 1, 0);
+            inputTranxData.resize(size);
+            comm.broadcast(inputTranxData.data(), size, 0);
+            size = inputTranyData.size();
+            comm.broadcast(&size, 1, 0);
+            inputTranyData.resize(size);
+            comm.broadcast(inputTranyData.data(), size, 0);
+            size = inputTranzData.size();
+            comm.broadcast(&size, 1, 0);
+            inputTranzData.resize(size);
+            comm.broadcast(inputTranzData.data(), size, 0);
+        }
+
         bool tranx_deckAssigned = false;                     // Ohh my ....
         bool trany_deckAssigned = false;
         bool tranz_deckAssigned = false;
