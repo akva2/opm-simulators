@@ -900,13 +900,26 @@ std::vector<int>
 equilnum(const Opm::EclipseState& eclipseState,
          const Grid& grid)
 {
+    const auto& comm = Dune::MPIHelper::getCollectiveCommunication();
     std::vector<int> eqlnum(grid.size(0), 0);
 
-    if (eclipseState.fieldProps().has<int>("EQLNUM")) {
+    bool has;
+    if (comm.rank() == 0)
+        has = eclipseState.fieldProps().has<int>("EQLNUM");
+    comm.broadcast(&has, 1, 0);
+
+    if (has) {
         const int nc = grid.size(/*codim=*/0);
         eqlnum.resize(nc);
 
-        const auto& e = eclipseState.fieldProps().get_global<int>("EQLNUM");
+        std::vector<int> e;
+        if (comm.rank() == 0)
+            e = eclipseState.fieldProps().get_global<int>("EQLNUM");
+        size_t size = e.size();
+        comm.broadcast(&size, 1, 0);
+        e.resize(size);
+        comm.broadcast(e.data(), size, 0);
+
         const int* gc = Opm::UgGridHelpers::globalCell(grid);
         for (int cell = 0; cell < nc; ++cell) {
             const int deckPos = (gc == NULL) ? cell : gc[cell];
