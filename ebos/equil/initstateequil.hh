@@ -955,8 +955,20 @@ public:
         if (applySwatInit) {
             const int nc = grid.size(/*codim=*/0);
 
-            if (eclipseState.fieldProps().has<double>("SWATINIT")) {
-                const std::vector<double>& swatInitEcl = eclipseState.fieldProps().get_global<double>("SWATINIT");
+            const auto& comm = Dune::MPIHelper::getCollectiveCommunication();
+            bool has;
+            if (comm.rank() == 0)
+                has = eclipseState.fieldProps().has<double>("SWATINIT");
+            comm.broadcast(&has, 1, 0);
+
+            if (has) {
+                std::vector<double> swatInitEcl;
+                if (comm.rank() == 0)
+                    swatInitEcl = eclipseState.fieldProps().get_global<double>("SWATINIT");
+                size_t size = swatInitEcl.size();
+                comm.broadcast(&size, 1, 0);
+                swatInitEcl.resize(size);
+                comm.broadcast(swatInitEcl.data(), size, 0);
                 const int* gc = Opm::UgGridHelpers::globalCell(grid);
                 swatInit_.resize(nc);
                 for (int c = 0; c < nc; ++c) {
