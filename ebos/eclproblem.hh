@@ -2993,8 +2993,14 @@ private:
         nonTrivialBoundaryConditions_ = false;
         const auto& simulator = this->simulator();
         const auto& vanguard = simulator.vanguard();
+        const auto& comm = simulator.gridView().comm();
 
-        if (vanguard.deck().hasKeyword("BC")) {
+        bool has;
+        if (comm.rank() == 0)
+            has = vanguard.deck().hasKeyword("BC");
+        comm.broadcast(&has, 1, 0);
+
+        if (has) {
             nonTrivialBoundaryConditions_ = true;
 
             size_t numCartDof = vanguard.cartesianSize();
