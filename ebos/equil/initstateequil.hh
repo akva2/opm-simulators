@@ -1133,9 +1133,17 @@ private:
         size_t numCompressed = grid.size(/*codim=*/0);
         const auto* globalCell = Opm::UgGridHelpers::globalCell(grid);
         std::vector<int> cellPvtRegionIdx(numCompressed);
+        const auto& comm = Dune::MPIHelper::getCollectiveCommunication();
 
         //Get the PVTNUM data
-        const auto pvtnumData = eclState.fieldProps().get_global<int>("PVTNUM");
+        std::vector<int> pvtnumData;
+        if (comm.rank() == 0)
+            pvtnumData = eclState.fieldProps().get_global<int>("PVTNUM");
+        size_t size = pvtnumData.size();
+        comm.broadcast(&size, 1, 0);
+        pvtnumData.resize(size);
+        comm.broadcast(pvtnumData.data(), size, 0);
+
         // Convert PVTNUM data into an array of indices for compressed cells. Remember
         // that Eclipse uses Fortran-style indices which start at 1 instead of 0, so we
         // need to subtract 1.
