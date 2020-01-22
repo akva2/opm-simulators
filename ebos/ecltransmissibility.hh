@@ -146,7 +146,7 @@ public:
 
         unsigned numElements = elemMapper.size();
 
-        extractPermeability_();
+        extractPermeability_(global);
 
         // calculate the axis specific centroids of all elements
         std::array<std::vector<DimVector>, dimWorld> axisCentroids;
@@ -767,7 +767,7 @@ private:
         }
     }
 
-    void extractPermeability_()
+    void extractPermeability_(bool global)
     {
         unsigned numElem = vanguard_.gridView().size(/*codim=*/0);
         permeability_.resize(numElem);
@@ -776,18 +776,45 @@ private:
         // provided by eclState are one-per-cell of "uncompressed" grid, whereas the
         // simulation grid might remove a few elements. (e.g. because it is distributed
         // over several processes.)
-        const auto& fp = vanguard_.eclState().fieldProps();
-        if (fp.has_double("PERMX")) {
-            const std::vector<double>& permxData = fp.get_global_double("PERMX");
 
-            std::vector<double> permyData(permxData);
-            if (fp.has_double("PERMY"))
-                permyData = fp.get_global_double("PERMY");
+        std::vector<double> permxData, permyData, permzData;
+        bool has;
+        const auto& comm = vanguard_.gridView().comm();
+        if (comm.rank() == 0) {
+            const auto& fp = vanguard_.eclState().fieldProps();
+            has = fp.has_double("PERMX");
+            if (has) {
+                permxData = fp.get_global_double("PERMX");
 
-            std::vector<double> permzData(permxData);
-            if (fp.has_double("PERMZ"))
-                permzData = fp.get_global_double("PERMZ");
+                if (fp.has_double("PERMY"))
+                    permyData = fp.get_global_double("PERMY");
+                else
+                    permyData = permxData;
 
+                if (fp.has_double("PERMZ"))
+                    permzData = fp.get_global_double("PERMZ");
+                else
+                    permzData = permxData;
+            }
+        }
+        if (global) {
+            comm.broadcast(&has, 1, 0);
+        }
+        if (has) {
+            if (global) {
+                size_t size = permxData.size();
+                comm.broadcast(&size, 1, 0);
+                permxData.resize(size);
+                comm.broadcast(permxData.data(), size, 0);
+                size = permyData.size();
+                comm.broadcast(&size, 1, 0);
+                permyData.resize(size);
+                comm.broadcast(permyData.data(), size, 0);
+                size = permzData.size();
+                comm.broadcast(&size, 1, 0);
+                permzData.resize(size);
+                comm.broadcast(permzData.data(), size, 0);
+            }
             for (size_t dofIdx = 0; dofIdx < numElem; ++ dofIdx) {
                 unsigned cartesianElemIdx = vanguard_.cartesianIndex(dofIdx);
                 permeability_[dofIdx] = 0.0;
@@ -797,7 +824,6 @@ private:
             }
 
             // for now we don't care about non-diagonal entries
-
         }
         else
             throw std::logic_error("Can't read the intrinsic permeability from the ecl state. "
