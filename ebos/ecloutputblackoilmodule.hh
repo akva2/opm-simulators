@@ -325,7 +325,13 @@ public:
             krnSwMdcGo_.resize(bufferSize, 0.0);
         }
 
-        if (simulator_.vanguard().eclState().fieldProps().has_double("SWATINIT"))
+        const auto& comm = simulator_.vanguard().gridView().comm();
+        bool has;
+        if (comm.rank() == 0)
+            has = simulator_.vanguard().eclState().fieldProps().has_double("SWATINIT");
+        comm.broadcast(&has, 1, 0);
+
+        if (has)
             ppcw_.resize(bufferSize, 0.0);
 
         if (FluidSystem::enableDissolvedGas() && rstKeywords["RSSAT"] > 0) {
