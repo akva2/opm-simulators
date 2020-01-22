@@ -100,6 +100,7 @@
 #include <dune/common/version.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
+#include <dune/common/parallel/mpitraits.hh>
 
 #include <opm/output/eclipse/EclipseIO.hpp>
 
@@ -2982,18 +2983,50 @@ private:
     {
         const auto& simulator = this->simulator();
         const auto& eclState = simulator.vanguard().eclState();
+        const auto& comm = simulator.gridView().comm();
 
-        if (!has_int_prop(eclState, name))
+        bool has;
+        if (comm.rank() == 0) {
+            has = has_int_prop(eclState, name);
+        }
+        comm.broadcast(&has, 1, 0);
+        if (!has)
             return;
 
-        const auto& numData = get_int_prop(eclState, name);
         const auto& vanguard = simulator.vanguard();
+        int numElems = vanguard.gridView().size(/*codim=*/0);
+        if (comm.rank() == 0) {
+            const auto& numData = get_int_prop(eclState, name);
 
-        unsigned numElems = vanguard.gridView().size(/*codim=*/0);
-        numbers.resize(numElems);
-        for (unsigned elemIdx = 0; elemIdx < numElems; ++elemIdx) {
-            unsigned cartElemIdx = vanguard.cartesianIndex(elemIdx);
-            numbers[elemIdx] = static_cast<T>(std::max(numData[cartElemIdx], 1) - 1);
+            numbers.resize(numElems);
+            for (int elemIdx = 0; elemIdx < numElems; ++elemIdx) {
+                unsigned cartElemIdx = vanguard.cartesianIndex(elemIdx);
+                numbers[elemIdx] = static_cast<T>(std::max(numData[cartElemIdx], 1) - 1);
+            }
+            std::vector<int> sizes(comm.size());
+            comm.gather(&numElems, sizes.data(), 1, 0);
+            for (int i = 1; i < comm.size(); ++i) {
+                std::vector<int> cell_ids(sizes[i]);
+                MPI_Recv(cell_ids.data(), sizes[i], MPI_INT,
+                         i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                std::vector<T> sendData;
+                sendData.reserve(sizes[i]);
+                for (int cell : cell_ids)
+                    sendData.push_back(static_cast<T>(std::max(numData[cell], 1) - 1));
+                MPI_Send(sendData.data(), sizes[i], Dune::MPITraits<T>::getType(),
+                         i, 0, MPI_COMM_WORLD);
+            }
+        } else {
+            comm.gather(&numElems, &numElems, 1, 0);
+            std::vector<int> cell_ids;
+            cell_ids.reserve(numElems);
+            for (int elemIdx = 0; elemIdx < numElems; ++elemIdx) {
+                cell_ids.push_back(vanguard.cartesianIndex(elemIdx));
+            }
+            MPI_Send(cell_ids.data(), numElems, MPI_INT, 0, 0, MPI_COMM_WORLD);
+            numbers.resize(numElems);
+            MPI_Recv(numbers.data(), numElems, Dune::MPITraits<T>::getType(),
+                     0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
     }
 
