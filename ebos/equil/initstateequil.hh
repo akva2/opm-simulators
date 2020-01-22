@@ -1106,9 +1106,14 @@ public:
 private:
     void updateInitialTemperature_(const Opm::EclipseState& eclState)
     {
+        const auto& comm = Dune::MPIHelper::getCollectiveCommunication();
         // Get the initial temperature data
-        std::vector<double> tempiData = eclState.fieldProps().get_global<double>("TEMPI");
-        temperature_ = tempiData;
+        if (comm.rank() == 0)
+            temperature_ = eclState.fieldProps().get_global<double>("TEMPI");
+        size_t size = temperature_.size();
+        comm.broadcast(&size, 1, 0);
+        temperature_.resize(size);
+        comm.broadcast(temperature_.data(), size, 0);
     }
 
     typedef EquilReg EqReg;
