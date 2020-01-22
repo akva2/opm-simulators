@@ -140,7 +140,16 @@ void
 BlackoilAquiferModel<TypeTag>::init()
 {
     const auto& deck = this->simulator_.vanguard().deck();
-    if (deck.hasKeyword("AQUCT")) {
+    const auto& comm = this->simulator_.vanguard().gridView().comm();
+
+    bool has;
+    if (comm.rank() == 0)
+        has = deck.hasKeyword("AQUCT");
+    comm.broadcast(&has, 1, 0);
+
+    if (has) {
+        assert(comm.rank() == 0); // TODO
+
         // updateConnectionIntensiveQuantities();
         const auto& eclState = this->simulator_.vanguard().eclState();
 
