@@ -2462,52 +2462,94 @@ private:
         const auto& simulator = this->simulator();
         const auto& vanguard = simulator.vanguard();
         const auto& eclState = vanguard.eclState();
-        const auto& eclGrid = eclState.getInputGrid();
+        const auto& comm = simulator.gridView().comm();
 
         size_t numDof = this->model().numGridDof();
 
         referencePorosity_[/*timeIdx=*/0].resize(numDof);
 
-        const auto& fp = eclState.fieldProps();
-        const std::vector<double> porvData = fp.porv(true);
-        const std::vector<int> actnumData = fp.actnum();
-        int nx = eclGrid.getNX();
-        int ny = eclGrid.getNY();
-        for (size_t dofIdx = 0; dofIdx < numDof; ++ dofIdx) {
-            unsigned cartElemIdx = vanguard.cartesianIndex(dofIdx);
-            Scalar poreVolume = porvData[cartElemIdx];
+        if (comm.rank() == 0) {
+            const auto& eclGrid = eclState.getInputGrid();
+//            auto mode = eclGrid.getMinpvMode();
+//            comm.broadcast(&mode, 1, 0);
+            const auto& fp = eclState.fieldProps();
+            const std::vector<double> porvData = fp.porv(true);
+            const std::vector<int> actnumData = fp.actnum();
+            int nx = eclGrid.getNX();
+            int ny = eclGrid.getNY();
+            for (size_t dofIdx = 0; dofIdx < numDof; ++ dofIdx) {
+                unsigned cartElemIdx = vanguard.cartesianIndex(dofIdx);
+                Scalar poreVolume = porvData[cartElemIdx];
 
-            // sum up the pore volume of the active cell and all inactive ones above it
-            // which were disabled due to their pore volume being too small. If energy is
-            // conserved, cells are not disabled due to a too small pore volume because
-            // such cells still store and conduct energy.
-            if (!enableEnergy && eclGrid.getMinpvMode() == Opm::MinpvMode::ModeEnum::OpmFIL) {
-                const std::vector<Scalar>& minPvVector = eclGrid.getMinpvVector();
-                for (int aboveElemCartIdx = static_cast<int>(cartElemIdx) - nx*ny;
-                     aboveElemCartIdx >= 0;
-                     aboveElemCartIdx -= nx*ny)
-                {
-                    if (porvData[aboveElemCartIdx] >= minPvVector[aboveElemCartIdx])
-                        // the cartesian element above exhibits a pore volume which larger or
-                        // equal to the minimum one
-                        break;
+                // sum up the pore volume of the active cell and all inactive ones above it
+                // which were disabled due to their pore volume being too small. If energy is
+                // conserved, cells are not disabled due to a too small pore volume because
+                // such cells still store and conduct energy.
+                if (!enableEnergy && eclGrid.getMinpvMode() == Opm::MinpvMode::ModeEnum::OpmFIL) {
+                    assert(comm.rank() == 0); // TODO
+                    const std::vector<Scalar>& minPvVector = eclGrid.getMinpvVector();
+                    for (int aboveElemCartIdx = static_cast<int>(cartElemIdx) - nx*ny;
+                         aboveElemCartIdx >= 0;
+                         aboveElemCartIdx -= nx*ny)
+                    {
+                        if (porvData[aboveElemCartIdx] >= minPvVector[aboveElemCartIdx])
+                            // the cartesian element above exhibits a pore volume which larger or
+                            // equal to the minimum one
+                            break;
 
-                    Scalar aboveElemVolume = eclGrid.getCellVolume(aboveElemCartIdx);
-                    if (actnumData[aboveElemCartIdx] == 0 && aboveElemVolume > 1e-3)
-                        // stop at explicitly disabled elements, but only if their volume is
-                        // greater than 10^-3 m^3
-                        break;
+                        Scalar aboveElemVolume = eclGrid.getCellVolume(aboveElemCartIdx);
+                        if (actnumData[aboveElemCartIdx] == 0 && aboveElemVolume > 1e-3)
+                            // stop at explicitly disabled elements, but only if their volume is
+                            // greater than 10^-3 m^3
+                            break;
 
-                    poreVolume += porvData[aboveElemCartIdx];
+                        poreVolume += porvData[aboveElemCartIdx];
+                    }
+                }
+
+                // we define the porosity as the accumulated pore volume divided by the
+                // geometric volume of the element. Note that -- in pathetic cases -- it can
+                // be larger than 1.0!
+                Scalar dofVolume = simulator.model().dofTotalVolume(dofIdx);
+                assert(dofVolume > 0.0);
+                referencePorosity_[/*timeIdx=*/0][dofIdx] = poreVolume/dofVolume;
+            }
+            if (comm.size() > 1) {
+                std::vector<size_t> sizes(comm.size());
+                comm.gather(&numDof, sizes.data(), 1, 0);
+                for (size_t i = 1; i < sizes.size(); ++i) {
+                    std::vector<int> cell_ids(sizes[i]);
+                    MPI_Recv(cell_ids.data(), sizes[i], MPI_INT, i, 0,
+                             MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                    std::vector<Scalar> sendData;
+                    sendData.reserve(sizes[i]);
+                    for (int cell : cell_ids) {
+                        sendData.push_back(porvData[cell]);
+                    }
+                    MPI_Send(sendData.data(), sizes[i], Dune::MPITraits<Scalar>::getType(),
+                             i, 0, MPI_COMM_WORLD);
                 }
             }
-
-            // we define the porosity as the accumulated pore volume divided by the
-            // geometric volume of the element. Note that -- in pathetic cases -- it can
-            // be larger than 1.0!
-            Scalar dofVolume = simulator.model().dofTotalVolume(dofIdx);
-            assert(dofVolume > 0.0);
-            referencePorosity_[/*timeIdx=*/0][dofIdx] = poreVolume/dofVolume;
+        } else {
+            comm.gather(&numDof, &numDof, 1, 0);
+            std::vector<int> cell_ids(numDof);
+            cell_ids.reserve(numDof);
+            for (size_t dofIdx = 0; dofIdx < numDof; ++ dofIdx) {
+                cell_ids[dofIdx] = vanguard.cartesianIndex(dofIdx);
+            }
+            MPI_Send(cell_ids.data(), numDof, MPI_INT, 0, 0, MPI_COMM_WORLD);
+            std::vector<Scalar> porv(numDof);
+            MPI_Recv(porv.data(), numDof, Dune::MPITraits<Scalar>::getType(),
+                     0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            for (size_t dofIdx = 0; dofIdx < numDof; ++ dofIdx) {
+                Scalar poreVolume = porv[dofIdx];
+                // we define the porosity as the accumulated pore volume divided by the
+                // geometric volume of the element. Note that -- in pathetic cases -- it can
+                // be larger than 1.0!
+                Scalar dofVolume = simulator.model().dofTotalVolume(dofIdx);
+                assert(dofVolume > 0.0);
+                referencePorosity_[/*timeIdx=*/0][dofIdx] = poreVolume/dofVolume;
+            }
         }
     }
 
