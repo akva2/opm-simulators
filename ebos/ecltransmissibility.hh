@@ -117,15 +117,16 @@ public:
      * either but at least it seems to be much better.
      */
     void finishInit()
-    { update(); }
+    { update(true); }
 
 
     /*!
      * \brief Compute all transmissibilities
      *
+     * \param global If true, update is called on all processes
      * Also, this updates the "thermal half transmissibilities" if energy is enabled.
      */
-    void update()
+    void update(bool global)
     {
         const auto& gridView = vanguard_.gridView();
         const auto& cartMapper = vanguard_.cartesianIndexMapper();
@@ -141,7 +142,7 @@ public:
 
         // get the ntg values, the ntg values are modified for the cells merged with minpv
         std::vector<double> ntg;
-        minPvFillNtg_(ntg);
+        minPvFillNtg_(ntg, global);
 
         unsigned numElements = elemMapper.size();
 
@@ -852,20 +853,31 @@ private:
         }
     }
 
-    void minPvFillNtg_(std::vector<double>& averageNtg) const
+    void minPvFillNtg_(std::vector<double>& averageNtg, bool global) const
     {
         // compute volume weighted arithmetic average of NTG for
         // cells merged as an result of minpv.
         const auto& eclState = vanguard_.eclState();
         const auto& eclGrid = eclState.getInputGrid();
+        const auto& comm = vanguard_.gridView().comm();
         bool opmfil = eclGrid.getMinpvMode() == Opm::MinpvMode::OpmFIL;
         std::vector<double> ntg;
 
-        ntg = eclState.fieldProps().get_global_double("NTG");
-        // just return the unmodified ntg if opmfil is not used
-        averageNtg = ntg;
-        if (!opmfil)
+        if (!opmfil) {
+            if (comm.rank() == 0) {
+                ntg = eclState.fieldProps().get_global_double("NTG");
+            }
+            if (comm.size() > 1 && global) {
+                size_t size = ntg.size();
+                comm.broadcast(&size, 1, 0);
+                ntg.resize(size);
+                comm.broadcast(ntg.data(), size, 0);
+
+            }
+            // just return the unmodified ntg if opmfil is not used
+            averageNtg = ntg;
             return;
+        }
 
         const auto& cartMapper = vanguard_.cartesianIndexMapper();
         const auto& cartDims = cartMapper.cartesianDimensions();
