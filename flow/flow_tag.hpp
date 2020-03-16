@@ -38,6 +38,8 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/checkDeck.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQASTNode.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 
