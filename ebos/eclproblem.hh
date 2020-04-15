@@ -676,7 +676,7 @@ public:
             minTimeStepSize_ = tuning.TSMINZ;
         }
 
-        initFluidSystem_();
+        {PROFILE("Flusys init"); initFluidSystem_(); }
 
         // deal with DRSDT
         unsigned ntpvt = eclState.runspec().tabdims().getNumPVTTables();
@@ -690,17 +690,19 @@ public:
             maxOilSaturation_.resize(numDof, 0.0);
         }
 
-        updateElementDepths_();
-        readRockParameters_();
-        readMaterialParameters_();
-        readThermalParameters_();
-        transmissibilities_.finishInit();
+        {PROFILE("update elem depths"); updateElementDepths_();}
+        {PROFILE("read rock params"); readRockParameters_(); }
+        {PROFILE("read material params"); readMaterialParameters_(); }
+        {PROFILE("read thermal params"); readThermalParameters_(); }
+        {PROFILE("trans finish"); transmissibilities_.finishInit(); }
 
         const auto& initconfig = eclState.getInitConfig();
         if (initconfig.restartRequested())
             readEclRestartSolution_();
-        else
+        else {
+            PROFILE("read init conds");
             readInitialCondition_();
+        }
 
         updatePffDofData_();
 

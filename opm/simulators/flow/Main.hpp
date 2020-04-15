@@ -72,6 +72,8 @@
 #include <opm/simulators/utils/ParallelSerialization.hpp>
 #endif
 
+#include <opm/common/utility/Profiler.h>
+
 BEGIN_PROPERTIES
 
 // this is a dummy type tag that is used to setup the parameters before the actual
@@ -341,6 +343,7 @@ namespace Opm
             }
 
             // Create Deck and EclipseState.
+            Profiler prof(argv[0]);
             try {
                 if (outputCout) {
                     std::cout << "Reading deck file '" << deckFilename << "'\n";
@@ -370,21 +373,32 @@ namespace Opm
                     Opm::FlowMainEbos<PreTypeTag>::printPRTHeader(outputCout);
 
                     if (mpiRank == 0) {
-                        deck.reset( new Opm::Deck( parser.parseFile(deckFilename , parseContext, errorGuard)));
-                        Opm::MissingFeatures::checkKeywords(*deck, parseContext, errorGuard);
-                        if ( outputCout )
+                        {
+                            PROFILE("Parse deck");
+                            deck.reset( new Opm::Deck( parser.parseFile(deckFilename , parseContext, errorGuard)));
+                        }
+                        {
+                            PROFILE("Check missing features");
+                            Opm::MissingFeatures::checkKeywords(*deck, parseContext, errorGuard);
+                        }
+                        if ( outputCout ) {
+                            PROFILE("Check check ");
                             Opm::checkDeck(*deck, parser, parseContext, errorGuard);
+                        }
 
+                        { PROFILE("Setup state");
 #if HAVE_MPI
                         eclipseState.reset(new Opm::ParallelEclipseState(*deck));
 #else
                         eclipseState.reset(new Opm::EclipseState(*deck));
 #endif
+                        }
                         /*
                           For the time being initializing wells and groups from the
                           restart file is not possible, but work is underways and it is
                           included here as a switch.
                         */
+                        { PROFILE("Setup schedule");
                         const bool init_from_restart_file = !EWOMS_GET_PARAM(PreTypeTag, bool, SchedRestart);
                         const auto& init_config = eclipseState->getInitConfig();
                         if (init_config.restartRequested() && init_from_restart_file) {
@@ -395,9 +409,12 @@ namespace Opm
                             schedule.reset(new Opm::Schedule(*deck, *eclipseState, parseContext, errorGuard, python, &rst_state) );
                         } else
                             schedule.reset(new Opm::Schedule(*deck, *eclipseState, parseContext, errorGuard, python));
+                        }
 
                         setupMessageLimiter_(schedule->getMessageLimits(), "STDOUT_LOGGER");
+                        { PROFILE("Setup summaryconfig");
                         summaryConfig.reset( new Opm::SummaryConfig(*deck, *schedule, eclipseState->getTableManager(), parseContext, errorGuard));
+                        }
                     }
 #if HAVE_MPI
                     else {
@@ -405,10 +422,14 @@ namespace Opm
                         schedule.reset(new Opm::Schedule(python));
                         eclipseState.reset(new Opm::ParallelEclipseState);
                     }
+                    { PROFILE("Broadcast state");
                     Opm::eclStateBroadcast(*eclipseState, *schedule, *summaryConfig);
+                    }
 #endif
 
+                    { PROFILE("Check consistent dimensions");
                     Opm::checkConsistentArrayDimensions(*eclipseState, *schedule, parseContext, errorGuard);
+                    }
 
                     if (errorGuard) {
                         errorGuard.dump();

@@ -48,6 +48,8 @@
 #include <dune/common/parallel/mpihelper.hh>
 #endif
 
+#include <opm/common/utility/Profiler.h>
+
 BEGIN_PROPERTIES
 
 NEW_PROP_TAG(EnableDryRun);
@@ -248,14 +250,24 @@ namespace Opm
             try {
                 // deal with some administrative boilerplate
 
+                { PROFILE("Setup parameters");
                 int status = setupParameters_(argc, argv);
                 if (status)
                     return status;
+                }
 
+                {PROFILE("Setup parallelism");
                 setupParallelism();
+                }
+                {PROFILE("Setup ebos simulator");
                 setupEbosSimulator();
+                }
+                {PROFILE("Run diagnostics");
                 runDiagnostics(output_cout);
+                }
+                {PROFILE("Create simulator");
                 createSimulator();
+                }
 
                 // do the actual work
                 runSimulator(output_cout);
@@ -387,9 +399,13 @@ namespace Opm
 
         void setupEbosSimulator()
         {
+            {PROFILE("Ebos simulator constructor");
             ebosSimulator_.reset(new EbosSimulator(/*verbose=*/false));
+            }
             ebosSimulator_->executionTimer().start();
+            {PROFILE("Apply initial solution");
             ebosSimulator_->model().applyInitialSolution();
+            }
 
             try {
                 // Possible to force initialization only behavior (NOSIM).

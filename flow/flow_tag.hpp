@@ -382,7 +382,9 @@ int mainFlow(int argc, char** argv)
             Opm::FlowMainEbos<PreTypeTag>::printPRTHeader(outputCout);
 
             if (mpiRank == 0) {
-                deck.reset( new Opm::Deck( parser.parseFile(deckFilename , parseContext, errorGuard)));
+                {
+                  deck.reset( new Opm::Deck( parser.parseFile(deckFilename , parseContext, errorGuard)));
+                }
                 Opm::MissingFeatures::checkKeywords(*deck, parseContext, errorGuard);
                 if ( outputCout )
                     Opm::checkDeck(*deck, parser, parseContext, errorGuard);
