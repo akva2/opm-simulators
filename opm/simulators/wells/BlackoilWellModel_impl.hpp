@@ -2992,7 +2992,7 @@ namespace Opm {
             if (wellTmp.getStatus() == Well::Status::SHUT)
                 continue;
 
-            auto well = getWell(wellName);
+            auto well = this->getWell(wellName);
             well->setWsolvent(wsolvent);
         }
     }

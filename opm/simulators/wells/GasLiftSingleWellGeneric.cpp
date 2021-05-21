@@ -40,13 +40,15 @@ GasLiftSingleWellGeneric::GasLiftSingleWellGeneric(DeferredLogger& deferred_logg
                                                    const Well& ecl_well,
                                                    const SummaryState& summary_state,
                                                    const Schedule& schedule,
-                                                   const int report_step_idx)
+                                                   const int report_step_idx,
+                                                   const WellInterfaceGeneric& std_well)
     : deferred_logger_(deferred_logger)
     , well_state_(well_state)
     , ecl_well_(ecl_well)
     , summary_state_(summary_state)
     , controls_(ecl_well_.productionControls(summary_state_))
     , num_phases_{well_state_.numPhases()}
+    , std_well_(std_well)
     , debug_{false}  // extra debugging output
     , debug_limit_increase_decrease_{false}
 {

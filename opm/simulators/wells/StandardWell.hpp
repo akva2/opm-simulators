@@ -297,14 +297,14 @@ namespace Opm
             const Simulator& ebos_simulator,
             const SummaryState& summary_state,
             DeferredLogger& deferred_logger,
-            double alq_value) const;
+            double alq_value) const override;
 
         // NOTE: Cannot be protected since it is used by GasLiftRuntime
         void computeWellRatesWithBhp(
             const Simulator& ebosSimulator,
             const double& bhp,
             std::vector<double>& well_flux,
-            Opm::DeferredLogger& deferred_logger) const;
+            Opm::DeferredLogger& deferred_logger) const override;
 
         // NOTE: These cannot be protected since they are used by GasLiftRuntime
         using Base::phaseUsage;

@@ -39,6 +39,7 @@ class DeferredLogger;
 class GasLiftWellState;
 class Schedule;
 class SummaryState;
+class WellInterfaceGeneric;
 class WellStateFullyImplicitBlackoil;
 
 class GasLiftSingleWellGeneric
@@ -83,13 +84,16 @@ public:
 
     std::unique_ptr<GasLiftWellState> runOptimize(const int iteration_idx);
 
+    const WellInterfaceGeneric& getStdWell() const { return std_well_; }
+
 protected:
     GasLiftSingleWellGeneric(DeferredLogger &deferred_logger,
                              WellState &well_state,
                              const Well& ecl_well,
                              const SummaryState& summary_state,
                              const Schedule& schedule,
-                             const int report_step_idx);
+                             const int report_step_idx,
+                             const WellInterfaceGeneric& std_well);
 
     struct OptimizeState
     {
@@ -158,6 +162,8 @@ protected:
     void displayWarning_(const std::string& warning);
 
     std::pair<double, bool> getBhpWithLimit_(double bhp) const;
+    std::tuple<double, double, double> getCurrentWellRates_(const std::string& well_name,
+                                                            const std::string& group_name);
     std::pair<double, bool> getGasRateWithLimit_(const std::vector<double>& potentials) const;
     std::tuple<double,double,bool,bool>
     getInitialRatesWithLimit_(const std::vector<double>& potentials);
@@ -232,6 +238,7 @@ protected:
     std::string well_name_;
 
     const GasLiftOpt::Well* gl_well_;
+    const WellInterfaceGeneric& std_well_;
 
     bool optimize_;
     bool debug_;  // extra debug output

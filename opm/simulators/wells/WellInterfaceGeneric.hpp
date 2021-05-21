@@ -85,6 +85,7 @@ public:
     void initCompletions();
     void closeCompletions(WellTestState& wellTestState);
 
+    const VFPProperties* vfp_properties() const { return vfp_properties_; }
     void setVFPProperties(const VFPProperties* vfp_properties_arg);
     void setGuideRate(const GuideRate* guide_rate_arg);
     void setWellEfficiencyFactor(const double efficiency_factor);

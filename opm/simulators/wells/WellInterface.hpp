@@ -51,6 +51,7 @@ namespace Opm {
 #include <opm/simulators/wells/BlackoilWellModel.hpp>
 #include <opm/simulators/flow/BlackoilModelParametersEbos.hpp>
 
+#include <opm/simulators/timestepping/ConvergenceReport.hpp>
 #include <opm/simulators/utils/DeferredLogger.hpp>
 
 #include<dune/common/fmatrix.hh>
@@ -196,11 +197,24 @@ namespace Opm
         /// r = r - C D^-1 Rw
         virtual void apply(BVector& r) const = 0;
 
+        virtual std::optional<double> computeBhpAtThpLimitProdWithAlq(const Simulator&,
+                                                                      const SummaryState&,
+                                                                      DeferredLogger&,
+                                                                      double) const
+        {
+            return {};
+        }
+
         // TODO: before we decide to put more information under mutable, this function is not const
         virtual void computeWellPotentials(const Simulator& ebosSimulator,
                                            const WellState& well_state,
                                            std::vector<double>& well_potentials,
                                            DeferredLogger& deferred_logger) = 0;
+
+        virtual void computeWellRatesWithBhp(const Simulator& ebosSimulator,
+                                             const double& bhp,
+                                             std::vector<double>& well_flux,
+                                             Opm::DeferredLogger& deferred_logger) const = 0;
 
         void updateWellStateWithTarget(const Simulator& ebos_simulator,
                                        WellState& well_state,

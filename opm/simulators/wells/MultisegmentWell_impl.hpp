@@ -601,7 +601,7 @@ namespace Opm
     void
     MultisegmentWell<TypeTag>::
     computeWellRatesWithBhp(const Simulator& ebosSimulator,
-                            const Scalar bhp,
+                            const double& bhp,
                             std::vector<double>& well_flux,
                             DeferredLogger& deferred_logger) const
     {

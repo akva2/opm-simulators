@@ -20,14 +20,11 @@
 #ifndef OPM_GASLIFT_SINGLE_WELL_HEADER_INCLUDED
 #define OPM_GASLIFT_SINGLE_WELL_HEADER_INCLUDED
 
-// NOTE: StandardWell.hpp includes ourself (GasLiftSingleWell.hpp), so we need
-//   to forward declare StandardWell for it to be defined in this file.
-namespace Opm {
-    template<typename TypeTag> class StandardWell;
-}
-#include <opm/simulators/wells/StandardWell.hpp>
-
+#include <opm/models/utils/propertysystem.hh>
+#include <opm/models/utils/basicproperties.hh>
 #include <opm/simulators/wells/GasLiftSingleWellGeneric.hpp>
+#include <opm/simulators/wells/WellInterface.hpp>
+
 
 #include <optional>
 #include <vector>
@@ -41,17 +38,15 @@ namespace Opm
     {
         using Simulator = GetPropType<TypeTag, Properties::Simulator>;
         using WellState = WellStateFullyImplicitBlackoil;
-        using StdWell = StandardWell<TypeTag>;
 
     public:
         GasLiftSingleWell(
-            const StdWell &std_well,
+            const WellInterfaceGeneric& std_well,
             const Simulator &ebos_simulator,
             const SummaryState &summary_state,
             DeferredLogger &deferred_logger,
             WellState &well_state
         );
-        const WellInterface<TypeTag> &getStdWell() const { return std_well_; }
 
     private:
         std::optional<double> computeBhpAtThpLimit_(double alq) const override;
@@ -61,7 +56,6 @@ namespace Opm
         void setAlqMaxRate_(const GasLiftOpt::Well& well);
 
         const Simulator &ebos_simulator_;
-        const StdWell &std_well_;
     };
 
 } // namespace Opm

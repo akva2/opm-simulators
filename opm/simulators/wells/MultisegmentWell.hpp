@@ -220,6 +220,7 @@ namespace Opm
         virtual bool useInnerIterations() const override {
             return param_.use_inner_iterations_ms_wells_;
         }
+
     protected:
         int number_segments_;
 
@@ -424,9 +425,9 @@ namespace Opm
                                         DeferredLogger& deferred_logger) const;
 
         void computeWellRatesWithBhp(const Simulator& ebosSimulator,
-                                     const Scalar bhp,
+                                     const double& bhp,
                                      std::vector<double>& well_flux,
-                                     DeferredLogger& deferred_logger) const;
+                                     DeferredLogger& deferred_logger) const override;
 
         std::vector<double>
         computeWellPotentialWithTHP(const Simulator& ebos_simulator,

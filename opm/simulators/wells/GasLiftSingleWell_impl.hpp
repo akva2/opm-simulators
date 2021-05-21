@@ -21,7 +21,7 @@ namespace Opm {
 
 template<typename TypeTag>
 GasLiftSingleWell<TypeTag>::
-GasLiftSingleWell(const StdWell &std_well,
+GasLiftSingleWell(const WellInterfaceGeneric& std_well,
                   const Simulator &ebos_simulator,
                   const SummaryState &summary_state,
                   DeferredLogger &deferred_logger,
@@ -31,9 +31,9 @@ GasLiftSingleWell(const StdWell &std_well,
                                std_well.wellEcl(),
                                summary_state,
                                ebos_simulator.vanguard().schedule(),
-                               ebos_simulator.episodeIndex())
+                               ebos_simulator.episodeIndex(),
+                               std_well)
    , ebos_simulator_{ebos_simulator}
-   , std_well_{std_well}
 {
     const auto& gl_well = *gl_well_;
     if(useFixedAlq_(gl_well)) {
@@ -92,7 +92,7 @@ computeWellRates_(
     // NOTE: If we do not clear the potentials here, it will accumulate
     //   the new potentials to the old values..
     std::fill(potentials.begin(), potentials.end(), 0.0);
-    this->std_well_.computeWellRatesWithBhp(
+    static_cast<const WellInterface<TypeTag>&>(this->std_well_).computeWellRatesWithBhp(
         this->ebos_simulator_, bhp, potentials, this->deferred_logger_);
     if (debug_output) {
         const std::string msg = fmt::format("computed well potentials given bhp {}, "
@@ -108,7 +108,7 @@ std::optional<double>
 GasLiftSingleWell<TypeTag>::
 computeBhpAtThpLimit_(double alq) const
 {
-    auto bhp_at_thp_limit = this->std_well_.computeBhpAtThpLimitProdWithAlq(
+    auto bhp_at_thp_limit = static_cast<const WellInterface<TypeTag>&>(this->std_well_).computeBhpAtThpLimitProdWithAlq(
         this->ebos_simulator_,
         this->summary_state_,
         this->deferred_logger_,
@@ -147,7 +147,7 @@ setAlqMaxRate_(const GasLiftOpt::Well &well)
         // According to the manual for WLIFTOPT, item 3:
         //   The default value should be set to the largest ALQ
         //   value in the well's VFP table
-        const auto& table = std_well_.vfp_properties_->getProd()->getTable(
+        const auto& table = std_well_.vfp_properties()->getProd()->getTable(
                 this->controls_.vfp_table_number);
         const auto& alq_values = table.getALQAxis();
         // Assume the alq_values are sorted in ascending order, so
