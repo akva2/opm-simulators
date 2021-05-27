@@ -860,7 +860,7 @@ public:
 
         // deal with DRSDT
         this->initDRSDT_(this->model().numGridDof(),
-                         this->simulator().episodeIndex());
+                         std::max(this->simulator().episodeIndex(),0));
 
         this->readRockParameters_(simulator.vanguard().cellCenterDepths());
         readMaterialParameters_();
