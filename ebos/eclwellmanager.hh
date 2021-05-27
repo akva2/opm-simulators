@@ -759,7 +759,7 @@ protected:
         // register all wells at the model as auxiliary equations
         wellIt = wells_.begin();
         for (; wellIt != wellEndIt; ++wellIt) {
-            (*wellIt)->endSpec();
+            (*wellIt)->endSpec((*wellIt)->numConnections());
             model.addAuxiliaryModule(wellIt->get());
         }
     }

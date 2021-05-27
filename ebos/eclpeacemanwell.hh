@@ -28,12 +28,13 @@
 #ifndef EWOMS_ECL_PEACEMAN_WELL_HH
 #define EWOMS_ECL_PEACEMAN_WELL_HH
 
+#include <ebos/eclgenericpeacemanwell.hh>
+
 #include <opm/models/blackoil/blackoilproperties.hh>
 #include <opm/models/discretization/common/baseauxiliarymodule.hh>
 #include <opm/models/utils/propertysystem.hh>
 #include <opm/models/utils/alignedallocator.hh>
 
-#include <opm/simulators/wells/WellState.hpp>
 #include <opm/simulators/wells/WGState.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 #include <opm/material/densead/Evaluation.hpp>
@@ -43,7 +44,6 @@
 
 #include <dune/common/fmatrix.hh>
 #include <dune/common/version.hh>
-#include <dune/geometry/referenceelements.hh>
 
 #include <map>
 #include <unordered_set>
@@ -52,6 +52,8 @@ namespace Opm {
 
 template <class TypeTag>
 class EcfvDiscretization;
+
+class WellState;
 
 /*!
  * \ingroup EclBlackOilSimulator
@@ -75,6 +77,9 @@ class EcfvDiscretization;
  */
 template <class TypeTag>
 class EclPeacemanWell : public BaseAuxiliaryModule<TypeTag>
+                      , public EclGenericPeacemanWell<GetPropType<TypeTag, Properties::FluidSystem>,
+                                                      GetPropType<TypeTag, Properties::Scalar>,
+                                                      getPropValue<TypeTag, Properties::NumPhases>()>
 {
     using AuxModule = BaseAuxiliaryModule<TypeTag>;
 
@@ -105,6 +110,8 @@ class EclPeacemanWell : public BaseAuxiliaryModule<TypeTag>
     // components
     static const unsigned numComponents = getPropValue<TypeTag, Properties::NumComponents>();
     static const unsigned numPhases = getPropValue<TypeTag, Properties::NumPhases>();
+
+    using WellBase = EclGenericPeacemanWell<FluidSystem,Scalar,numPhases>;
 
     // convenient access to the phase and component indices. If the compiler bails out
     // here, you're probably using an incompatible fluid system. This class has only been
@@ -220,61 +227,10 @@ class EclPeacemanWell : public BaseAuxiliaryModule<TypeTag>
                   "The Peaceman well model is only implemented for 3D grids!");
 
 public:
-    enum ControlMode {
-        BottomHolePressure,
-        TubingHeadPressure,
-        VolumetricSurfaceRate,
-        VolumetricReservoirRate
-    };
-
-    enum WellType {
-        Undefined,
-        Injector,
-        Producer
-    };
-
-    enum WellStatus {
-        // production/injection is ongoing
-        Open,
-
-        // no production/injection, but well is only closed above the reservoir, so cross
-        // flow is possible
-        Closed,
-
-        // well is completely separated from the reservoir, e.g. by filling it with
-        // concrete.
-        Shut
-    };
-
     EclPeacemanWell(const Simulator& simulator)
-        : simulator_(simulator)
+        : WellBase(simulator.vanguard().gridView().comm())
+        , simulator_(simulator)
     {
-        // set the initial status of the well
-        wellType_ = Undefined;
-        wellStatus_ = Shut;
-        controlMode_ = BottomHolePressure;
-
-        wellTotalVolume_ = 0.0;
-
-        bhpLimit_ = 0.0;
-        thpLimit_ = 0.0;
-
-        targetBottomHolePressure_ = 0.0;
-        actualBottomHolePressure_ = 0.0;
-        maximumSurfaceRate_ = 0.0;
-        maximumReservoirRate_ = 0.0;
-
-        actualWeightedSurfaceRate_ = 0.0;
-        actualWeightedResvRate_ = 0.0;
-        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-            actualSurfaceRates_[phaseIdx] = 0.0;
-            actualResvRates_[phaseIdx] = 0.0;
-
-            volumetricWeight_[phaseIdx] = 0.0;
-        }
-
-        refDepth_ = 0.0;
-
         // set the composition of the injected fluids based. If
         // somebody is stupid enough to inject oil, we assume he wants
         // to loose his fortune on dry oil...
@@ -287,8 +243,6 @@ public:
 
         // set the temperature to 25 deg C, just so that it is set
         injectionFluidState_.setTemperature(273.15 + 25);
-
-        injectedPhaseIdx_ = oilPhaseIdx;
     }
 
     /*!
@@ -357,7 +311,7 @@ public:
 
         MatrixBlock block(0.0);
 
-        if (wellStatus() == Shut) {
+        if (this->wellStatus() == WellBase::Shut) {
             // if the well is shut, make the auxiliary DOFs a trivial equation in the
             // matrix: the main diagonal is already set to the identity matrix, the
             // off-diagonal matrix entries must be set to 0.
@@ -378,7 +332,7 @@ public:
             return;
         }
 
-        Scalar wellResid = wellResidual_(actualBottomHolePressure_);
+        Scalar wellResid = wellResidual_(this->actualBottomHolePressure_);
         residual[wellGlobalDofIdx][0] = wellResid;
 
         // account for the effect of the grid DOFs which are influenced by the well on
@@ -411,7 +365,7 @@ public:
                 tmpDofVars.update(elemCtx.intensiveQuantities(dofVars.localDofIdx, /*timeIdx=*/0));
 
                 Scalar dWellEq_dPV =
-                    (wellResidual_(actualBottomHolePressure_, &tmpDofVars, gridDofIdx) - wellResid)
+                    (wellResidual_(this->actualBottomHolePressure_, &tmpDofVars, gridDofIdx) - wellResid)
                     / eps;
                 block[0][priVarIdx] = dWellEq_dPV;
 
@@ -437,8 +391,8 @@ public:
             Scalar eps =
                 1e3
                 *std::numeric_limits<Scalar>::epsilon()
-                *std::max<Scalar>(1e5, actualBottomHolePressure_);
-            computeVolumetricDofRates_(resvRates, actualBottomHolePressure_ + eps, *dofVariables_[gridDofIdx]);
+                *std::max<Scalar>(1e5, this->actualBottomHolePressure_);
+            computeVolumetricDofRates_(resvRates, this->actualBottomHolePressure_ + eps, *dofVariables_[gridDofIdx]);
             for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 if (!FluidSystem::phaseIsActive(phaseIdx))
                     continue;
@@ -449,7 +403,7 @@ public:
             }
 
             // then, we subtract the source rates for a undisturbed well.
-            computeVolumetricDofRates_(resvRates, actualBottomHolePressure_, *dofVariables_[gridDofIdx]);
+            computeVolumetricDofRates_(resvRates, this->actualBottomHolePressure_, *dofVariables_[gridDofIdx]);
             for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 if (!FluidSystem::phaseIsActive(phaseIdx))
                     continue;
@@ -483,8 +437,8 @@ public:
         Scalar eps =
             1e3
             *std::numeric_limits<Scalar>::epsilon()
-            *std::max<Scalar>(1e7, targetBottomHolePressure_);
-        Scalar wellResidStar = wellResidual_(actualBottomHolePressure_ + eps);
+            *std::max<Scalar>(1e7, this->targetBottomHolePressure_);
+        Scalar wellResidStar = wellResidual_(this->actualBottomHolePressure_ + eps);
         diagBlock[0][0] = (wellResidStar - wellResid)/eps;
 
         matrix.setBlock(wellGlobalDofIdx, wellGlobalDofIdx, diagBlock);
@@ -494,7 +448,7 @@ public:
     {
         const DofVariables& dofVars = *dofVariables_.at(globalDofIdx);
         std::array<Scalar, numPhases> volumetricReservoirRates;
-        computeVolumetricDofRates_(volumetricReservoirRates, actualBottomHolePressure_, dofVars);
+        computeVolumetricDofRates_(volumetricReservoirRates, this->actualBottomHolePressure_, dofVars);
         std::array<Scalar, numPhases> volumetricSurfaceRates;
         computeSurfaceRates_(volumetricSurfaceRates, volumetricReservoirRates, dofVars);
         return volumetricSurfaceRates[phaseIdx];
@@ -507,124 +461,6 @@ public:
         dofVarsStore_.clear();
         dofVariables_.clear();
     }
-
-    /*!
-     * \brief Begin the specification of the well.
-     *
-     * The specification process is the following:
-     *
-     * beginSpec()
-     * setName("FOO");
-     * // add degrees of freedom to the well
-     * for (dof in wellDofs)
-     *    addDof(dof);
-     * endSpec()
-     *
-     * // set the radius of the well at the dof [m].
-     * // optional, if not specified, it is assumed to be 0.1524m
-     * setRadius(dof, someRadius);
-     *
-     * // set the skin factor of the well.
-     * // optional, if not specified, it is assumed to be 0
-     * setSkinFactor(dof, someSkinFactor);
-     *
-     * // specify the phase which is supposed to be injected. (Optional,
-     * // if unspecified, the well will throw an
-     * // exception if it would inject something.)
-     * setInjectedPhaseIndex(phaseIdx);
-     *
-     * // set maximum production rate at reservoir conditions
-     * // (kg/s, optional, if not specified, the well is assumed to be
-     * // shut for production)
-     * setMaximumReservoirRate(someMassRate);
-     *
-     * // set maximum injection rate at reservoir conditions
-     * // (kg/s, optional, if not specified, the well is assumed to be
-     * // shut for injection)
-     * setMinmumReservoirRate(someMassRate);
-     *
-     * // set the relative weight of the mass rate of a fluid phase.
-     * // (Optional, if unspecified each phase exhibits a weight of 1)
-     * setPhaseWeight(phaseIdx, someWeight);
-     *
-     * // set maximum production rate at surface conditions
-     * // (kg/s, optional, if not specified, the well is assumed to be
-     * // not limited by the surface rate)
-     * setMaximumSurfaceRate(someMassRate);
-     *
-     * // set maximum production rate at surface conditions
-     * // (kg/s, optional, if not specified, the well is assumed to be
-     * // not limited by the surface rate)
-     * setMinimumSurfaceRate(someMassRate);
-     *
-     * // set the minimum pressure at the bottom of the well (Pa,
-     * // optional, if not specified, the well is assumes it estimates
-     * // the bottom hole pressure based on the tubing head pressure
-     * // assuming hydrostatic conditions.)
-     * setMinimumBottomHolePressure(somePressure);
-     *
-     * // set the pressure at the top of the well (Pa,
-     * // optional, if not specified, the tubing head pressure is
-     * // assumed to be 1 bar)
-     * setTubingHeadPressure(somePressure);
-     *
-     * // set the control mode of the well [m].
-     * // optional, if not specified, it is assumed to be "BottomHolePressure"
-     * setControlMode(Well::TubingHeadPressure);
-     *
-     * // set the tubing head pressure of the well [Pa]
-     * // only require  if the control mode is "TubingHeadPressure"
-     * setTubingHeadPressure(1e5);
-     */
-    void beginSpec()
-    {
-        // this is going to be set to a real value by any realistic grid. Shall we bet?
-        refDepth_ = 1e100;
-
-        // By default, take the bottom hole pressure as a given
-        controlMode_ = ControlMode::BottomHolePressure;
-
-        // use one bar for the default bottom hole and tubing head
-        // pressures. For the bottom hole pressure, this is probably
-        // off by at least one magnitude...
-        bhpLimit_ = 1e5;
-        thpLimit_ = 1e5;
-
-        // reset the actually observed bottom hole pressure
-        actualBottomHolePressure_ = 0.0;
-
-        // By default, all fluids exhibit the weight 1.0
-        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            volumetricWeight_[phaseIdx] = 1.0;
-
-        wellType_ = Undefined;
-
-        wellTotalVolume_ = 0.0;
-    }
-
-    /*!
-     * \brief Set the relative weight of the volumetric phase rates.
-     */
-    void setVolumetricPhaseWeights(Scalar oilWeight, Scalar gasWeight, Scalar waterWeight)
-    {
-        volumetricWeight_[oilPhaseIdx] = oilWeight;
-        volumetricWeight_[gasPhaseIdx] = gasWeight;
-        volumetricWeight_[waterPhaseIdx] = waterWeight;
-    }
-
-    /*!
-     * \brief Return the human-readable name of the well
-     *
-     * Well, let's say "readable by some humans".
-     */
-    const std::string& name() const
-    { return name_; }
-
-    /*!
-     * \brief Set the human-readable name of the well
-     */
-    void setName(const std::string& newName)
-    { name_ = newName; }
 
     /*!
      * \brief Add a degree of freedom to the well.
@@ -642,7 +478,7 @@ public:
         dofVarsStore_.push_back(DofVariables());
         dofVariables_[globalDofIdx] = &dofVarsStore_.back();
         DofVariables& dofVars = *dofVariables_[globalDofIdx];
-        wellTotalVolume_ += context.model().dofTotalVolume(globalDofIdx);
+        this->wellTotalVolume_ += context.model().dofTotalVolume(globalDofIdx);
 
         dofVars.element = context.element();
 
@@ -718,51 +554,12 @@ public:
 
         // we assume that the z-coordinate represents depth (and not
         // height) here...
-        if (dofPos[2] < refDepth_)
-            refDepth_ = dofPos[2];
+        if (dofPos[2] < this->refDepth_)
+            this->refDepth_ = dofPos[2];
     }
 
     int numConnections() const
     { return dofVariables_.size(); }
-
-    /*!
-     * \brief Finalize the specification of the borehole.
-     */
-    void endSpec()
-    {
-        const auto& comm = simulator_.gridView().comm();
-
-        int nTotal = dofVariables_.size();
-        nTotal = comm.sum(nTotal);
-        if (nTotal == 0) {
-            // well does not penetrate any active cell on any process. notify the
-            // user about this.
-            std::cout << "Well " << name() << " does not penetrate any active cell."
-                      << " Assuming it to be shut!\n";
-            setWellStatus(WellStatus::Shut);
-        }
-
-        // determine the maximum depth of the well over all processes
-        refDepth_ = comm.min(refDepth_);
-
-        // the total volume of the well must also be summed over all processes
-        wellTotalVolume_ = comm.sum(wellTotalVolume_);
-    }
-
-    /*!
-     * \brief Set the control mode of the well.
-     *
-     * This specifies which quantities are assumed to be externally
-     * given and which must be calculated based on those.
-     */
-    void setControlMode(ControlMode controlMode)
-    { controlMode_ = controlMode; }
-
-    /*!
-     * \brief Set the temperature of the injected fluids [K]
-     */
-    void setTemperature(Scalar value)
-    { wellTemperature_ = value; }
 
     /*!
      * \brief Set the connection transmissibility factor for a given degree of freedom.
@@ -795,152 +592,11 @@ public:
     }
 
     /*!
-     * \brief Set the type of the well (i.e., injector or producer).
-     */
-    void setWellType(WellType wellType)
-    { wellType_ = wellType; }
-
-    /*!
-     * \brief Returns the type of the well (i.e., injector or producer).
-     */
-    WellType wellType() const
-    { return wellType_; }
-
-    /*!
-     * \brief Set the index of fluid phase to be injected.
-     *
-     * This is only relevant if the well type is an injector.
-     */
-    void setInjectedPhaseIndex(unsigned injPhaseIdx)
-    { injectedPhaseIdx_ = injPhaseIdx; }
-
-    /*!
-     * \brief Sets the reference depth for the bottom hole pressure [m]
-     */
-    void setReferenceDepth(Scalar value)
-    { refDepth_ = value; }
-
-    /*!
-     * \brief The reference depth for the bottom hole pressure [m]
-     */
-    Scalar referenceDepth() const
-    { return refDepth_; }
-
-    /*!
-     * \brief Set whether the well is open,closed or shut
-     */
-    void setWellStatus(WellStatus status)
-    { wellStatus_ = status; }
-
-    /*!
-     * \brief Return whether the well is open,closed or shut
-     */
-    WellStatus wellStatus() const
-    { return wellStatus_; }
-
-    /*!
      * \brief Return true iff a degree of freedom is directly affected
      *        by the well
      */
     bool applies(unsigned globalDofIdx) const
     { return dofVariables_.count(globalDofIdx) > 0; }
-
-    /*!
-     * \brief Set the maximum/minimum bottom hole pressure [Pa] of the well.
-     */
-    void setTargetBottomHolePressure(Scalar val)
-    { bhpLimit_ = val; }
-
-    /*!
-     * \brief Return the maximum/minimum bottom hole pressure [Pa] of the well.
-     *
-     * For injectors, this is the maximum, for producers it's the minimum.
-     */
-    Scalar targetBottomHolePressure() const
-    { return bhpLimit_; }
-
-    /*!
-     * \brief Return the maximum/minimum bottom hole pressure [Pa] of the well.
-     */
-    Scalar bottomHolePressure() const
-    { return actualBottomHolePressure_; }
-
-    /*!
-     * \brief Set the tubing head pressure [Pa] of the well.
-     */
-    void setTargetTubingHeadPressure(Scalar val)
-    { thpLimit_ = val; }
-
-    /*!
-     * \brief Return the maximum/minimum tubing head pressure [Pa] of the well.
-     *
-     * For injectors, this is the maximum, for producers it's the minimum.
-     */
-    Scalar targetTubingHeadPressure() const
-    { return thpLimit_; }
-
-    /*!
-     * \brief Return the maximum/minimum tubing head pressure [Pa] of the well.
-     */
-    Scalar tubingHeadPressure() const
-    {
-        // warning: this is a bit hacky...
-        Scalar rho = 650; // kg/m^3
-        Scalar g = 9.81; // m/s^2
-        return actualBottomHolePressure_ + rho*refDepth_*g;
-    }
-
-    /*!
-     * \brief Set the maximum combined rate of the fluids at the surface.
-     */
-    void setMaximumSurfaceRate(Scalar value)
-    { maximumSurfaceRate_ = value; }
-
-    /*!
-     * \brief Return the weighted maximum surface rate [m^3/s] of the well.
-     */
-    Scalar maximumSurfaceRate() const
-    { return maximumSurfaceRate_; }
-
-    /*!
-     * \brief Set the maximum combined rate of the fluids at the surface.
-     */
-    void setMaximumReservoirRate(Scalar value)
-    { maximumReservoirRate_ = value; }
-
-    /*!
-     * \brief Return the weighted maximum reservoir rate [m^3/s] of the well.
-     */
-    Scalar maximumReservoirRate() const
-    { return maximumReservoirRate_; }
-
-    /*!
-     * \brief Return the reservoir rate [m^3/s] actually seen by the well in the current time
-     *        step.
-     */
-    Scalar reservoirRate() const
-    { return actualWeightedResvRate_; }
-
-    /*!
-     * \brief Return the weighted surface rate [m^3/s] actually seen by the well in the current time
-     *        step.
-     */
-    Scalar surfaceRate() const
-    { return actualWeightedSurfaceRate_; }
-
-    /*!
-     * \brief Return the reservoir rate [m^3/s] of a given fluid which is actually seen
-     *        by the well in the current time step.
-     */
-    Scalar reservoirRate(unsigned phaseIdx) const
-    { return actualResvRates_[phaseIdx]; }
-
-    /*!
-     * \brief Return the weighted surface rate [m^3/s] of a given fluid which is actually
-     *        seen by the well in the current time step.
-     */
-    Scalar surfaceRate(unsigned phaseIdx) const
-    { return actualSurfaceRates_[phaseIdx]; }
 
     /*!
      * \brief Set the skin factor of the well
@@ -987,38 +643,6 @@ public:
     { return dofVariables_.at(gridDofIdx)->radius_; }
 
     /*!
-     * \brief Informs the well that a time step has just begun.
-     */
-    void beginTimeStep()
-    {
-        if (wellStatus() == Shut)
-            return;
-
-        // calculate the bottom hole pressure to be actually used
-        if (controlMode_ == ControlMode::TubingHeadPressure) {
-            // assume a density of 650 kg/m^3 for the bottom hole pressure
-            // calculation
-            Scalar rho = 650.0;
-            targetBottomHolePressure_ = thpLimit_ + rho*refDepth_;
-        }
-        else if (controlMode_ == ControlMode::BottomHolePressure)
-            targetBottomHolePressure_ = bhpLimit_;
-        else
-            // TODO: also take the tubing head pressure limit into account...
-            targetBottomHolePressure_ = bhpLimit_;
-
-        // make it very likely that we screw up if we control for {surface,reservoir}
-        // rate, but depend on the {reservoir,surface} rate somewhere...
-        if (controlMode_ == ControlMode::VolumetricSurfaceRate)
-            maximumReservoirRate_ = 1e100;
-        else if (controlMode_ == ControlMode::VolumetricReservoirRate)
-            maximumSurfaceRate_ = 1e100;
-
-        // reset the iteration index
-        iterationIdx_ = 0;
-    }
-
-    /*!
      * \brief Informs the well that an iteration has just begun.
      *
      * The beginIteration*() methods, the well calculates the bottom
@@ -1040,7 +664,7 @@ public:
     template <class Context>
     void beginIterationAccumulate(Context& context, unsigned timeIdx)
     {
-        if (wellStatus() == Shut)
+        if (this->wellStatus() == WellBase::Shut)
             return;
 
         for (unsigned dofIdx = 0; dofIdx < context.numPrimaryDof(timeIdx); ++dofIdx) {
@@ -1051,7 +675,7 @@ public:
             DofVariables& dofVars = *dofVariables_.at(globalDofIdx);
             const auto& intQuants = context.intensiveQuantities(dofIdx, timeIdx);
 
-            if (iterationIdx_ == 0)
+            if (this->iterationIdx_ == 0)
                 dofVars.updateBeginTimestep(intQuants);
 
             dofVars.update(intQuants);
@@ -1066,7 +690,7 @@ public:
      */
     void beginIterationPostProcess()
     {
-        if (wellStatus() == Shut)
+        if (this->wellStatus() == WellBase::Shut)
             return;
 
         auto& sol = const_cast<SolutionVector&>(simulator_.model().solution(/*timeIdx=*/0));
@@ -1074,71 +698,21 @@ public:
 
         if (!dofVariables_.empty()) {
             // retrieve the bottom hole pressure from the global system of equations
-            actualBottomHolePressure_ = Toolbox::value(dofVariables_.begin()->second->pressure[0]);
-            actualBottomHolePressure_ = computeRateEquivalentBhp_();
+            this->actualBottomHolePressure_ = Toolbox::value(dofVariables_.begin()->second->pressure[0]);
+            this->actualBottomHolePressure_ = computeRateEquivalentBhp_();
         }
         else
             // start with 300 bars if we don't have anything better
-            actualBottomHolePressure_ = 300 * 1e5;
+            this->actualBottomHolePressure_ = 300 * 1e5;
 
-        sol[wellGlobalDof][0] = actualBottomHolePressure_;
+        sol[wellGlobalDof][0] = this->actualBottomHolePressure_;
 
-        computeOverallRates_(actualBottomHolePressure_,
-                             actualResvRates_,
-                             actualSurfaceRates_);
+        computeOverallRates_(this->actualBottomHolePressure_,
+                             this->actualResvRates_,
+                             this->actualSurfaceRates_);
 
-        actualWeightedResvRate_ = computeWeightedRate_(actualResvRates_);
-        actualWeightedSurfaceRate_ = computeWeightedRate_(actualSurfaceRates_);
-    }
-
-    /*!
-     * \brief Called by the simulator after each Newton-Raphson iteration.
-     */
-    void endIteration()
-    { ++ iterationIdx_; }
-
-    /*!
-     * \brief Called by the simulator after each time step.
-     */
-    void endTimeStep()
-    {
-        if (wellStatus() == Shut)
-            return;
-
-        // we use a condition that is always false here to prevent the code below from
-        // bitrotting. (i.e., at least it stays compileable)
-        if (false && simulator_.gridView().comm().rank() == 0) {
-            std::cout << "Well '" << name() << "':\n";
-            std::cout << " Control mode: " << controlMode_ << "\n";
-            std::cout << " BHP limit: " << bhpLimit_/1e5 << " bar\n";
-            std::cout << " Observed BHP: " << actualBottomHolePressure_/1e5 << " bar\n";
-            std::cout << " Weighted surface rate limit: " << maximumSurfaceRate_ << "\n";
-            std::cout << " Weighted surface rate: " << std::abs(actualWeightedSurfaceRate_) << " (="
-                      << 100*std::abs(actualWeightedSurfaceRate_)/maximumSurfaceRate_ << "%)\n";
-
-            std::cout << " Surface rates:\n";
-            std::cout << "  oil: "
-                      << actualSurfaceRates_[oilPhaseIdx] << " m^3/s = "
-                      << actualSurfaceRates_[oilPhaseIdx]*(24*60*60) << " m^3/day = "
-                      << actualSurfaceRates_[oilPhaseIdx]*(24*60*60)/0.15898729 << " STB/day = "
-                      << actualSurfaceRates_[oilPhaseIdx]*(24*60*60)
-                         *FluidSystem::referenceDensity(oilPhaseIdx, /*pvtRegionIdx=*/0) << " kg/day"
-                      << "\n";
-            std::cout << "  gas: "
-                      << actualSurfaceRates_[gasPhaseIdx] << " m^3/s = "
-                      << actualSurfaceRates_[gasPhaseIdx]*(24*60*60) << " m^3/day = "
-                      << actualSurfaceRates_[gasPhaseIdx]*(24*60*60)/28.316847 << " MCF/day = "
-                      << actualSurfaceRates_[gasPhaseIdx]*(24*60*60)
-                         *FluidSystem::referenceDensity(gasPhaseIdx, /*pvtRegionIdx=*/0) << " kg/day"
-                      << "\n";
-            std::cout << "  water: "
-                      << actualSurfaceRates_[waterPhaseIdx] << " m^3/s = "
-                      << actualSurfaceRates_[waterPhaseIdx]*(24*60*60) << " m^3/day = "
-                      << actualSurfaceRates_[waterPhaseIdx]*(24*60*60)/0.15898729 << " STB/day = "
-                      << actualSurfaceRates_[waterPhaseIdx]*(24*60*60)
-                         *FluidSystem::referenceDensity(waterPhaseIdx, /*pvtRegionIdx=*/0) << " kg/day"
-                      << "\n";
-        }
+        this->actualWeightedResvRate_ = computeWeightedRate_(this->actualResvRates_);
+        this->actualWeightedSurfaceRate_ = computeWeightedRate_(this->actualSurfaceRates_);
     }
 
     /*!
@@ -1153,7 +727,7 @@ public:
         q = 0.0;
 
         unsigned globalDofIdx = context.globalSpaceIndex(dofIdx, timeIdx);
-        if (wellStatus() == Shut || !applies(globalDofIdx))
+        if (this->wellStatus() == WellBase::Shut || !applies(globalDofIdx))
             return;
 
         // create a DofVariables object for the current evaluation point
@@ -1162,7 +736,7 @@ public:
         tmp.update(context.intensiveQuantities(dofIdx, timeIdx));
 
         std::array<Evaluation, numPhases> volumetricRates;
-        computeVolumetricDofRates_(volumetricRates, actualBottomHolePressure_, tmp);
+        computeVolumetricDofRates_(volumetricRates, this->actualBottomHolePressure_, tmp);
 
         // convert to mass rates
         RateVector modelRate(0.0);
@@ -1182,7 +756,7 @@ public:
                     modelRate[contiEnergyEqIdx] += volumetricRates[phaseIdx]*fs.density(phaseIdx)*fs.enthalpy(phaseIdx);
                 }
                 else if (volumetricRates[phaseIdx] > 0.0
-                         && injectedPhaseIdx_ == phaseIdx)
+                         && this->injectedPhaseIdx_ == phaseIdx)
                 {
                     // injector for the right phase. we need to use the thermodynamic
                     // quantities from the borehole as upstream
@@ -1195,9 +769,9 @@ public:
                     // difference is probably not very large, and for wells that span
                     // multiple perforations it is unclear what "well temperature" means
                     // anyway.
-                    fs.setPressure(phaseIdx, actualBottomHolePressure_);
+                    fs.setPressure(phaseIdx, this->actualBottomHolePressure_);
 
-                    fs.setTemperature(wellTemperature_);
+                    fs.setTemperature(this->wellTemperature_);
 
                     typename FluidSystem::template ParameterCache<Evaluation> paramCache;
                     unsigned globalSpaceIdx = context.globalSpaceIndex(dofIdx, timeIdx);
@@ -1288,13 +862,13 @@ protected:
             // density and mobility of fluid phase
             const DofEval& rho = DofVarsToolbox::template decay<DofEval>(dofVars.density[phaseIdx]);
             DofEval lambda;
-            if (wellType_ == Producer) {
+            if (this->wellType_ == WellBase::Producer) {
                 //assert(p < pbh);
                 lambda = DofVarsToolbox::template decay<DofEval>(dofVars.mobility[phaseIdx]);
             }
-            else if (wellType_ == Injector) {
+            else if (this->wellType_ == WellBase::Injector) {
                 //assert(p > pbh);
-                if (phaseIdx != injectedPhaseIdx_)
+                if (phaseIdx != this->injectedPhaseIdx_)
                     continue;
 
                 // use the total mobility, i.e. the sum of all phase mobilities at the
@@ -1310,7 +884,7 @@ protected:
                 }
             }
             else
-                throw std::logic_error("Type of well \""+name()+"\" is undefined");
+                throw std::logic_error("Type of well \""+this->name()+"\" is undefined");
 
             Valgrind::CheckDefined(pbh);
             Valgrind::CheckDefined(p);
@@ -1318,10 +892,10 @@ protected:
             Valgrind::CheckDefined(rho);
             Valgrind::CheckDefined(lambda);
             Valgrind::CheckDefined(depth);
-            Valgrind::CheckDefined(refDepth_);
+            Valgrind::CheckDefined(this->refDepth_);
 
             // pressure in the borehole ("hole pressure") at the given location
-            ResultEval ph = pbh + rho*g*(depth - refDepth_);
+            ResultEval ph = pbh + rho*g*(depth - this->refDepth_);
 
             // volumetric reservoir rate for the phase
             volRates[phaseIdx] = Twj*lambda*(ph - p);
@@ -1347,7 +921,7 @@ protected:
             if (!FluidSystem::phaseIsActive(phaseIdx))
                 continue;
 
-            result += volRates[phaseIdx]*volumetricWeight_[phaseIdx];
+            result += volRates[phaseIdx]*this->volumetricWeight_[phaseIdx];
         }
         return result;
     }
@@ -1560,12 +1134,12 @@ protected:
      */
     Scalar computeRateEquivalentBhp_() const
     {
-        if (wellStatus() == Shut)
+        if (this->wellStatus() == WellBase::Shut)
             // there is no flow happening in the well, so we return 0...
             return 0.0;
 
         // initialize the bottom hole pressure which we would like to calculate
-        Scalar bhpScalar = actualBottomHolePressure_;
+        Scalar bhpScalar = this->actualBottomHolePressure_;
         if (bhpScalar > 1e8)
             bhpScalar = 1e8;
         if (bhpScalar < 1e5)
@@ -1587,7 +1161,7 @@ protected:
             const auto& f = wellResidual_<BhpEval>(bhpEval);
 
             if (std::abs(f.derivative(0)) < 1e-20)
-                throw NumericalIssue("Cannot determine the bottom hole pressure for well "+name()
+                throw NumericalIssue("Cannot determine the bottom hole pressure for well "+this->name()
                                      +": Derivative of the well residual is too small");
             Scalar delta = f.value()/f.derivative(0);
 
@@ -1606,7 +1180,7 @@ protected:
                 return bhpEval.value();
         }
 
-        throw NumericalIssue("Could not determine the bottom hole pressure of well '"+name()
+        throw NumericalIssue("Could not determine the bottom hole pressure of well '"+this->name()
                               +"' within " + std::to_string(maxIter) + " iterations.");
     }
 
@@ -1652,16 +1226,16 @@ protected:
         // injectors. (i.e., the target bottom hole pressure is an upper limit for
         // injectors and a lower limit for producers.) Note that with this approach, one
         // of the limits must always be reached to get the well equation to zero...
-        Valgrind::CheckDefined(maximumSurfaceRate_);
-        Valgrind::CheckDefined(maximumReservoirRate_);
+        Valgrind::CheckDefined(this->maximumSurfaceRate_);
+        Valgrind::CheckDefined(this->maximumReservoirRate_);
         Valgrind::CheckDefined(surfaceRate);
         Valgrind::CheckDefined(resvRate);
 
         BhpEval result = 1e30;
 
-        BhpEval maxSurfaceRate = maximumSurfaceRate_;
-        BhpEval maxResvRate = maximumReservoirRate_;
-        if (wellStatus() == Closed) {
+        BhpEval maxSurfaceRate = this->maximumSurfaceRate_;
+        BhpEval maxResvRate = this->maximumReservoirRate_;
+        if (this->wellStatus() == WellBase::Closed) {
             // make the weight of the fluids on the surface equal and require that no
             // fluids are produced on the surface...
             maxSurfaceRate = 0.0;
@@ -1677,20 +1251,20 @@ protected:
             maxResvRate = 1e30;
         }
 
-        if (wellType_ == Injector) {
+        if (this->wellType_ == WellBase::Injector) {
             // for injectors the computed rates are positive and the target BHP is the
             // maximum allowed pressure ...
             result = BhpEvalToolbox::min(maxSurfaceRate - surfaceRate, result);
             result = BhpEvalToolbox::min(maxResvRate - resvRate, result);
-            result = BhpEvalToolbox::min(1e-7*(targetBottomHolePressure_ - bhp), result);
+            result = BhpEvalToolbox::min(1e-7*(this->targetBottomHolePressure_ - bhp), result);
         }
         else {
-            assert(wellType_ == Producer);
+            assert(this->wellType_ == WellBase::Producer);
             // ... for producers the rates are negative and the bottom hole pressure is
             // is the minimum
             result = BhpEvalToolbox::min(maxSurfaceRate + surfaceRate, result);
             result = BhpEvalToolbox::min(maxResvRate + resvRate, result);
-            result = BhpEvalToolbox::min(1e-7*(bhp - targetBottomHolePressure_), result);
+            result = BhpEvalToolbox::min(1e-7*(bhp - this->targetBottomHolePressure_), result);
         }
 
         const Scalar scalingFactor = 1e-3;
@@ -1699,74 +1273,8 @@ protected:
 
     const Simulator& simulator_;
 
-    std::string name_;
-
     std::vector<DofVariables, aligned_allocator<DofVariables, alignof(DofVariables)> > dofVarsStore_;
     std::map<int, DofVariables*> dofVariables_;
-
-    // the number of times beginIteration*() was called for the current time step
-    unsigned iterationIdx_;
-
-    // the type of the well (injector, producer or undefined)
-    WellType wellType_;
-
-    // Specifies whether the well is currently open, closed or shut. The difference
-    // between "closed" and "shut" is that for the former, the well is assumed to be
-    // closed above the reservoir so that cross-flow within the well is possible while
-    // the well is completely separated from the reservoir if it is shut. (i.e., no
-    // crossflow is possible in this case.)
-    WellStatus wellStatus_;
-
-    // specifies the quantities which are controlled for (i.e., which
-    // should be assumed to be externally specified and which should
-    // be computed based on those)
-    ControlMode controlMode_;
-
-    // the sum of the total volumes of all the degrees of freedoms that interact with the well
-    Scalar wellTotalVolume_;
-
-    // the temperature assumed for the fluid (in the case of an injector well)
-    Scalar wellTemperature_;
-
-    // The assumed bottom hole and tubing head pressures as specified by the user
-    Scalar bhpLimit_;
-    Scalar thpLimit_;
-
-    // The bottom hole pressure to be targeted by the well model. This may be computed
-    // from the tubing head pressure (if the control mode is TubingHeadPressure), or it may be
-    // just the user-specified bottom hole pressure if the control mode is
-    // BottomHolePressure.
-    Scalar targetBottomHolePressure_;
-
-    // The bottom hole pressure which is actually observed in the well
-    Scalar actualBottomHolePressure_;
-
-    // The maximum weighted volumetric surface rates specified by the
-    // user. This is used to apply rate limits and it is to be read as
-    // the maximum absolute value of the rate, i.e., the well can
-    // produce or inject the given amount.
-    Scalar maximumSurfaceRate_;
-
-    // The maximum weighted volumetric reservoir rates specified by
-    // the user. This is used to apply rate limits and it is to be
-    // read as the maximum absolute value of the rate, i.e., the well
-    // can produce or inject the given amount.
-    Scalar maximumReservoirRate_;
-
-    // The volumetric surface rate which is actually observed in the well
-    Scalar actualWeightedSurfaceRate_;
-    std::array<Scalar, numPhases> actualSurfaceRates_;
-
-    // The volumetric reservoir rate which is actually observed in the well
-    Scalar actualWeightedResvRate_;
-    std::array<Scalar, numPhases> actualResvRates_;
-
-    // The relative weight of the volumetric rate of each fluid
-    std::array<Scalar, numPhases> volumetricWeight_;
-
-    // the reference depth for the bottom hole pressure. if not specified otherwise, this
-    // is the position of the _highest_ DOF in the well.
-    Scalar refDepth_;
 
     // The thermodynamic state of the fluid which gets injected
     //
@@ -1774,9 +1282,8 @@ protected:
     // which can be avoided using a PressureOverlayFluidState, but
     // then performance would be slightly worse...
     mutable FluidState injectionFluidState_;
-
-    unsigned injectedPhaseIdx_;
 };
+
 } // namespace Opm
 
 #endif
