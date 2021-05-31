@@ -96,15 +96,15 @@ public:
     bool wellHasTHPConstraints(const SummaryState& summaryState) const;
 
     void stopWell() {
-        this->wellStatus_ = Well::Status::STOP;
+        this->wellStatus_ = WellEnums::Status::STOP;
     }
 
     void openWell() {
-        this->wellStatus_ = Well::Status::OPEN;
+        this->wellStatus_ = WellEnums::Status::OPEN;
     }
 
     bool wellIsStopped() const {
-        return this->wellStatus_ == Well::Status::STOP;
+        return this->wellStatus_ == WellEnums::Status::STOP;
     }
 
 protected:
@@ -236,7 +236,7 @@ protected:
     // saturation table nubmer for each well perforation
     std::vector<int> saturation_table_number_;
 
-    Well::Status wellStatus_;
+    WellEnums::Status wellStatus_;
 
     const PhaseUsage* phase_usage_;
 

@@ -22,6 +22,7 @@
 #include <config.h>
 #include <opm/simulators/wells/WellInterfaceGeneric.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestState.hpp>
 
 #include <opm/simulators/utils/DeferredLoggingErrorHelpers.hpp>

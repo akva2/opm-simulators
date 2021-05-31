@@ -29,7 +29,7 @@
 #include <opm/output/data/Wells.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellEnums.hpp>
 
 #include <functional>
 #include <map>
@@ -103,12 +103,12 @@ public:
     const std::vector<double>& perfPhaseRates() const { return perfphaserates_; }
 
     /// One current control per injecting well.
-    Well::InjectorCMode currentInjectionControl(std::size_t well_index) const { return current_injection_controls_[well_index]; }
-    void currentInjectionControl(std::size_t well_index, Well::InjectorCMode cmode) { current_injection_controls_[well_index] = cmode; }
+    WellEnums::InjectorCMode currentInjectionControl(std::size_t well_index) const { return current_injection_controls_[well_index]; }
+    void currentInjectionControl(std::size_t well_index, WellEnums::InjectorCMode cmode) { current_injection_controls_[well_index] = cmode; }
 
     /// One current control per producing well.
-    Well::ProducerCMode currentProductionControl(std::size_t well_index) const { return current_production_controls_[well_index]; }
-    void currentProductionControl(std::size_t well_index, Well::ProducerCMode cmode) { current_production_controls_[well_index] = cmode; }
+    WellEnums::ProducerCMode currentProductionControl(std::size_t well_index) const { return current_production_controls_[well_index]; }
+    void currentProductionControl(std::size_t well_index, WellEnums::ProducerCMode cmode) { current_production_controls_[well_index] = cmode; }
 
     void setCurrentWellRates(const std::string& wellName, const std::vector<double>& new_rates ) {
         auto& [owner, rates] = this->well_rates.at(wellName);
@@ -404,10 +404,10 @@ public:
     void resetConnectionTransFactors(const int well_index,
                                      const std::vector<PerforationData>& well_perf_data);
 
-    void updateStatus(int well_index, Well::Status status);
+    void updateStatus(int well_index, WellEnums::Status status);
 
     void openWell(int well_index) {
-        this->status_[well_index] = Well::Status::OPEN;
+        this->status_[well_index] = WellEnums::Status::OPEN;
     }
 
     void shutWell(int well_index);
@@ -463,7 +463,7 @@ private:
     ALQState alq_state;
     bool do_glift_optimization_;
 
-    WellContainer<Well::Status> status_;
+    WellContainer<WellEnums::Status> status_;
     WellContainer<std::vector<PerforationData>> well_perf_data_;
     WellContainer<const ParallelWellInfo*> parallel_well_info_;
     WellContainer<double> bhp_;
@@ -482,8 +482,8 @@ private:
     // for (int perf = first_perf_index_[well_index]; perf < first_perf_index_[well_index] + num_perf_[well_index]; ++perf)
     std::vector<int> first_perf_index_;
     std::vector<int> num_perf_;
-    WellContainer<Opm::Well::InjectorCMode> current_injection_controls_;
-    WellContainer<Well::ProducerCMode> current_production_controls_;
+    WellContainer<WellEnums::InjectorCMode> current_injection_controls_;
+    WellContainer<WellEnums::ProducerCMode> current_production_controls_;
 
     // The well_rates variable is defined for all wells on all processors. The
     // bool in the value pair is whether the current process owns the well or
