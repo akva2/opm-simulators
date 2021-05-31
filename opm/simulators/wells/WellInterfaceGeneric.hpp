@@ -107,6 +107,18 @@ public:
         return this->wellStatus_ == WellEnums::Status::STOP;
     }
 
+    int currentStep() const {
+        return this->current_step_;
+    }
+
+    int pvtRegionIdx() const {
+        return pvtRegionIdx_;
+    }
+
+    const GuideRate* guideRate() const {
+        return guide_rate_;
+    }
+
 protected:
     // whether a well is specified with a non-zero and valid VFP table number
     bool isVFPActive(DeferredLogger& deferred_logger) const;

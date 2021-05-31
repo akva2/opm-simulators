@@ -50,6 +50,7 @@ namespace Opm
                                                          index_of_well,
                                                          first_perf_index,
                                                          perf_data)
+      , WellInterfaceEval<FluidSystem>(*this)
       , param_(param)
     {
         connectionRates_.resize(this->number_of_perforations_);

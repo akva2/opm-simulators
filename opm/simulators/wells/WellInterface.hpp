@@ -59,6 +59,7 @@ namespace Opm {
 #include <opm/material/densead/Math.hpp>
 #include <opm/material/densead/Evaluation.hpp>
 
+#include <opm/simulators/wells/WellInterfaceEval.hpp>
 #include <opm/simulators/wells/WellInterfaceIndices.hpp>
 
 #include <array>
@@ -74,6 +75,8 @@ template<typename TypeTag>
 class WellInterface : public WellInterfaceIndices<GetPropType<TypeTag, Properties::FluidSystem>,
                                                   GetPropType<TypeTag, Properties::Indices>,
                                                   GetPropType<TypeTag, Properties::Scalar>>
+                    , public WellInterfaceEval<GetPropType<TypeTag, Properties::FluidSystem>>
+
 {
 public:
 
