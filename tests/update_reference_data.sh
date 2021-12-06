@@ -197,12 +197,19 @@ do
 
       if [ -d $configuration/build-opm-simulators/tests/results/$binary+$test_name/restart ]
       then
-        copyToReferenceDir \
-            $BUILD_DIR/tests/results/$binary+$test_name/restart/ \
-            $OPM_TESTS_ROOT/$dirname/opm-simulation-reference/$binary/restart \
-            ${casename}_RESTART \
-            EGRID INIT RFT SMSPEC UNRST UNSMRY
-        test $? -eq 0 && changed_tests="$changed_tests $test_name(restart)"
+        RSTEPS=`ls -1 $BUILD_DIR/tests/results/$binary+$test_name/restart/*.UNRST | sed -e '.*RESTART_\([0-9]*).UNRST/\1/g'`
+        result=0
+        for RSTEP in $RSTEPS
+        do
+          copyToReferenceDir \
+              $BUILD_DIR/tests/results/$binary+$test_name/restart/ \
+              $OPM_TESTS_ROOT/$dirname/opm-simulation-reference/$binary/restart \
+              ${casename}_RESTART_${RSTEP} \
+              EGRID INIT RFT SMSPEC UNRST UNSMRY
+          res=$?
+          test $result -eq 0 || result=$res
+        done
+        test $result -eq 0 && changed_tests="$changed_tests $test_name(restart)"
       fi
     fi
   done
