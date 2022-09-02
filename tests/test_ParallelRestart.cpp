@@ -128,214 +128,8 @@
 #include <ebos/eclmpiserializer.hh>
 
 
-namespace {
-
-
-Opm::data::Solution getSolution()
-{
-    Opm::data::Solution sol1;
-    sol1.insert("testdata", Opm::UnitSystem::measure::length,
-                {1.0, 2.0, 3.0}, Opm::data::TargetType::RESTART_SOLUTION);
-    return sol1;
-}
-
-
-Opm::data::Rates getRates()
-{
-    Opm::data::Rates rat1;
-    rat1.set(Opm::data::Rates::opt::wat, 1.0);
-    rat1.set(Opm::data::Rates::opt::oil, 2.0);
-    rat1.set(Opm::data::Rates::opt::gas, 3.0);
-    rat1.set(Opm::data::Rates::opt::polymer, 4.0);
-    rat1.set(Opm::data::Rates::opt::solvent, 5.0);
-    rat1.set(Opm::data::Rates::opt::energy, 6.0);
-    rat1.set(Opm::data::Rates::opt::dissolved_gas, 7.0);
-    rat1.set(Opm::data::Rates::opt::vaporized_oil, 8.0);
-    rat1.set(Opm::data::Rates::opt::reservoir_water, 9.0);
-    rat1.set(Opm::data::Rates::opt::reservoir_oil, 10.0);
-    rat1.set(Opm::data::Rates::opt::reservoir_gas, 11.0);
-    rat1.set(Opm::data::Rates::opt::productivity_index_water, 12.0);
-    rat1.set(Opm::data::Rates::opt::productivity_index_oil, 13.0);
-    rat1.set(Opm::data::Rates::opt::productivity_index_gas, 14.0);
-    rat1.set(Opm::data::Rates::opt::well_potential_water, 15.0);
-    rat1.set(Opm::data::Rates::opt::well_potential_oil, 16.0);
-    rat1.set(Opm::data::Rates::opt::well_potential_gas, 17.0);
-
-    return rat1;
-}
-
-
-Opm::data::Connection getConnection()
-{
-    Opm::data::Connection con1;
-    con1.rates = getRates();
-    con1.index = 1;
-    con1.pressure = 2.0;
-    con1.reservoir_rate = 3.0;
-    con1.cell_pressure = 4.0;
-    con1.cell_saturation_water = 5.0;
-    con1.cell_saturation_gas = 6.0;
-    con1.effective_Kh = 7.0;
-    con1.trans_factor = 8.0;
-
-    return con1;
-}
-
-
-Opm::data::Segment getSegment()
-{
-    Opm::data::Segment seg1;
-    seg1.rates = getRates();
-    seg1.segNumber = 1;
-    const auto pres_idx = Opm::data::SegmentPressures::Value::Pressure;
-    seg1.pressures[pres_idx] = 2.0;
-    return seg1;
-}
-
-
-Opm::data::CurrentControl getCurrentControl()
-{
-    Opm::data::CurrentControl curr;
-    curr.isProducer = true;
-    curr.prod = ::Opm::Well::ProducerCMode::CRAT;
-    return curr;
-}
-
-Opm::data::GuideRateValue getWellGuideRate()
-{
-    using Item = Opm::data::GuideRateValue::Item;
-
-    return Opm::data::GuideRateValue{}.set(Item::Oil  , 1.23)
-                                      .set(Item::Gas  , 2.34)
-                                      .set(Item::Water, 3.45)
-                                      .set(Item::ResV , 4.56);
-}
-
-Opm::data::Well getWell()
-{
-    Opm::data::Well well1;
-    well1.rates = getRates();
-    well1.bhp = 1.0;
-    well1.thp = 2.0;
-    well1.temperature = 3.0;
-    well1.control = 4;
-    well1.connections.push_back(getConnection());
-    well1.segments.insert({0, getSegment()});
-    well1.current_control = getCurrentControl();
-    well1.guide_rates = getWellGuideRate();
-    return well1;
-}
-
-Opm::data::GroupGuideRates getGroupGuideRates()
-{
-    using Item = Opm::data::GuideRateValue::Item;
-
-    auto gr = Opm::data::GroupGuideRates{};
-
-    gr.production.set(Item::Oil ,   999.888)
-                 .set(Item::Gas ,  8888.777)
-                 .set(Item::ResV, 12345.678);
-
-    gr.injection.set(Item::Gas  , 9876.543)
-                .set(Item::Water, 2345.987);
-
-    return gr;
-}
-
-Opm::data::GroupConstraints getGroupConstraints()
-{
-    using PMode = ::Opm::Group::ProductionCMode;
-    using IMode = ::Opm::Group::InjectionCMode;
-
-    return Opm::data::GroupConstraints{}
-    .set(PMode::ORAT,           // Production
-         IMode::VREP,           // Gas Injection
-         IMode::NONE);          // Water Injection
-}
-
-Opm::data::GroupData getGroupData()
-{
-    return Opm::data::GroupData {
-        getGroupConstraints(),
-        getGroupGuideRates()
-    };
-}
-
-Opm::data::NodeData getNodeData()
-{
-    return Opm::data::NodeData {
-        123.457
-    };
-}
-
-Opm::data::AquiferData getFetkovichAquifer(const int aquiferID = 1)
-{
-    auto aquifer = Opm::data::AquiferData {
-        aquiferID, 123.456, 56.78, 9.0e10, 290.0, 2515.5
-    };
-
-    auto* aquFet = aquifer.typeData.create<Opm::data::AquiferType::Fetkovich>();
-
-    aquFet->initVolume = 1.23;
-    aquFet->prodIndex = 45.67;
-    aquFet->timeConstant = 890.123;
-
-    return aquifer;
-}
-
-Opm::data::AquiferData getCarterTracyAquifer(const int aquiferID = 5)
-{
-    auto aquifer = Opm::data::AquiferData {
-        aquiferID, 123.456, 56.78, 9.0e10, 290.0, 2515.5
-    };
-
-    auto* aquCT = aquifer.typeData.create<Opm::data::AquiferType::CarterTracy>();
-
-    aquCT->timeConstant = 987.65;
-    aquCT->influxConstant = 43.21;
-    aquCT->waterDensity = 1014.5;
-    aquCT->waterViscosity = 0.00318;
-    aquCT->dimensionless_time = 42.0;
-    aquCT->dimensionless_pressure = 2.34;
-
-    return aquifer;
-}
-
-Opm::data::AquiferData getNumericalAquifer(const int aquiferID = 2)
-{
-    auto aquifer = Opm::data::AquiferData {
-        aquiferID, 123.456, 56.78, 9.0e10, 290.0, 2515.5
-    };
-
-    auto* aquNum = aquifer.typeData.create<Opm::data::AquiferType::Numerical>();
-
-    aquNum->initPressure.push_back(1.234);
-    aquNum->initPressure.push_back(2.345);
-    aquNum->initPressure.push_back(3.4);
-    aquNum->initPressure.push_back(9.876);
-
-    return aquifer;
-}
-}
-
-
 template<class T>
-std::tuple<T,int,int> PackUnpack(const T& in)
-{
-    auto comm = Dune::MPIHelper::getCollectiveCommunication();
-    std::size_t packSize = Opm::Mpi::packSize(in, comm);
-    std::vector<char> buffer(packSize);
-    int pos1 = 0;
-    Opm::Mpi::pack(in, buffer, pos1, comm);
-    int pos2 = 0;
-    T out;
-    Opm::Mpi::unpack(out, buffer, pos2, comm);
-
-    return std::make_tuple(out, pos1, pos2);
-}
-
-template<class T>
-std::tuple<T,int,int> PackUnpack2(T& in)
+std::tuple<T,int,int> PackUnpack(T& in)
 {
     auto comm = Dune::MPIHelper::getCollectiveCommunication();
     Opm::EclMpiSerializer ser(comm);
@@ -353,210 +147,20 @@ std::tuple<T,int,int> PackUnpack2(T& in)
     BOOST_CHECK_MESSAGE(std::get<1>(val2) == std::get<2>(val2), "Packed size differ from unpack size for " #TYPE_NAME);  \
     BOOST_CHECK_MESSAGE(val1 == std::get<0>(val2), "Deserialized " #TYPE_NAME " differ");
 
-
-BOOST_AUTO_TEST_CASE(Solution)
-{
-    Opm::data::Solution val1 = getSolution();
-    auto val2 = PackUnpack(val1);
-    DO_CHECKS(data::Solution)
-}
-
-
-BOOST_AUTO_TEST_CASE(Rates)
-{
-    Opm::data::Rates val1 = getRates();
-    auto val2 = PackUnpack(val1);
-    DO_CHECKS(data::Rates)
-}
-
-BOOST_AUTO_TEST_CASE(dataFetkovichData)
-{
-    const auto val1 = getFetkovichAquifer();
-    const auto val2 = PackUnpack(val1);
-
-    DO_CHECKS(data::FetkovichData)
-}
-
-BOOST_AUTO_TEST_CASE(dataCarterTracyData)
-{
-    const auto val1 = getCarterTracyAquifer();
-    const auto val2 = PackUnpack(val1);
-
-    DO_CHECKS(data::CarterTracyData)
-}
-
-BOOST_AUTO_TEST_CASE(dataNumericAquiferData)
-{
-    const auto val1 = getNumericalAquifer();
-    const auto val2 = PackUnpack(val1);
-
-    DO_CHECKS(data::NumericAquiferData)
-}
-
-BOOST_AUTO_TEST_CASE(dataAquifers)
-{
-    const auto val1 = Opm::data::Aquifers {
-        { 1, getFetkovichAquifer(1) },
-        { 4, getFetkovichAquifer(4) },
-        { 5, getCarterTracyAquifer(5) },
-        { 9, getNumericalAquifer(9) },
-    };
-
-    const auto val2 = PackUnpack(val1);
-
-    DO_CHECKS(data::Aquifers)
-}
-
-BOOST_AUTO_TEST_CASE(dataGuideRateValue)
-{
-    using Item = Opm::data::GuideRateValue::Item;
-
-    const auto val1 = Opm::data::GuideRateValue{}
-    .set(Item::Oil ,   999.888)
-    .set(Item::Gas ,  8888.777)
-    .set(Item::ResV, 12345.678);
-
-    const auto val2 = PackUnpack(val1);
-
-    BOOST_CHECK_MESSAGE(! std::get<0>(val2).has(Item::Water),
-                        "Water Must Not Appear From "
-                        "Serializing GuideRateValues");
-
-    DO_CHECKS(data::GuideRateValue)
-}
-
-BOOST_AUTO_TEST_CASE(dataConnection)
-{
-    Opm::data::Connection val1 = getConnection();
-    auto val2 = PackUnpack(val1);
-    DO_CHECKS(data::Connection)
-}
-
-
-BOOST_AUTO_TEST_CASE(dataCurrentControl)
-{
-    Opm::data::CurrentControl val1 = getCurrentControl();
-    auto val2 = PackUnpack(val1);
-    DO_CHECKS(data::CurrentControl)
-}
-
-
-BOOST_AUTO_TEST_CASE(dataSegment)
-{
-    Opm::data::Segment val1 = getSegment();
-    auto val2 = PackUnpack(val1);
-    DO_CHECKS(data::Segment)
-}
-
-
-BOOST_AUTO_TEST_CASE(dataWell)
-{
-    Opm::data::Well val1 = getWell();
-    auto val2 = PackUnpack(val1);
-    DO_CHECKS(data::Well)
-}
-
-
-BOOST_AUTO_TEST_CASE(Wells)
-{
-    Opm::data::Wells val1;
-    val1.insert({"test_well", getWell()});
-    auto val2 = PackUnpack(val1);
-    DO_CHECKS(data::Wells)
-}
-
-BOOST_AUTO_TEST_CASE(dataGroupConstraints)
-{
-    const auto val1 = getGroupConstraints();
-    const auto val2 = PackUnpack(val1);
-
-    DO_CHECKS(data::GroupConstraints)
-}
-
-BOOST_AUTO_TEST_CASE(dataGroupGuideRates)
-{
-    const auto val1 = getGroupData().guideRates;
-    const auto val2 = PackUnpack(val1);
-
-    DO_CHECKS(data::GroupGuideRates)
-}
-
-BOOST_AUTO_TEST_CASE(dataGroupData)
-{
-    const auto val1 = getGroupData();
-    const auto val2 = PackUnpack(val1);
-
-    DO_CHECKS(data::GroupData)
-}
-
-BOOST_AUTO_TEST_CASE(dataNodeData)
-{
-    const auto val1 = getNodeData();
-    const auto val2 = PackUnpack(val1);
-
-    DO_CHECKS(data::NodeData)
-}
-
-BOOST_AUTO_TEST_CASE(CellData)
-{
-    Opm::data::CellData val1;
-    val1.dim = Opm::UnitSystem::measure::length;
-    val1.data = {1.0, 2.0, 3.0};
-    val1.target = Opm::data::TargetType::RESTART_SOLUTION;
-    auto val2 = PackUnpack(val1);
-    DO_CHECKS(data::cellData)
-}
-
-
-BOOST_AUTO_TEST_CASE(RestartKey)
-{
-    Opm::RestartKey val1("key", Opm::UnitSystem::measure::length, true);
-    auto val2 = PackUnpack(val1);
-    DO_CHECKS(RestartKey)
-}
-
-
-BOOST_AUTO_TEST_CASE(RestartValue)
-{
-    auto wells1 = Opm::data::Wells {{
-        { "test_well", getWell() },
-    }};
-    auto grp_nwrk_1 = Opm::data::GroupAndNetworkValues {
-        {                       // .groupData
-            { "test_group1", getGroupData() },
-        },
-        {                       // .nodeData
-            { "test_node1", getNodeData() },
-        }
-    };
-
-    auto aquifers = Opm::data::Aquifers {
-        { 2, getCarterTracyAquifer(2) },
-        {11, getFetkovichAquifer(11) },
-    };
-
-    const auto val1 = Opm::RestartValue {
-        getSolution(), std::move(wells1), std::move(grp_nwrk_1), std::move(aquifers)
-    };
-    const auto val2 = PackUnpack(val1);
-
-    DO_CHECKS(RestartValue)
-}
-
 #define TEST_FOR_TYPE(TYPE) \
 BOOST_AUTO_TEST_CASE(TYPE) \
 { \
     auto val1 = Opm::TYPE::serializeObject(); \
-    auto val2 = PackUnpack2(val1); \
+    auto val2 = PackUnpack(val1); \
     DO_CHECKS(TYPE) \
 }
 
-#define TEST_FOR_TYPE2(TYPE1, TYPE2) \
-BOOST_AUTO_TEST_CASE(TYPE2) \
+#define TEST_FOR_TYPE_NAMED(TYPE, NAME) \
+BOOST_AUTO_TEST_CASE(NAME) \
 { \
-    auto val1 = Opm::TYPE1::TYPE2::serializeObject(); \
-    auto val2 = PackUnpack2(val1); \
-    DO_CHECKS(TYPE1::TYPE2) \
+    auto val1 = Opm::TYPE::serializeObject(); \
+    auto val2 = PackUnpack(val1); \
+    DO_CHECKS(TYPE) \
 }
 
 
@@ -567,15 +171,28 @@ TEST_FOR_TYPE(AquiferConfig)
 TEST_FOR_TYPE(AquiferCT)
 TEST_FOR_TYPE(Aquifetp)
 TEST_FOR_TYPE(AutoICD)
-TEST_FOR_TYPE2(Action, Actions)
-TEST_FOR_TYPE2(Action, ActionX)
-TEST_FOR_TYPE2(Action, AST)
-TEST_FOR_TYPE2(Action, ASTNode)
-TEST_FOR_TYPE2(Action, State)
+TEST_FOR_TYPE_NAMED(Action::Actions, Actions)
+TEST_FOR_TYPE_NAMED(Action::ActionX, ActionX)
+TEST_FOR_TYPE_NAMED(Action::AST, AST)
+TEST_FOR_TYPE_NAMED(Action::ASTNode, ASTNode)
+TEST_FOR_TYPE_NAMED(Action::State, State)
 TEST_FOR_TYPE(BCConfig)
 TEST_FOR_TYPE(BrineDensityTable)
 TEST_FOR_TYPE(ColumnSchema)
 TEST_FOR_TYPE(Connection)
+TEST_FOR_TYPE_NAMED(data::Connection, dataConnection)
+TEST_FOR_TYPE_NAMED(data::CellData, CellData)
+TEST_FOR_TYPE_NAMED(data::CurrentControl, CurrentControl)
+TEST_FOR_TYPE_NAMED(data::GroupConstraints, GroupConstraints)
+TEST_FOR_TYPE_NAMED(data::GroupData, GroupData)
+TEST_FOR_TYPE_NAMED(data::GroupGuideRates, GroupGuideRates)
+TEST_FOR_TYPE_NAMED(data::GuideRateValue, GuideRateValue)
+TEST_FOR_TYPE_NAMED(data::NodeData, NodeData)
+TEST_FOR_TYPE_NAMED(data::Rates, Rates)
+TEST_FOR_TYPE_NAMED(data::Segment, dataSegment)
+TEST_FOR_TYPE_NAMED(data::Solution, Solution)
+TEST_FOR_TYPE_NAMED(data::Well, dataWell)
+TEST_FOR_TYPE_NAMED(data::Wells, Wells)
 TEST_FOR_TYPE(Deck)
 TEST_FOR_TYPE(DeckItem)
 TEST_FOR_TYPE(DeckKeyword)
@@ -599,8 +216,8 @@ TEST_FOR_TYPE(GConSale)
 TEST_FOR_TYPE(GConSump)
 TEST_FOR_TYPE(GridDims)
 TEST_FOR_TYPE(Group)
-TEST_FOR_TYPE2(Group, GroupInjectionProperties)
-TEST_FOR_TYPE2(Group, GroupProductionProperties)
+TEST_FOR_TYPE_NAMED(Group::GroupInjectionProperties, GroupInjectionProperties)
+TEST_FOR_TYPE_NAMED(Group::GroupProductionProperties, GroupProductionProperties)
 TEST_FOR_TYPE(GuideRateConfig)
 TEST_FOR_TYPE(GuideRateModel)
 TEST_FOR_TYPE(InitConfig)
@@ -610,7 +227,7 @@ TEST_FOR_TYPE(KeywordLocation)
 TEST_FOR_TYPE(MessageLimits)
 TEST_FOR_TYPE(MULTREGTScanner)
 TEST_FOR_TYPE(NNC)
-TEST_FOR_TYPE2(Network, Node)
+TEST_FOR_TYPE_NAMED(Network::Node, Node)
 TEST_FOR_TYPE(OilVaporizationProperties)
 TEST_FOR_TYPE(PAvg)
 TEST_FOR_TYPE(Phases)
@@ -622,6 +239,8 @@ TEST_FOR_TYPE(PvtoTable)
 TEST_FOR_TYPE(PvtwsaltTable)
 TEST_FOR_TYPE(PvtwTable)
 TEST_FOR_TYPE(Regdims)
+TEST_FOR_TYPE(RestartKey)
+TEST_FOR_TYPE(RestartValue)
 TEST_FOR_TYPE(RSTConfig)
 TEST_FOR_TYPE(RFTConfig)
 TEST_FOR_TYPE(RockConfig)
@@ -671,10 +290,10 @@ TEST_FOR_TYPE(WellBrineProperties)
 TEST_FOR_TYPE(WellConnections)
 TEST_FOR_TYPE(WellEconProductionLimits)
 TEST_FOR_TYPE(WellFoamProperties)
-TEST_FOR_TYPE2(Well, WellGuideRate)
-TEST_FOR_TYPE2(Well, WellInjectionProperties)
+TEST_FOR_TYPE_NAMED(Well::WellGuideRate, WellGuideRate)
+TEST_FOR_TYPE_NAMED(Well::WellInjectionProperties, WellInjectionProperties)
 TEST_FOR_TYPE(WellPolymerProperties)
-TEST_FOR_TYPE2(Well, WellProductionProperties)
+TEST_FOR_TYPE_NAMED(Well::WellProductionProperties, WellProductionProperties)
 TEST_FOR_TYPE(WellTracerProperties)
 TEST_FOR_TYPE(WellSegmentDims)
 TEST_FOR_TYPE(WellSegments)
