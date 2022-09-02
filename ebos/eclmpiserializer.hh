@@ -64,8 +64,8 @@ using remove_cvr_t = std::remove_const_t<std::remove_reference_t<T>>;
 namespace Opm {
 
 /*! \brief Class for (de-)serializing and broadcasting data in parallel.
- *!  \details Can be called on any class with a serializeOp member. Such classes
- *!           are referred to as 'complex types' in the documentation.
+ *!  \details If the class has a serializeOp member this is used,
+ *            if not it is passed on to the underlying primitive serializer.
 */
 
 class EclMpiSerializer {
@@ -287,7 +287,7 @@ public:
         }
     }
 
-    template<class Set, bool complexType = true>
+    template<class Set>
     void set(Set& data)
     {
         using Data = typename Set::value_type;
@@ -295,10 +295,10 @@ public:
         auto handle = [&](auto& d)
         {
             if constexpr (is_vector<Data>::value)
-                this->template vector<typename Data::value_type,complexType>(d);
+                this->vector(d);
             else if constexpr (is_ptr<Data>::value)
                 ptr(d);
-            else if constexpr (complexType)
+            else if constexpr (has_serializeOp<Data>::value)
                 d.serializeOp(*this);
             else
                 (*this)(d);
