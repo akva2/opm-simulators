@@ -19,7 +19,6 @@
 #ifndef MPI_SERIALIZER_HPP
 #define MPI_SERIALIZER_HPP
 
-#include <opm/common/ErrorMacros.hpp>
 #include <opm/common/utility/TimeService.hpp>
 
 #include <opm/simulators/utils/ParallelCommunication.hpp>
@@ -50,8 +49,8 @@ template<class T>
 std::size_t packSize(const T&, Opm::Parallel::MPIComm,
                      std::integral_constant<bool, false>)
 {
-    std::string msg = std::string{"Packing not (yet) supported for non-pod type: "} + typeid(T).name();
-    OPM_THROW(std::logic_error, msg);
+    static_assert(!std::is_same_v<T,T>, "Packing not supported for type");
+    return 0;
 }
 
 template<class T>
@@ -100,7 +99,7 @@ template<class T>
 void pack(const T&, std::vector<char>&, int&,
           Opm::Parallel::MPIComm, std::integral_constant<bool, false>)
 {
-    OPM_THROW(std::logic_error, "Packing not (yet) supported for this non-pod type.");
+    static_assert(!std::is_same_v<T,T>, "Packing not supported for type");
 }
 
 template<class T>
@@ -155,7 +154,7 @@ template<class T>
 void unpack(T&, std::vector<char>&, int&,
             Opm::Parallel::MPIComm, std::integral_constant<bool, false>)
 {
-    OPM_THROW(std::logic_error, "Packing not (yet) supported for this non-pod type.");
+    static_assert(!std::is_same_v<T,T>, "Packing not supported for type");
 }
 
 template<class T>

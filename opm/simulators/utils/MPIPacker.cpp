@@ -36,7 +36,8 @@ template<class T>
 std::size_t packSize(const T*, std::size_t, Opm::Parallel::MPIComm,
                      std::integral_constant<bool, false>)
 {
-    OPM_THROW(std::logic_error, "Packing not (yet) supported for this non-pod type.");
+    static_assert(!std::is_same_v<T,T>, "Packing not supported for type");
+    return 0;
 }
 
 template<class T>
@@ -146,7 +147,7 @@ template<class T>
 void pack(const T*, std::size_t, std::vector<char>&, int&,
           Opm::Parallel::MPIComm, std::integral_constant<bool, false>)
 {
-    OPM_THROW(std::logic_error, "Packing not (yet) supported for this non-pod type.");
+    static_assert(!std::is_same_v<T,T>, "Packing not supported for type");
 }
 
 template<class T>
@@ -241,7 +242,7 @@ template<class T>
 void unpack(T*, const std::size_t&, std::vector<char>&, int&,
             Opm::Parallel::MPIComm, std::integral_constant<bool, false>)
 {
-    OPM_THROW(std::logic_error, "Packing not (yet) supported for this non-pod type.");
+    static_assert(!std::is_same_v<T,T>, "Packing not supported for type");
 }
 
 template<class T>
