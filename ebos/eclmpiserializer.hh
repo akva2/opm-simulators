@@ -369,13 +369,14 @@ public:
     //!
     //! \tparam T Type of class to broadcast
     //! \param data Class to broadcast
+    //! \param root Process to broadcast from
     template<class T>
-    void broadcast(T& data)
+    void broadcast(T& data, int root = 0)
     {
         if (m_comm.size() == 1)
             return;
 
-        if (m_comm.rank() == 0) {
+        if (m_comm.rank() == root) {
             try {
                 pack(data);
                 m_packSize = m_position;
@@ -402,17 +403,18 @@ public:
     //!
     //! \tparam T Type of class to broadcast
     //! \param data Class to broadcast
+    //! \param root Process to broadcast from
     template<class T>
-    void append(T& data)
+    void append(T& data, int root = 0)
     {
         if (m_comm.size() == 1)
             return;
 
         T tmp;
-        T& bcast = m_comm.rank() == 0 ? data : tmp;
+        T& bcast = m_comm.rank() == root ? data : tmp;
         broadcast(bcast);
 
-        if (m_comm.rank() != 0)
+        if (m_comm.rank() != root)
             data.append(tmp);
     }
 
