@@ -128,6 +128,7 @@ unpack(time_point& data,
 }
 
 template struct Packing<false,std::bitset<4>>;
+template struct Packing<false,std::bitset<10>>;
 
 }
 
