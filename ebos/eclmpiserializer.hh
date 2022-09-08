@@ -97,22 +97,22 @@ public:
         } else if constexpr (is_optional<T>::value) {
             optional(data);
         } else if constexpr (is_vector<T>::value) {
-            vector(const_cast<T&>(data));
+            vector(data);
         } else if constexpr (is_map<T>::value) {
-            map(const_cast<T&>(data));
+            map(data);
         } else if constexpr (is_array<T>::value) {
-            array(const_cast<T&>(data));
+            array(data);
         } else if constexpr (is_set<T>::value) {
-            set(const_cast<T&>(data));
+            set(data);
         } else if constexpr (has_serializeOp<detail::remove_cvr_t<T>>::value) {
-          const_cast<T&>(data).serializeOp(*this);
+            const_cast<T&>(data).serializeOp(*this);
         } else {
-          if (m_op == Operation::PACKSIZE)
-              m_packSize += Mpi::packSize(data, m_comm);
-          else if (m_op == Operation::PACK)
-              Mpi::pack(data, m_buffer, m_position, m_comm);
-          else if (m_op == Operation::UNPACK)
-              Mpi::unpack(const_cast<T&>(data), m_buffer, m_position, m_comm);
+            if (m_op == Operation::PACKSIZE)
+                m_packSize += Mpi::packSize(data, m_comm);
+            else if (m_op == Operation::PACK)
+                Mpi::pack(data, m_buffer, m_position, m_comm);
+            else if (m_op == Operation::UNPACK)
+                Mpi::unpack(const_cast<T&>(data), m_buffer, m_position, m_comm);
         }
     }
 
@@ -120,14 +120,15 @@ public:
     //! \tparam T Type for vector elements
     //! \param data The vector to (de-)serialize
     template <typename T>
-    void vector(std::vector<T>& data)
+    void vector(const std::vector<T>& data)
     {
         auto handle = [this](auto& d) { (*this)(d); };
         if (m_op == Operation::UNPACK) {
             std::size_t size = 0;
             (*this)(size);
-            data.resize(size);
-            std::for_each(data.begin(), data.end(), handle);
+            auto& data_mut = const_cast<std::vector<T>&>(data);
+            data_mut.resize(size);
+            std::for_each(data_mut.begin(), data_mut.end(), handle);
         } else {
             (*this)(data.size());
             std::for_each(data.begin(), data.end(), handle);
@@ -136,17 +137,18 @@ public:
 
     //! \brief Handler for bool vectors.
     //! \param data The vector to (de-)serialize
-    void vector(std::vector<bool>& data)
+    void vector(const std::vector<bool>& data)
     {
         if (m_op == Operation::UNPACK) {
             std::size_t size = 0;
             (*this)(size);
-            data.clear();
-            data.reserve(size);
+            auto& data_mut = const_cast<std::vector<bool>&>(data);
+            data_mut.clear();
+            data_mut.reserve(size);
             for (size_t i = 0; i < size; ++i) {
                 bool entry = false;
                 (*this)(entry);
-                data.push_back(entry);
+                data_mut.push_back(entry);
             }
         } else {
             (*this)(data.size());
@@ -160,7 +162,7 @@ public:
     //! \brief Handler for arrays.
     //! \param data The array to (de-)serialize
     template <class Array>
-    void array(Array& data)
+    void array(const Array& data)
     {
         auto handle = [this](auto& d) { (*this)(d); };
         std::for_each(data.begin(), data.end(), handle);
@@ -218,16 +220,17 @@ public:
     //! \tparam Map map type
     //! \param map The map to (de-)serialize
     template<class Map>
-    void map(Map& data)
+    void map(const Map& data)
     {
         auto handle = [this](auto& d) { (*this)(d); };
         if (m_op == Operation::UNPACK) {
             std::size_t size = 0;
             (*this)(size);
+            auto& data_mut = const_cast<Map&>(data);
             for (size_t i = 0; i < size; ++i) {
                 typename Map::value_type entry;
                 (*this)(entry);
-                data.insert(entry);
+                data_mut.insert(entry);
             }
         } else {
             (*this)(data.size());
@@ -239,16 +242,17 @@ public:
     //! \tparam Set set type
     //! \param data The set to (de-)serialize
     template<class Set>
-    void set(Set& data)
+    void set(const Set& data)
     {
         auto handle = [this](auto& d) { (*this)(d); };
         if (m_op == Operation::UNPACK) {
             std::size_t size = 0;
             (*this)(size);
+            auto& data_mut = const_cast<Set&>(data);
             for (size_t i = 0; i < size; ++i) {
                 typename Set::value_type entry;
                 (*this)(entry);
-                data.insert(entry);
+                data_mut.insert(entry);
             }
         } else {
             (*this)(data.size());
