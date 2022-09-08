@@ -24,6 +24,7 @@
 #include <opm/simulators/utils/MPIPacker.hpp>
 #include <opm/simulators/utils/ParallelCommunication.hpp>
 
+#include <algorithm>
 #include <map>
 #include <optional>
 #include <set>
@@ -81,9 +82,7 @@ public:
         m_comm(comm)
     {}
 
-    //! \brief (De-)serialization for simple types.
-    //! \details The data handled by this depends on the underlying serialization used.
-    //!          Currently you can call this for scalars, and stl containers with scalars.
+    //! \brief Applies current serialization op to the passed data.
     template<class T>
     void operator()(const T& data)
     {
@@ -123,33 +122,15 @@ public:
     template <typename T>
     void vector(std::vector<T>& data)
     {
-        auto handle = [&](auto& d)
-        {
-            for (auto& it : d) {
-              if constexpr (is_pair<T>::value)
-                  pair(it);
-              else if constexpr (is_ptr<T>::value)
-                  ptr(it);
-              else if constexpr (is_vector<T>::value)
-                vector(it);
-              else if constexpr (has_serializeOp<T>::value)
-                  it.serializeOp(*this);
-              else
-                  (*this)(it);
-            }
-        };
-
-        if (m_op == Operation::PACKSIZE) {
-            m_packSize += Mpi::packSize(data.size(), m_comm);
-            handle(data);
-        } else if (m_op == Operation::PACK) {
-            Mpi::pack(data.size(), m_buffer, m_position, m_comm);
-            handle(data);
-        } else if (m_op == Operation::UNPACK) {
-            size_t size;
-            Mpi::unpack(size, m_buffer, m_position, m_comm);
+        auto handle = [this](auto& d) { (*this)(d); };
+        if (m_op == Operation::UNPACK) {
+            std::size_t size = 0;
+            (*this)(size);
             data.resize(size);
-            handle(data);
+            std::for_each(data.begin(), data.end(), handle);
+        } else {
+            (*this)(data.size());
+            std::for_each(data.begin(), data.end(), handle);
         }
     }
 
@@ -157,24 +138,21 @@ public:
     //! \param data The vector to (de-)serialize
     void vector(std::vector<bool>& data)
     {
-        if (m_op == Operation::PACKSIZE) {
-            m_packSize += Mpi::packSize(data.size(), m_comm);
-            m_packSize += data.size()*Mpi::packSize(bool(), m_comm);
-        } else if (m_op == Operation::PACK) {
-            (*this)(data.size());
-            for (const auto entry : data) { // Not a reference: vector<bool> range
-                bool b = entry;
-                (*this)(b);
-            }
-        } else if (m_op == Operation::UNPACK) {
-            size_t size;
+        if (m_op == Operation::UNPACK) {
+            std::size_t size = 0;
             (*this)(size);
             data.clear();
             data.reserve(size);
             for (size_t i = 0; i < size; ++i) {
-                bool entry;
+                bool entry = false;
                 (*this)(entry);
                 data.push_back(entry);
+            }
+        } else {
+            (*this)(data.size());
+            for (const auto entry : data) { // Not a reference: vector<bool> range
+                bool b = entry;
+                (*this)(b);
             }
         }
     }
@@ -184,32 +162,8 @@ public:
     template <class Array>
     void array(Array& data)
     {
-        using T = typename Array::value_type;
-
-        auto handle = [&](auto& d) {
-            for (auto& it : d) {
-                if constexpr (is_pair<T>::value)
-                    pair(it);
-                else if constexpr (is_ptr<T>::value)
-                    ptr(it);
-                else if constexpr (has_serializeOp<T>::value)
-                    it.serializeOp(*this);
-                else
-                    (*this)(it);
-            }
-        };
-
-        if (m_op == Operation::PACKSIZE) {
-            m_packSize += Mpi::packSize(data.size(), m_comm);
-            handle(data);
-        } else if (m_op == Operation::PACK) {
-            Mpi::pack(data.size(), m_buffer, m_position, m_comm);
-            handle(data);
-        } else if (m_op == Operation::UNPACK) {
-            size_t size;
-            Mpi::unpack(size, m_buffer, m_position, m_comm);
-            handle(data);
-        }
+        auto handle = [this](auto& d) { (*this)(d); };
+        std::for_each(data.begin(), data.end(), handle);
     }
 
     //! \brief Handler for std::variant.
@@ -217,25 +171,16 @@ public:
     template<class... Args>
     void variant(const std::variant<Args...>& data)
     {
-        auto visitor = [&](auto& d)
-        {
-            if constexpr (has_serializeOp<detail::remove_cvr_t<decltype(d)>>::value)
-                const_cast<detail::remove_cvr_t<decltype(d)>&>(d).serializeOp(*this);
-            else
-                (*this)(d);
-        };
-        if (m_op == Operation::PACKSIZE) {
-            m_packSize += Mpi::packSize(data.index(), m_comm);
-            std::visit(visitor, data);
-        } else if (m_op == Operation::PACK) {
-            Mpi::pack(data.index(), m_buffer, m_position, m_comm);
-            std::visit(visitor, data);
-        } else if (m_op == Operation::UNPACK) {
-            size_t index;
-            Mpi::unpack(index, m_buffer, m_position, m_comm);
+        auto handle = [this](auto& d) { (*this)(d); };
+        if (m_op == Operation::UNPACK) {
+            std::size_t index = 0;
+            (*this)(index);
             auto& data_mut = const_cast<std::variant<Args...>&>(data);
             data_mut = detail::make_variant<Args...>(index);
-            std::visit(visitor, data_mut);
+            std::visit(handle, data_mut);
+        } else {
+            (*this)(data.index());
+            std::visit(handle, data);
         }
     }
 
@@ -245,23 +190,18 @@ public:
     template<class T>
     void optional(const std::optional<T>& data)
     {
-        if (m_op == Operation::PACKSIZE) {
-            m_packSize += Mpi::packSize(data.has_value(), m_comm);
-            if (data.has_value()) {
-                (*this)(*data);
-            }
-        } else if (m_op == Operation::PACK) {
-            Mpi::pack(data.has_value(), m_buffer, m_position, m_comm);
-            if (data.has_value()) {
-                (*this)(*data);
-            }
-        } else if (m_op == Operation::UNPACK) {
-            bool has;
-            Mpi::unpack(has, m_buffer, m_position, m_comm);
+        if (m_op == Operation::UNPACK) {
+            bool has = false;
+            (*this)(has);
             if (has) {
                 T res;
                 (*this)(res);
                 const_cast<std::optional<T>&>(data) = res;
+            }
+        } else {
+            (*this)(data.has_value());
+            if (data.has_value()) {
+                (*this)(*data);
             }
         }
     }
@@ -271,19 +211,7 @@ public:
     template<class... Args>
     void tuple(const std::tuple<Args...>& data)
     {
-        if (m_op == Operation::PACKSIZE) {
-            m_op = Operation::PACKSIZE;
-            m_packSize = 0;
-            tuple_call(data);
-        } else if (m_op == Operation::PACK) {
-            m_position = 0;
-            m_buffer.resize(m_packSize);
-            tuple_call(data);
-        } else if (m_op == Operation::UNPACK) {
-            m_position = 0;
-            m_op = Operation::UNPACK;
-            tuple_call(data);
-        }
+        tuple_call(data);
     }
 
     //! \brief Handler for maps.
@@ -292,55 +220,18 @@ public:
     template<class Map>
     void map(Map& data)
     {
-        using Key = typename Map::key_type;
-        using Data = typename Map::mapped_type;
-
-        auto handle = [&](auto& d)
-        {
-            if constexpr (is_vector<Data>::value)
-                vector(d);
-            else if constexpr (is_ptr<Data>::value)
-                ptr(d);
-            else if constexpr (is_map<Data>::value)
-                map(d);
-            else if constexpr (has_serializeOp<Data>::value)
-                d.serializeOp(*this);
-            else
-                (*this)(d);
-        };
-
-        auto keyHandle = [&](auto& d)
-        {
-              if constexpr (is_pair<Key>::value)
-                  pair(d);
-              else if constexpr (has_serializeOp<Key>::value)
-                  d.serializeOp(*this);
-              else
-                  (*this)(d);
-        };
-
-        if (m_op == Operation::PACKSIZE) {
-            m_packSize += Mpi::packSize(data.size(), m_comm);
-            for (auto& it : data) {
-                keyHandle(it.first);
-                handle(it.second);
-            }
-        } else if (m_op == Operation::PACK) {
-            Mpi::pack(data.size(), m_buffer, m_position, m_comm);
-            for (auto& it : data) {
-                keyHandle(it.first);
-                handle(it.second);
-            }
-        } else if (m_op == Operation::UNPACK) {
-            size_t size;
-            Mpi::unpack(size, m_buffer, m_position, m_comm);
+        auto handle = [this](auto& d) { (*this)(d); };
+        if (m_op == Operation::UNPACK) {
+            std::size_t size = 0;
+            (*this)(size);
             for (size_t i = 0; i < size; ++i) {
-                Key key;
-                keyHandle(key);
-                Data entry;
-                handle(entry);
-                data.insert(std::make_pair(key, entry));
+                typename Map::value_type entry;
+                (*this)(entry);
+                data.insert(entry);
             }
+        } else {
+            (*this)(data.size());
+            std::for_each(data.begin(), data.end(), handle);
         }
     }
 
@@ -350,38 +241,18 @@ public:
     template<class Set>
     void set(Set& data)
     {
-        using Data = typename Set::value_type;
-
-        auto handle = [&](auto& d)
-        {
-            if constexpr (is_vector<Data>::value)
-                vector(d);
-            else if constexpr (is_ptr<Data>::value)
-                ptr(d);
-            else if constexpr (has_serializeOp<Data>::value)
-                d.serializeOp(*this);
-            else
-                (*this)(d);
-        };
-
-        if (m_op == Operation::PACKSIZE) {
-            m_packSize += Mpi::packSize(data.size(), m_comm);
-            for (auto& it : data) {
-                handle(it);
-            }
-        } else if (m_op == Operation::PACK) {
-            Mpi::pack(data.size(), m_buffer, m_position, m_comm);
-            for (auto& it : data) {
-                handle(it);
-            }
-        } else if (m_op == Operation::UNPACK) {
-            size_t size;
-            Mpi::unpack(size, m_buffer, m_position, m_comm);
+        auto handle = [this](auto& d) { (*this)(d); };
+        if (m_op == Operation::UNPACK) {
+            std::size_t size = 0;
+            (*this)(size);
             for (size_t i = 0; i < size; ++i) {
-                Data entry;
-                handle(entry);
+                typename Set::value_type entry;
+                (*this)(entry);
                 data.insert(entry);
             }
+        } else {
+            (*this)(data.size());
+            std::for_each(data.begin(), data.end(), handle);
         }
     }
 
@@ -393,11 +264,11 @@ public:
     {
         m_op = Operation::PACKSIZE;
         m_packSize = 0;
-        data.serializeOp(*this);
+        (*this)(data);
         m_position = 0;
         m_buffer.resize(m_packSize);
         m_op = Operation::PACK;
-        data.serializeOp(*this);
+        (*this)(data);
     }
 
     //! \brief Call this to de-serialize data.
@@ -408,7 +279,7 @@ public:
     {
         m_position = 0;
         m_op = Operation::UNPACK;
-        data.serializeOp(*this);
+        (*this)(data);
     }
 
     //! \brief Serialize and broadcast on root process, de-serialize on
@@ -678,15 +549,8 @@ protected:
     template<class T1, class T2>
     void pair(const std::pair<T1,T2>& data)
     {
-        if constexpr (has_serializeOp<T1>::value)
-            const_cast<T1&>(data.first).serializeOp(*this);
-        else
-            (*this)(data.first);
-
-        if constexpr (has_serializeOp<T2>::value)
-            const_cast<T2&>(data.second).serializeOp(*this);
-        else
-            (*this)(data.second);
+        (*this)(data.first);
+        (*this)(data.second);
     }
 
     //! \brief Handler for smart pointers.
@@ -700,10 +564,7 @@ protected:
             const_cast<PtrType&>(data).reset(new T1);
         }
         if (data) {
-            if constexpr (has_serializeOp<T1>::value)
-                data->serializeOp(*this);
-            else
-                (*this)(*data);
+            (*this)(*data);
         }
     }
 
