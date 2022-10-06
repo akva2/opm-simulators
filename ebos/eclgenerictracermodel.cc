@@ -214,7 +214,7 @@ doInit(bool rst, size_t numGridDof,
     tracerResidual_.resize(numGridDof);
 
     // allocate matrix for storing the Jacobian of the tracer residual
-    tracerMatrix_ = new TracerMatrix(numGridDof, numGridDof, TracerMatrix::random);
+    tracerMatrix_[0] = std::make_unique<TracerMatrix>(numGridDof, numGridDof, TracerMatrix::random);
 
     // find the sparsity pattern of the tracer matrix
     using NeighborSet = std::set<unsigned>;
@@ -239,8 +239,8 @@ doInit(bool rst, size_t numGridDof,
 
     // allocate space for the rows of the matrix
     for (unsigned dofIdx = 0; dofIdx < numGridDof; ++ dofIdx)
-        tracerMatrix_->setrowsize(dofIdx, neighbors[dofIdx].size());
-    tracerMatrix_->endrowsizes();
+        tracerMatrix_[0]->setrowsize(dofIdx, neighbors[dofIdx].size());
+    tracerMatrix_[0]->endrowsizes();
 
     // fill the rows with indices. each degree of freedom talks to
     // all of its neighbors. (it also talks to itself since
@@ -249,9 +249,12 @@ doInit(bool rst, size_t numGridDof,
         typename NeighborSet::iterator nIt = neighbors[dofIdx].begin();
         typename NeighborSet::iterator nEndIt = neighbors[dofIdx].end();
         for (; nIt != nEndIt; ++nIt)
-            tracerMatrix_->addindex(dofIdx, *nIt);
+            tracerMatrix_[0]->addindex(dofIdx, *nIt);
     }
-    tracerMatrix_->endindices();
+    tracerMatrix_[0]->endindices();
+
+    tracerMatrix_[1] = std::make_unique<TracerMatrix>(*tracerMatrix_[0]);
+    tracerMatrix_[2] = std::make_unique<TracerMatrix>(*tracerMatrix_[0]);
 
     const int sizeCartGrid = cartMapper_.cartesianSize();
     cartToGlobal_.resize(sizeCartGrid);

@@ -158,7 +158,7 @@ public:
 
     void beginTimeStep()
     {
-        if (this->numTracers()==0)
+        if (this->numTracers() == 0)
             return;
 
         updateStorageCache();
@@ -169,7 +169,7 @@ public:
      */
     void endTimeStep()
     {
-        if (this->numTracers()==0)
+        if (this->numTracers() == 0)
             return;
 
         advanceTracerFields();
@@ -254,34 +254,45 @@ protected:
         }
     }
 
-    template <class TrRe>
-    void assembleTracerEquations_(TrRe & tr)
+    void assembleTracerEquations_()
     {
-        if (tr.numTracer() == 0)
-            return;
-
         // Note that we formulate the equations in terms of a concentration update
         // (compared to previous time step) and not absolute concentration.
         // This implies that current concentration (tr.concentration_[][]) contributes
         // to the rhs both through storrage and flux terms.
         // Compare also advanceTracerFields(...) below.
 
-        (*this->tracerMatrix_) = 0.0;
-        for (int tIdx =0; tIdx < tr.numTracer(); ++tIdx)
-            tr.residual_[tIdx] = 0.0;
+        (*this->tracerMatrix_[0]) = 0.0;
+        (*this->tracerMatrix_[1]) = 0.0;
+        (*this->tracerMatrix_[2]) = 0.0;
+        std::size_t bidx = 0;
+        for (auto& tr : tbatch) {
+            if (tr.numTracer() != 0)
+                (*this->tracerMatrix_[bidx]) = 0.0;
+            for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx)
+                tr.residual_[tIdx] = 0.0;
+            ++bidx;
+        }
 
         ElementContext elemCtx(simulator_);
         for (const auto& elem : elements(simulator_.gridView())) {
-            elemCtx.updateAll(elem);
+            elemCtx.updateStencil(elem);
 
-            size_t I = elemCtx.globalSpaceIndex(/*dofIdx=*/ 0, /*timIdx=*/0);
+            size_t I = elemCtx.globalSpaceIndex(/*dofIdx=*/ 0, /*timeIdx=*/0);
 
             if (elem.partitionType() != Dune::InteriorEntity)
             {
                 // Dirichlet boundary conditions needed for the parallel matrix
-                (*this->tracerMatrix_)[I][I][0][0] = 1.;
+                if (tbatch[0].numTracer() != 0)
+                    (*this->tracerMatrix_[0])[I][I][0][0] = 1.;
+                if (tbatch[1].numTracer() != 0)
+                    (*this->tracerMatrix_[1])[I][I][0][0] = 1.;
+                if (tbatch[2].numTracer() != 0)
+                    (*this->tracerMatrix_[2])[I][I][0][0] = 1.;
                 continue;
             }
+            elemCtx.updateAllIntensiveQuantities();
+            elemCtx.updateAllExtensiveQuantities();
 
             Scalar extrusionFactor =
                     elemCtx.intensiveQuantities(/*dofIdx=*/ 0, /*timeIdx=*/0).extrusionFactor();
@@ -293,30 +304,37 @@ protected:
                     * extrusionFactor;
             Scalar dt = elemCtx.simulator().timeStepSize();
 
-            size_t I1 = elemCtx.globalSpaceIndex(/*dofIdx=*/ 0, /*timIdx=*/1);
+            size_t I1 = elemCtx.globalSpaceIndex(/*dofIdx=*/ 0, /*timeIdx=*/1);
 
-            std::vector<Scalar> storageOfTimeIndex1(tr.numTracer());
-            if (elemCtx.enableStorageCache()) {
-                for (int tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
-                    storageOfTimeIndex1[tIdx] = tr.storageOfTimeIndex1_[tIdx][I];
+            bidx = 0;
+            for (auto& tr : tbatch) {
+                if (tr.numTracer() == 0) {
+                    ++bidx;
+                    continue;
                 }
-            }
-            else {
-                Scalar fVolume1;
-                computeVolume_(fVolume1, tr.phaseIdx_, elemCtx, 0, /*timIdx=*/1);
-                for (int tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
-                    storageOfTimeIndex1[tIdx] = fVolume1*tr.concentrationInitial_[tIdx][I1];
+                std::vector<Scalar> storageOfTimeIndex1(tr.numTracer());
+                if (elemCtx.enableStorageCache()) {
+                    for (int tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
+                        storageOfTimeIndex1[tIdx] = tr.storageOfTimeIndex1_[tIdx][I];
+                    }
                 }
-            }
+                else {
+                    Scalar fVolume1;
+                    computeVolume_(fVolume1, tr.phaseIdx_, elemCtx, 0, /*timIdx=*/1);
+                    for (int tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
+                        storageOfTimeIndex1[tIdx] = fVolume1*tr.concentrationInitial_[tIdx][I1];
+                    }
+                }
 
-            TracerEvaluation fVolume;
-            computeVolume_(fVolume, tr.phaseIdx_, elemCtx, 0, /*timIdx=*/0);
-            for (int tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
-                Scalar storageOfTimeIndex0 = fVolume.value()*tr.concentration_[tIdx][I];
-                Scalar localStorage = (storageOfTimeIndex0 - storageOfTimeIndex1[tIdx]) * scvVolume/dt;
-                tr.residual_[tIdx][I][0] += localStorage; //residual + flux
+                TracerEvaluation fVolume;
+                computeVolume_(fVolume, tr.phaseIdx_, elemCtx, 0, /*timIdx=*/0);
+                for (int tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
+                    Scalar storageOfTimeIndex0 = fVolume.value()*tr.concentration_[tIdx][I];
+                    Scalar localStorage = (storageOfTimeIndex0 - storageOfTimeIndex1[tIdx]) * scvVolume/dt;
+                    tr.residual_[tIdx][I][0] += localStorage; //residual + flux
+                }
+                (*this->tracerMatrix_[bidx++])[I][I][0][0] += fVolume.derivative(0) * scvVolume/dt;
             }
-            (*this->tracerMatrix_)[I][I][0][0] += fVolume.derivative(0) * scvVolume/dt;
 
             size_t numInteriorFaces = elemCtx.numInteriorFaces(/*timIdx=*/0);
             for (unsigned scvfIdx = 0; scvfIdx < numInteriorFaces; scvfIdx++) {
@@ -324,18 +342,25 @@ protected:
                 const auto& face = elemCtx.stencil(0).interiorFace(scvfIdx);
                 unsigned j = face.exteriorIndex();
                 unsigned J = elemCtx.globalSpaceIndex(/*dofIdx=*/ j, /*timIdx=*/0);
-                bool isUpF;
-                computeFlux_(flux, isUpF, tr.phaseIdx_, elemCtx, scvfIdx, 0);
-                int globalUpIdx = isUpF ? I : J;
-                for (int tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
-                    tr.residual_[tIdx][I][0] += flux.value()*tr.concentration_[tIdx][globalUpIdx]; //residual + flux
-                }
-                if (isUpF) {
-                    (*this->tracerMatrix_)[J][I][0][0] = -flux.derivative(0);
-                    (*this->tracerMatrix_)[I][I][0][0] += flux.derivative(0);
+                bidx = 0;
+                for (auto& tr : tbatch) {
+                    if (tr.numTracer() == 0) {
+                        ++bidx;
+                        continue;
+                    }
+                    bool isUpF;
+                    computeFlux_(flux, isUpF, tr.phaseIdx_, elemCtx, scvfIdx, 0);
+                    int globalUpIdx = isUpF ? I : J;
+                    for (int tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
+                        tr.residual_[tIdx][I][0] += flux.value()*tr.concentration_[tIdx][globalUpIdx]; //residual + flux
+                    }
+                    if (isUpF) {
+                        (*this->tracerMatrix_[bidx])[J][I][0][0] = -flux.derivative(0);
+                        (*this->tracerMatrix_[bidx])[I][I][0][0] += flux.derivative(0);
+                    }
+                    ++bidx;
                 }
             }
-
         }
 
         // Wells  terms
@@ -343,39 +368,51 @@ protected:
         for (const auto& wellPtr : wellPtrs) {
             const auto& well = wellPtr->wellEcl();
 
-            for (int tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
-                this->wellTracerRate_[std::make_pair(well.name(), this->name(tr.idx_[tIdx]))] = 0.0;
-            }
+            bidx = 0;
+            for (auto& tr : tbatch) {
+                if (tr.numTracer() == 0) {
+                    ++bidx;
+                    continue;
+                }
+                for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
+                    this->wellTracerRate_[std::make_pair(well.name(), this->name(tr.idx_[tIdx]))] = 0.0;
+                }
 
-            std::vector<double> wtracer(tr.numTracer());
-            for (int tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
-                wtracer[tIdx] = well.getTracerProperties().getConcentration(this->name(tr.idx_[tIdx]));
-            }
+                std::vector<double> wtracer(tr.numTracer());
+                for (int tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
+                    wtracer[tIdx] = well.getTracerProperties().getConcentration(this->name(tr.idx_[tIdx]));
+                }
 
-            for (auto& perfData : wellPtr->perforationData()) {
-                auto I = perfData.cell_index;
-                Scalar rate = wellPtr->volumetricSurfaceRateForConnection(I, tr.phaseIdx_);
-                if (rate > 0) {
-                    for (int tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
-                        tr.residual_[tIdx][I][0] -= rate*wtracer[tIdx];
-                        // Store _injector_ tracer rate for reporting
-                        this->wellTracerRate_.at(std::make_pair(well.name(),this->name(tr.idx_[tIdx]))) += rate*wtracer[tIdx];
+                for (auto& perfData : wellPtr->perforationData()) {
+                    auto I = perfData.cell_index;
+                    Scalar rate = wellPtr->volumetricSurfaceRateForConnection(I, tr.phaseIdx_);
+                    if (rate > 0) {
+                        for (int tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
+                            tr.residual_[tIdx][I][0] -= rate*wtracer[tIdx];
+                            // Store _injector_ tracer rate for reporting
+                            this->wellTracerRate_.at(std::make_pair(well.name(),this->name(tr.idx_[tIdx]))) += rate*wtracer[tIdx];
+                        }
+                    }
+                    else if (rate < 0) {
+                        for (int tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
+                            tr.residual_[tIdx][I][0] -= rate*tr.concentration_[tIdx][I];
+                        }
+                        (*this->tracerMatrix_[bidx])[I][I][0][0] -= rate*variable<TracerEvaluation>(1.0, 0).derivative(0);
                     }
                 }
-                else if (rate < 0) {
-                    for (int tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
-                        tr.residual_[tIdx][I][0] -= rate*tr.concentration_[tIdx][I];
-                    }
-                    (*this->tracerMatrix_)[I][I][0][0] -= rate*variable<TracerEvaluation>(1.0, 0).derivative(0);
-                }
+                ++bidx;
             }
         }
 
         // Communicate overlap using grid Communication
-        auto handle = VectorVectorDataHandle<GridView, std::vector<TracerVector>>(tr.residual_,
-                                                                                  simulator_.gridView());
-        simulator_.gridView().communicate(handle, Dune::InteriorBorder_All_Interface,
-                                          Dune::ForwardCommunication);
+        for (auto& tr : tbatch) {
+            if (tr.numTracer() == 0)
+                continue;
+            auto handle = VectorVectorDataHandle<GridView, std::vector<TracerVector>>(tr.residual_,
+                                                                                      simulator_.gridView());
+            simulator_.gridView().communicate(handle, Dune::InteriorBorder_All_Interface,
+                                              Dune::ForwardCommunication);
+        }
     }
 
     void updateStorageCache()
@@ -413,6 +450,9 @@ protected:
             tbatch[2].numTracer() == 0)
             return;
 
+        assembleTracerEquations_();
+
+        size_t bidx = 0;
         for (auto& tr : tbatch) {
             if (tr.numTracer() == 0)
                 continue;
@@ -423,9 +463,7 @@ protected:
             for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx)
                 dx[tIdx] = 0.0;
 
-            assembleTracerEquations_(tr);
-
-            bool converged = this->linearSolveBatchwise_(*this->tracerMatrix_, dx, tr.residual_);
+            bool converged = this->linearSolveBatchwise_(*this->tracerMatrix_[bidx++], dx, tr.residual_);
             if (!converged)
                 std::cout << "### Tracer model: Warning, linear solver did not converge. ###" << std::endl;
 
