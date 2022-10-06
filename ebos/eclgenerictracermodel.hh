@@ -37,6 +37,7 @@
 
 #include <dune/common/version.hh>
 
+#include <cstddef>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -55,7 +56,7 @@ public:
     /*!
      * \brief Return the number of tracers considered by the tracerModel.
      */
-    int numTracers() const;
+    std::size_t numTracers() const;
 
     /*!
      * \brief Return the tracer name

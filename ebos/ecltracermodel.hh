@@ -33,6 +33,7 @@
 #include <opm/models/utils/propertysystem.hh>
 #include <opm/simulators/utils/VectorVectorDataHandle.hpp>
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -262,14 +263,11 @@ protected:
         // to the rhs both through storrage and flux terms.
         // Compare also advanceTracerFields(...) below.
 
-        (*this->tracerMatrix_[0]) = 0.0;
-        (*this->tracerMatrix_[1]) = 0.0;
-        (*this->tracerMatrix_[2]) = 0.0;
         std::size_t bidx = 0;
         for (auto& tr : tbatch) {
             if (tr.numTracer() != 0)
                 (*this->tracerMatrix_[bidx]) = 0.0;
-            for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx)
+            for (std::size_t tIdx = 0; tIdx < tr.numTracer(); ++tIdx)
                 tr.residual_[tIdx] = 0.0;
             ++bidx;
         }
@@ -314,21 +312,21 @@ protected:
                 }
                 std::vector<Scalar> storageOfTimeIndex1(tr.numTracer());
                 if (elemCtx.enableStorageCache()) {
-                    for (int tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
+                    for (std::size_t tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
                         storageOfTimeIndex1[tIdx] = tr.storageOfTimeIndex1_[tIdx][I];
                     }
                 }
                 else {
                     Scalar fVolume1;
                     computeVolume_(fVolume1, tr.phaseIdx_, elemCtx, 0, /*timIdx=*/1);
-                    for (int tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
+                    for (std::size_t tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
                         storageOfTimeIndex1[tIdx] = fVolume1*tr.concentrationInitial_[tIdx][I1];
                     }
                 }
 
                 TracerEvaluation fVolume;
                 computeVolume_(fVolume, tr.phaseIdx_, elemCtx, 0, /*timIdx=*/0);
-                for (int tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
+                for (std::size_t tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
                     Scalar storageOfTimeIndex0 = fVolume.value()*tr.concentration_[tIdx][I];
                     Scalar localStorage = (storageOfTimeIndex0 - storageOfTimeIndex1[tIdx]) * scvVolume/dt;
                     tr.residual_[tIdx][I][0] += localStorage; //residual + flux
@@ -351,7 +349,7 @@ protected:
                     bool isUpF;
                     computeFlux_(flux, isUpF, tr.phaseIdx_, elemCtx, scvfIdx, 0);
                     int globalUpIdx = isUpF ? I : J;
-                    for (int tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
+                    for (std::size_t tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
                         tr.residual_[tIdx][I][0] += flux.value()*tr.concentration_[tIdx][globalUpIdx]; //residual + flux
                     }
                     if (isUpF) {
@@ -374,12 +372,12 @@ protected:
                     ++bidx;
                     continue;
                 }
-                for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
+                for (std::size_t tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
                     this->wellTracerRate_[std::make_pair(well.name(), this->name(tr.idx_[tIdx]))] = 0.0;
                 }
 
                 std::vector<double> wtracer(tr.numTracer());
-                for (int tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
+                for (std::size_t tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
                     wtracer[tIdx] = well.getTracerProperties().getConcentration(this->name(tr.idx_[tIdx]));
                 }
 
@@ -387,14 +385,14 @@ protected:
                     auto I = perfData.cell_index;
                     Scalar rate = wellPtr->volumetricSurfaceRateForConnection(I, tr.phaseIdx_);
                     if (rate > 0) {
-                        for (int tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
+                        for (std::size_t tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
                             tr.residual_[tIdx][I][0] -= rate*wtracer[tIdx];
                             // Store _injector_ tracer rate for reporting
                             this->wellTracerRate_.at(std::make_pair(well.name(),this->name(tr.idx_[tIdx]))) += rate*wtracer[tIdx];
                         }
                     }
                     else if (rate < 0) {
-                        for (int tIdx =0; tIdx < tr.numTracer(); ++tIdx) {
+                        for (std::size_t tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
                             tr.residual_[tIdx][I][0] -= rate*tr.concentration_[tIdx][I];
                         }
                         (*this->tracerMatrix_[bidx])[I][I][0][0] -= rate*variable<TracerEvaluation>(1.0, 0).derivative(0);
@@ -436,7 +434,7 @@ protected:
                     continue;
                 Scalar fVolume;
                 computeVolume_(fVolume, tr.phaseIdx_, elemCtx, 0, /*timeIdx=*/0);
-                for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
+                for (std::size_t tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
                     tr.storageOfTimeIndex1_[tIdx][globalDofIdx] = fVolume*tr.concentrationInitial_[tIdx][globalDofIdx];
                 }
             }
@@ -460,14 +458,14 @@ protected:
             // Note that we solve for a concentration update (compared to previous time step)
             // Confer also assembleTracerEquations_(...) above.
             std::vector<TracerVector> dx(tr.concentration_);
-            for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx)
+            for (std::size_t tIdx = 0; tIdx < tr.numTracer(); ++tIdx)
                 dx[tIdx] = 0.0;
 
             bool converged = this->linearSolveBatchwise_(*this->tracerMatrix_[bidx++], dx, tr.residual_);
             if (!converged)
                 std::cout << "### Tracer model: Warning, linear solver did not converge. ###" << std::endl;
 
-            for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
+            for (std::size_t tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
                 tr.concentration_[tIdx] -= dx[tIdx];
                 // Tracer concentrations for restart report
                 this->tracerConcentration_[tr.idx_[tIdx]] = tr.concentration_[tIdx];
@@ -488,7 +486,7 @@ protected:
                     Scalar rate = wellPtr->volumetricSurfaceRateForConnection(I, tr.phaseIdx_);
                     if (rate < 0) {
                         rateWellNeg += rate;
-                        for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
+                        for (std::size_t tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
                             this->wellTracerRate_.at(std::make_pair(well.name(),this->name(tr.idx_[tIdx]))) += rate*tr.concentration_[tIdx][I];
                         }
                     }
@@ -510,7 +508,7 @@ protected:
                 if (rateWellTotal > rateWellNeg) { // Cross flow
                     const Scalar bucketPrDay = 10.0/(1000.*3600.*24.); // ... keeps (some) trouble away
                     const Scalar factor = (rateWellTotal < -bucketPrDay) ? rateWellTotal/rateWellNeg : 0.0;
-                    for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
+                    for (std::size_t tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
                         this->wellTracerRate_.at(std::make_pair(well.name(),this->name(tr.idx_[tIdx]))) *= factor;
                     }
                 }
@@ -540,11 +538,11 @@ protected:
 
       TracerBatch(int phaseIdx) : phaseIdx_(phaseIdx) {}
 
-      int numTracer() const {return idx_.size(); }
+      std::size_t numTracer() const {return idx_.size(); }
 
       void addTracer(const int idx, const TV & concentration)
       {
-          int numGridDof = concentration.size();
+          std::size_t numGridDof = concentration.size();
           idx_.emplace_back(idx);
           concentrationInitial_.emplace_back(concentration);
           concentration_.emplace_back(concentration);

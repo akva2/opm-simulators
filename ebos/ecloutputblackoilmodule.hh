@@ -693,7 +693,7 @@ public:
             // tracers
             const auto& tracerModel = simulator_.problem().tracerModel();
             if (!this->tracerConcentrations_.empty()) {
-                for (int tracerIdx = 0; tracerIdx < tracerModel.numTracers(); tracerIdx++){
+                for (std::size_t tracerIdx = 0; tracerIdx < tracerModel.numTracers(); tracerIdx++){
                     if (this->tracerConcentrations_[tracerIdx].empty())
                         continue;
 

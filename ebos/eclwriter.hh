@@ -39,6 +39,7 @@
 
 #include <dune/grid/common/partitionset.hh>
 
+#include <cstddef>
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -385,7 +386,7 @@ public:
             }
 
             auto& tracer_model = simulator_.problem().tracerModel();
-            for (int tracer_index = 0; tracer_index < tracer_model.numTracers(); tracer_index++) {
+            for (std::size_t tracer_index = 0; tracer_index < tracer_model.numTracers(); tracer_index++) {
                 const auto& tracer_name = tracer_model.fname(tracer_index);
                 const auto& tracer_solution = restartValues.solution.data(tracer_name);
                 for (unsigned elemIdx = 0; elemIdx < numElements; ++elemIdx) {
