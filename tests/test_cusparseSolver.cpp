@@ -150,7 +150,7 @@ void test3(const pt::ptree& prm)
 }
 
 
-BOOST_AUTO_TEST_CASE(TestDefaultPreconditionerFactory)
+BOOST_AUTO_TEST_CASE(TestCusparseSolver)
 {
     pt::ptree prm;
 
