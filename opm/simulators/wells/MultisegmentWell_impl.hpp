@@ -1236,7 +1236,8 @@ namespace Opm
     checkOperabilityUnderBHPLimit(const WellState& /*well_state*/, const Simulator& ebos_simulator, DeferredLogger& deferred_logger)
     {
         const auto& summaryState = ebos_simulator.vanguard().summaryState();
-        const double bhp_limit = Base::mostStrictBhpFromBhpLimits(summaryState);
+        const double bhp_limit = WellBhpThpCalculator::mostStrictBhpFromBhpLimits(summaryState,
+                                                                                  this->well_ecl_);
         // Crude but works: default is one atmosphere.
         // TODO: a better way to detect whether the BHP is defaulted or not
         const bool bhp_limit_not_defaulted = bhp_limit > 1.5 * unit::barsa;
@@ -1407,7 +1408,8 @@ namespace Opm
         if (obtain_bhp) {
             this->operability_status_.can_obtain_bhp_with_thp_limit = true;
 
-            const double  bhp_limit = Base::mostStrictBhpFromBhpLimits(summaryState);
+            const double bhp_limit = WellBhpThpCalculator::mostStrictBhpFromBhpLimits(summaryState,
+                                                                                      this->well_ecl_);
             this->operability_status_.obey_bhp_limit_with_thp_limit = (*obtain_bhp >= bhp_limit);
 
             const double thp_limit = this->getTHPConstraint(summaryState);
@@ -1948,13 +1950,20 @@ namespace Opm
             return rates;
         };
 
-        auto bhpAtLimit = this->MultisegmentWellGeneric<Scalar>::
+        auto bhpAtLimit = WellBhpThpCalculator::
                 computeBhpAtThpLimitInj(frates,
                                         summary_state,
-                                        getRefDensity(),
+                                        *this->vfpProperties(),
+                                        this->wellEcl(),
+                                        this->getRefDensity(),
+                                        this->refDepth(),
+                                        this->gravity(),
+                                        false,
+                                        100,
+                                        0.01,
                                         deferred_logger);
 
-        if(bhpAtLimit)
+        if (bhpAtLimit)
             return bhpAtLimit;
 
        auto fratesIter = [this, &ebos_simulator, &deferred_logger](const double bhp) {
@@ -1966,8 +1975,17 @@ namespace Opm
            return rates;
        };
 
-        return this->MultisegmentWellGeneric<Scalar>::
-               computeBhpAtThpLimitInj(fratesIter, summary_state, getRefDensity(), deferred_logger);
+        return WellBhpThpCalculator::computeBhpAtThpLimitInj(fratesIter,
+                                                             summary_state,
+                                                             *this->vfpProperties(),
+                                                             this->wellEcl(),
+                                                             this->getRefDensity(),
+                                                             this->refDepth(),
+                                                             this->gravity(),
+                                                             false,
+                                                             100,
+                                                             0.01,
+                                                             deferred_logger);
     }
 
 
