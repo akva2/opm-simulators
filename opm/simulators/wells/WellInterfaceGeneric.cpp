@@ -188,21 +188,6 @@ bool WellInterfaceGeneric::wellHasTHPConstraints(const SummaryState& summaryStat
     return WellBhpThpCalculator(*this).wellHasTHPConstraints(summaryState);
 }
 
-double WellInterfaceGeneric::mostStrictBhpFromBhpLimits(const SummaryState& summaryState) const
-{
-    if (well_ecl_.isInjector()) {
-        const auto& controls = well_ecl_.injectionControls(summaryState);
-        return controls.bhp_limit;
-    }
-
-    if (well_ecl_.isProducer( )) {
-        const auto& controls = well_ecl_.productionControls(summaryState);
-        return controls.bhp_limit;
-    }
-
-    return 0.0;
-}
-
 double WellInterfaceGeneric::getTHPConstraint(const SummaryState& summaryState) const
 {
     if (dynamic_thp_limit_) {
