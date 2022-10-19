@@ -23,14 +23,12 @@
 #include <opm/simulators/wells/WellInterfaceGeneric.hpp>
 
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
-#include <opm/common/utility/numeric/RootFinders.hpp>
 #include <opm/simulators/utils/DeferredLoggingErrorHelpers.hpp>
 #include <opm/simulators/wells/PerforationData.hpp>
 #include <opm/simulators/wells/ParallelWellInfo.hpp>
 #include <opm/simulators/wells/VFPProperties.hpp>
 #include <opm/simulators/wells/WellBhpThpCalculator.hpp>
 #include <opm/simulators/wells/WellState.hpp>
-#include <opm/simulators/wells/WellHelpers.hpp>
 #include <opm/simulators/wells/VFPHelpers.hpp>
 #include <cassert>
 #include <cmath>

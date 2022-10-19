@@ -2653,9 +2653,13 @@ namespace Opm
             return rates;
         };
 
-        return this->StandardWellGeneric<Scalar>::computeBhpAtThpLimitInj(frates,
-                                                                          summary_state,
-                                                                          deferred_logger);
+        return WellBhpThpCalculator(*this).computeBhpAtThpLimitInj(frates,
+                                                                   summary_state,
+                                                                   this->getRho(),
+                                                                   1e-6,
+                                                                   50,
+                                                                   true,
+                                                                   deferred_logger);
     }
 
 
