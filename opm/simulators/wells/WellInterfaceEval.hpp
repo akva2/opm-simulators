@@ -49,13 +49,6 @@ class WellInterfaceEval {
     static constexpr int Gas = BlackoilPhases::Vapour;
 
 public:
-    template <class EvalWell>
-    EvalWell calculateBhpFromThp(const WellState& well_state,
-                                 const std::vector<EvalWell>& rates,
-                                 const Well& well,
-                                 const SummaryState& summaryState,
-                                 const double rho,
-                                 DeferredLogger& deferred_logger) const;
     template<class EvalWell>
     void getGroupInjectionControl(const Group& group,
                                   const WellState& well_state,
