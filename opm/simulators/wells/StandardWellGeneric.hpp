@@ -80,11 +80,6 @@ protected:
     static double relaxationFactorFraction(const double old_value,
                                            const double dx);
 
-    double calculateThpFromBhp(const WellState& well_state,
-                               const std::vector<double>& rates,
-                               const double bhp,
-                               DeferredLogger& deferred_logger) const;
-
     // checking the convergence of the well control equations
     void checkConvergenceControlEq(const WellState& well_state,
                                    ConvergenceReport& report,
