@@ -153,23 +153,6 @@ computeConnectionPressureDelta()
 }
 
 template<class Scalar>
-std::optional<double>
-StandardWellGeneric<Scalar>::
-computeBhpAtThpLimitProdWithAlq(const std::function<std::vector<double>(const double)>& frates,
-                                const SummaryState& summary_state,
-                                DeferredLogger& deferred_logger,
-                                double maxPerfPress,
-                                double alq_value) const
-{
-    return WellBhpThpCalculator(baseif_).computeBhpAtThpLimitProd(frates,
-                                                                  summary_state,
-                                                                  maxPerfPress,
-                                                                  this->getRho(),
-                                                                  alq_value,
-                                                                  deferred_logger);
-}
-
-template<class Scalar>
 void
 StandardWellGeneric<Scalar>::
 checkConvergenceControlEq(const WellState& well_state,
@@ -292,7 +275,6 @@ checkConvergencePolyMW(const std::vector<double>& res,
       }
   }
 }
-
 
 template<class Scalar>
 void
