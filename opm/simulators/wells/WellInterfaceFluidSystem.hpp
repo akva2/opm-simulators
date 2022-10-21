@@ -38,9 +38,10 @@ namespace RateConverter
 
 class Group;
 class GroupState;
+struct RatioLimitCheckReport;
+class SingleWellState;
 class Schedule;
 class WellState;
-class SingleWellState;
 
 template<class FluidSystem>
 class WellInterfaceFluidSystem : public WellInterfaceGeneric {
@@ -102,12 +103,6 @@ protected:
                              const double* rates_or_potentials,
                              Opm::DeferredLogger& deferred_logger) const;
 
-    struct RatioLimitCheckReport{
-        bool ratio_limit_violated = false;
-        int worst_offending_completion = INVALIDCOMPLETION;
-        double violation_extent = 0.0;
-    };
-
     void checkMaxWaterCutLimit(const WellEconProductionLimits& econ_production_limits,
                                const SingleWellState& ws,
                                RatioLimitCheckReport& report) const;
@@ -151,13 +146,6 @@ protected:
 
     // For the conversion between the surface volume rate and reservoir voidage rate
     const RateConverterType& rateConverter_;
-
-private:
-    template <typename RatioFunc>
-    void checkMaxRatioLimitCompletions(const SingleWellState& ws,
-                                       const double max_ratio_limit,
-                                       const RatioFunc& ratioFunc,
-                                       RatioLimitCheckReport& report) const;
 };
 
 }

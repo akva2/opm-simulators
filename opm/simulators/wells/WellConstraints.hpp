@@ -27,6 +27,7 @@
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
 #include <functional>
+#include <limits>
 #include <utility>
 #include <vector>
 
@@ -34,11 +35,18 @@ namespace Opm
 {
 
 class DeferredLogger;
+class ParallelWellInfo;
 class PhaseUsage;
 using RegionId = int;
 class Rates;
 class SingleWellState;
 class WellInterfaceGeneric;
+
+struct RatioLimitCheckReport {
+    bool ratio_limit_violated = false;
+    int worst_offending_completion = std::numeric_limits<int>::max();
+    double violation_extent = 0.0;
+};
 
 //! \brief Class for computing well group constraints.
 class WellConstraints {
@@ -63,6 +71,12 @@ public:
     bool checkMaxRatioLimitWell(const SingleWellState& ws,
                                 const double max_ratio_limit,
                                 const RatioFunc& ratioFunc) const;
+
+    void checkMaxRatioLimitCompletions(const SingleWellState& ws,
+                                       const double max_ratio_limit,
+                                       const RatioFunc& ratioFunc,
+                                       const ParallelWellInfo& parallel_well_info,
+                                       RatioLimitCheckReport& report) const;
 
 private:
     Well::ProducerCMode

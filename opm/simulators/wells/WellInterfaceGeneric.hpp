@@ -169,6 +169,10 @@ public:
         return well_index_;
     }
 
+    const std::map<int, std::vector<int>>& getCompletions() const {
+        return completions_;
+    }
+
     double getTHPConstraint(const SummaryState& summaryState) const;
     double getALQ(const WellState& well_state) const;
     double wsolvent() const;
