@@ -28,8 +28,8 @@
 #include <opm/simulators/wells/ParallelWellInfo.hpp>
 #include <opm/simulators/wells/VFPProperties.hpp>
 #include <opm/simulators/wells/WellBhpThpCalculator.hpp>
-#include <opm/simulators/wells/WellConstraints.hpp>
 #include <opm/simulators/wells/WellState.hpp>
+#include <opm/simulators/wells/WellTest.hpp>
 #include <opm/simulators/wells/VFPHelpers.hpp>
 #include <cassert>
 #include <cmath>
@@ -365,18 +365,32 @@ void WellInterfaceGeneric::updateWellTestState(const SingleWellState& ws,
 {
     // updating well test state based on physical (THP/BHP) limits.
     if (!this->isOperableAndSolvable()) {
-        WellConstraints(*this).updateWellTestStatePhysical(simulationTime, writeMessageToOPMLog,
-                                                           wellTestState, deferred_logger);
+        WellTest(*this).updateWellTestStatePhysical(simulationTime, writeMessageToOPMLog,
+                                                    wellTestState, deferred_logger);
     }
 
     // updating well test state based on Economic limits for operable wells
     if (this->isOperableAndSolvable())
-        WellConstraints(*this).updateWellTestStateEconomic(ws, simulationTime,
-                                                           writeMessageToOPMLog,
-                                                           parallel_well_info_,
-                                                           wellTestState, deferred_logger);
+        WellTest(*this).updateWellTestStateEconomic(ws, simulationTime,
+                                                    writeMessageToOPMLog,
+                                                    parallel_well_info_,
+                                                    wellTestState, deferred_logger);
 
     // TODO: well can be shut/closed due to other reasons
+}
+
+bool WellInterfaceGeneric::checkConstraints(WellState& well_state,
+                                            const GroupState& group_state,
+                                            const Schedule& schedule,
+                                            const SummaryState& summaryState,
+                                            DeferredLogger& deferred_logger) const
+{
+    const bool ind_broken = this->checkIndividualConstraints(well_state.well(this->indexOfWell()), summaryState, deferred_logger);
+    if (ind_broken) {
+        return true;
+    } else {
+        return this->checkGroupConstraints(well_state, group_state, schedule, summaryState, deferred_logger);
+    }
 }
 
 bool WellInterfaceGeneric::isOperableAndSolvable() const

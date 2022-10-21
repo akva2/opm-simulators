@@ -105,29 +105,12 @@ checkGroupConstraints(WellState& well_state,
 {
     auto rCoeff = [this](const int id, const int region, std::vector<double>& coeff)
     {
-      this->rateConverter().calcCoeff(id, region, coeff);
+        this->rateConverter().calcCoeff(id, region, coeff);
     };
 
     return WellGroupConstraints(*this).checkGroupConstraints(well_state, group_state,
                                                              schedule, summaryState,
                                                              rCoeff, deferred_logger);
-}
-
-template <typename FluidSystem>
-bool
-WellInterfaceFluidSystem<FluidSystem>::
-checkConstraints(WellState& well_state,
-                 const GroupState& group_state,
-                 const Schedule& schedule,
-                 const SummaryState& summaryState,
-                 DeferredLogger& deferred_logger) const
-{
-    const bool ind_broken = checkIndividualConstraints(well_state.well(this->index_of_well_), summaryState, deferred_logger);
-    if (ind_broken) {
-        return true;
-    } else {
-        return checkGroupConstraints(well_state, group_state, schedule, summaryState, deferred_logger);
-    }
 }
 
 template<typename FluidSystem>

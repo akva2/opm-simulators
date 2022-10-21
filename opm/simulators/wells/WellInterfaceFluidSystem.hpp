@@ -77,19 +77,13 @@ protected:
 
     bool checkIndividualConstraints(SingleWellState& ws,
                                     const SummaryState& summaryState,
-                                    DeferredLogger& deferred_logger) const;
+                                    DeferredLogger& deferred_logger) const override;
 
     bool checkGroupConstraints(WellState& well_state,
                                const GroupState& group_state,
                                const Schedule& schedule,
                                const SummaryState& summaryState,
-                               DeferredLogger& deferred_logger) const;
-
-    bool checkConstraints(WellState& well_state,
-                          const GroupState& group_state,
-                          const Schedule& schedule,
-                          const SummaryState& summaryState,
-                          DeferredLogger& deferred_logger) const;
+                               DeferredLogger& deferred_logger) const override;
 
     std::optional<double>
     getGroupInjectionTargetRate(const Group& group,

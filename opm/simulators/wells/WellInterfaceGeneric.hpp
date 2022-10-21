@@ -196,6 +196,21 @@ public:
 protected:
     bool getAllowCrossFlow() const;
 
+    bool checkConstraints(WellState& well_state,
+                          const GroupState& group_state,
+                          const Schedule& schedule,
+                          const SummaryState& summaryState,
+                          DeferredLogger& deferred_logger) const;
+
+    virtual bool checkIndividualConstraints(SingleWellState& ws,
+                                            const SummaryState& summaryState,
+                                            DeferredLogger& deferred_logger) const = 0;
+    virtual bool checkGroupConstraints(WellState& well_state,
+                                       const GroupState& group_state,
+                                       const Schedule& schedule,
+                                       const SummaryState& summaryState,
+                                       DeferredLogger& deferred_logger) const = 0;
+
     // definition of the struct OperabilityStatus
     struct OperabilityStatus {
         bool isOperableAndSolvable() const {
