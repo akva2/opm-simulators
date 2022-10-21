@@ -86,10 +86,6 @@ protected:
                                     const SummaryState& summaryState,
                                     DeferredLogger& deferred_logger) const;
 
-    Well::InjectorCMode activeInjectionConstraint(const SingleWellState& ws,
-                                                  const SummaryState& summaryState,
-                                                  DeferredLogger& deferred_logger) const;
-
     bool checkGroupConstraints(WellState& well_state,
                                const GroupState& group_state,
                                const Schedule& schedule,

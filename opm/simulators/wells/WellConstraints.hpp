@@ -56,6 +56,12 @@ public:
                                bool& thp_limit_violated_but_not_switched,
                                DeferredLogger& deferred_logger) const;
 
+    Well::InjectorCMode
+    activeInjectionConstraint(const SingleWellState& ws,
+                              const SummaryState& summaryState,
+                              bool& thp_limit_violated_but_not_switched,
+                              DeferredLogger& deferred_logger) const;
+
 private:
     const WellInterfaceGeneric& well_; //!< Reference to well interface
 };
