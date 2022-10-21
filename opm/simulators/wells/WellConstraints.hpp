@@ -78,24 +78,14 @@ public:
                                        const ParallelWellInfo& parallel_well_info,
                                        RatioLimitCheckReport& report) const;
 
-    void checkMaxGORLimit(const WellEconProductionLimits& econ_production_limits,
-                          const SingleWellState& ws,
-                          const ParallelWellInfo& parallel_well_info,
-                          RatioLimitCheckReport& report) const;
-
-    void checkMaxWGRLimit(const WellEconProductionLimits& econ_production_limits,
-                          const SingleWellState& ws,
-                          const ParallelWellInfo& parallel_well_info,
-                          RatioLimitCheckReport& report) const;
-
-    void checkMaxWaterCutLimit(const WellEconProductionLimits& econ_production_limits,
-                               const SingleWellState& ws,
-                               const ParallelWellInfo& parallel_well_info,
-                               RatioLimitCheckReport& report) const;
-
     bool checkRateEconLimits(const WellEconProductionLimits& econ_production_limits,
                             const std::vector<double>& rates_or_potentials,
                             DeferredLogger& deferred_logger) const;
+
+    RatioLimitCheckReport checkRatioEconLimits(const WellEconProductionLimits& econ_production_limits,
+                                               const SingleWellState& ws,
+                                               const ParallelWellInfo& parallel_well_info,
+                                               DeferredLogger& deferred_logger) const;
 
 private:
     Well::ProducerCMode
@@ -110,6 +100,21 @@ private:
                               const SummaryState& summaryState,
                               bool& thp_limit_violated_but_not_switched,
                               DeferredLogger& deferred_logger) const;
+
+    void checkMaxGORLimit(const WellEconProductionLimits& econ_production_limits,
+                          const SingleWellState& ws,
+                          const ParallelWellInfo& parallel_well_info,
+                          RatioLimitCheckReport& report) const;
+
+    void checkMaxWGRLimit(const WellEconProductionLimits& econ_production_limits,
+                          const SingleWellState& ws,
+                          const ParallelWellInfo& parallel_well_info,
+                          RatioLimitCheckReport& report) const;
+
+    void checkMaxWaterCutLimit(const WellEconProductionLimits& econ_production_limits,
+                               const SingleWellState& ws,
+                               const ParallelWellInfo& parallel_well_info,
+                               RatioLimitCheckReport& report) const;
 
     const WellInterfaceGeneric& well_; //!< Reference to well interface
 };
