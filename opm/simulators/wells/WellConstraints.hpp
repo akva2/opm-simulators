@@ -34,6 +34,7 @@ namespace Opm
 {
 
 class DeferredLogger;
+class PhaseUsage;
 using RegionId = int;
 class Rates;
 class SingleWellState;
@@ -49,12 +50,19 @@ public:
                                             const std::vector<double>&,
                                             std::vector<double>&)>;
 
+    using RatioFunc = std::function<double(const std::vector<double>& rates,
+                                           const PhaseUsage& pu)>;
+
     bool
     checkIndividualConstraints(SingleWellState& ws,
                                const SummaryState& summaryState,
                                const RateConvFunc& calcReservoirVoidageRates,
                                bool& thp_limit_violated_but_not_switched,
                                DeferredLogger& deferred_logger) const;
+
+    bool checkMaxRatioLimitWell(const SingleWellState& ws,
+                                const double max_ratio_limit,
+                                const RatioFunc& ratioFunc) const;
 
 private:
     Well::ProducerCMode

@@ -280,4 +280,19 @@ checkIndividualConstraints(SingleWellState& ws,
     return false;
 }
 
+bool WellConstraints::checkMaxRatioLimitWell(const SingleWellState& ws,
+                                             const double max_ratio_limit,
+                                             const RatioFunc& ratioFunc) const
+{
+    const int np = well_.numPhases();
+
+    std::vector<double> well_rates(np, 0.0);
+    for (int p = 0; p < np; ++p) {
+        well_rates[p] = ws.surface_rates[p];
+    }
+
+    const double well_ratio = ratioFunc(well_rates, well_.phaseUsage());
+    return (well_ratio > max_ratio_limit);
+}
+
 } // namespace Opm
