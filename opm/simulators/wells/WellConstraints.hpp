@@ -93,6 +93,10 @@ public:
                                const ParallelWellInfo& parallel_well_info,
                                RatioLimitCheckReport& report) const;
 
+    bool checkRateEconLimits(const WellEconProductionLimits& econ_production_limits,
+                            const std::vector<double>& rates_or_potentials,
+                            DeferredLogger& deferred_logger) const;
+
 private:
     Well::ProducerCMode
     activeProductionConstraint(const SingleWellState& ws,
