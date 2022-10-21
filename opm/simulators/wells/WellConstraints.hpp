@@ -78,6 +78,11 @@ public:
                                        const ParallelWellInfo& parallel_well_info,
                                        RatioLimitCheckReport& report) const;
 
+    void checkMaxGORLimit(const WellEconProductionLimits& econ_production_limits,
+                          const SingleWellState& ws,
+                          const ParallelWellInfo& parallel_well_info,
+                          RatioLimitCheckReport& report) const;
+
 private:
     Well::ProducerCMode
     activeProductionConstraint(const SingleWellState& ws,

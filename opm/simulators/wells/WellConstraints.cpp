@@ -341,4 +341,37 @@ checkMaxRatioLimitCompletions(const SingleWellState& ws,
     }
 }
 
+void WellConstraints::
+checkMaxGORLimit(const WellEconProductionLimits& econ_production_limits,
+                 const SingleWellState& ws,
+                 const ParallelWellInfo& parallel_well_info,
+                 RatioLimitCheckReport& report) const
+{
+    static constexpr int Oil = BlackoilPhases::Liquid;
+    static constexpr int Gas = BlackoilPhases::Vapour;
+
+    // function to calculate gor based on rates
+    auto gor = [](const std::vector<double>& rates,
+                  const PhaseUsage& pu) {
+        const double oil_rate = -rates[pu.phase_pos[Oil]];
+        const double gas_rate = -rates[pu.phase_pos[Gas]];
+        if (gas_rate <= 0.)
+            return 0.;
+        else if (oil_rate <= 0.)
+            return 1.e100; // big value to mark it as violated
+        else
+            return (gas_rate / oil_rate);
+    };
+
+    const double max_gor_limit = econ_production_limits.maxGasOilRatio();
+    assert(max_gor_limit > 0.);
+
+    const bool gor_limit_violated = this->checkMaxRatioLimitWell(ws, max_gor_limit, gor);
+
+    if (gor_limit_violated) {
+        report.ratio_limit_violated = true;
+        this->checkMaxRatioLimitCompletions(ws, max_gor_limit, gor, parallel_well_info, report);
+    }
+}
+
 } // namespace Opm
