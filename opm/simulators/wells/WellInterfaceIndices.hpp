@@ -23,15 +23,15 @@
 #ifndef OPM_WELLINTERFACE_INDICES_HEADER_INCLUDED
 #define OPM_WELLINTERFACE_INDICES_HEADER_INCLUDED
 
+#include <opm/simulators/wells/WellInterfaceAssemble.hpp>
 #include <opm/simulators/wells/WellInterfaceFluidSystem.hpp>
-#include <opm/simulators/wells/WellInterfaceEval.hpp>
 
 namespace Opm
 {
 
 template<class FluidSystem, class Indices, class Scalar>
 class WellInterfaceIndices : public WellInterfaceFluidSystem<FluidSystem>
-                           , public WellInterfaceEval<FluidSystem>
+                           , public WellInterfaceAssemble<FluidSystem>
 {
 public:
     using WellInterfaceFluidSystem<FluidSystem>::Gas;

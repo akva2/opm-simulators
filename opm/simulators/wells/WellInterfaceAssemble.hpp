@@ -21,8 +21,8 @@
 */
 
 
-#ifndef OPM_WELLINTERFACE_EVAL_HEADER_INCLUDED
-#define OPM_WELLINTERFACE_EVAL_HEADER_INCLUDED
+#ifndef OPM_WELLINTERFACE_ASSEMBLE_HEADER_INCLUDED
+#define OPM_WELLINTERFACE_ASSEMBLE_HEADER_INCLUDED
 
 #include <opm/core/props/BlackoilPhases.hpp>
 
@@ -43,7 +43,7 @@ template<class FluidSystem> class WellInterfaceFluidSystem;
 class WellState;
 
 template<class FluidSystem>
-class WellInterfaceEval {
+class WellInterfaceAssemble {
     static constexpr int Water = BlackoilPhases::Aqua;
     static constexpr int Oil = BlackoilPhases::Liquid;
     static constexpr int Gas = BlackoilPhases::Vapour;
@@ -124,7 +124,7 @@ public:
                                DeferredLogger& deferred_logger) const;
 
 protected:
-    WellInterfaceEval(const WellInterfaceFluidSystem<FluidSystem>& baseif);
+    WellInterfaceAssemble(const WellInterfaceFluidSystem<FluidSystem>& baseif);
 
     const WellInterfaceFluidSystem<FluidSystem>& baseif_;
 };

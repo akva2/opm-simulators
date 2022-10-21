@@ -53,7 +53,7 @@ WellInterfaceIndices(const Well& well,
                                             num_phases,
                                             index_of_well,
                                             perf_data)
-    , WellInterfaceEval<FluidSystem>(static_cast<const WellInterfaceFluidSystem<FluidSystem>&>(*this))
+    , WellInterfaceAssemble<FluidSystem>(static_cast<const WellInterfaceFluidSystem<FluidSystem>&>(*this))
 {
 }
 

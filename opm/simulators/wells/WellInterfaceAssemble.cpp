@@ -20,7 +20,7 @@
 */
 
 #include <config.h>
-#include <opm/simulators/wells/WellInterfaceEval.hpp>
+#include <opm/simulators/wells/WellInterfaceAssemble.hpp>
 
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
@@ -43,15 +43,15 @@ namespace Opm
 {
 
 template<class FluidSystem>
-WellInterfaceEval<FluidSystem>::
-WellInterfaceEval(const WellInterfaceFluidSystem<FluidSystem>& baseif)
+WellInterfaceAssemble<FluidSystem>::
+WellInterfaceAssemble(const WellInterfaceFluidSystem<FluidSystem>& baseif)
     : baseif_(baseif)
 {}
 
 template<class FluidSystem>
 template<class EvalWell>
 void
-WellInterfaceEval<FluidSystem>::
+WellInterfaceAssemble<FluidSystem>::
 assembleControlEqProd_(const WellState& well_state,
                        const GroupState& group_state,
                        const Schedule& schedule,
@@ -176,7 +176,7 @@ assembleControlEqProd_(const WellState& well_state,
 template<class FluidSystem>
 template<class EvalWell>
 void
-WellInterfaceEval<FluidSystem>::
+WellInterfaceAssemble<FluidSystem>::
 assembleControlEqInj_(const WellState& well_state,
                       const GroupState& group_state,
                       const Schedule& schedule,
@@ -260,7 +260,7 @@ assembleControlEqInj_(const WellState& well_state,
 }
 
 #define INSTANCE_METHODS(A,...) \
-template void WellInterfaceEval<A>:: \
+template void WellInterfaceAssemble<A>:: \
 assembleControlEqProd_<__VA_ARGS__>(const WellState&, \
                                     const GroupState&, \
                                     const Schedule&, \
@@ -271,7 +271,7 @@ assembleControlEqProd_<__VA_ARGS__>(const WellState&, \
                                     const std::function<__VA_ARGS__()>&, \
                                     __VA_ARGS__&, \
                                     DeferredLogger&) const; \
-template void WellInterfaceEval<A>:: \
+template void WellInterfaceAssemble<A>:: \
 assembleControlEqInj_<__VA_ARGS__>(const WellState&, \
                                    const GroupState&, \
                                    const Schedule&, \
@@ -285,7 +285,7 @@ assembleControlEqInj_<__VA_ARGS__>(const WellState&, \
 
 using FluidSys = BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>;
 
-template class WellInterfaceEval<FluidSys>;
+template class WellInterfaceAssemble<FluidSys>;
 
 INSTANCE_METHODS(FluidSys, DenseAd::Evaluation<double,3,0u>)
 INSTANCE_METHODS(FluidSys, DenseAd::Evaluation<double,4,0u>)
