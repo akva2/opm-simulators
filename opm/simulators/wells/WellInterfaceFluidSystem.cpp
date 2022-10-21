@@ -229,41 +229,6 @@ checkMaxWaterCutLimit(const WellEconProductionLimits& econ_production_limits,
 template<typename FluidSystem>
 void
 WellInterfaceFluidSystem<FluidSystem>::
-checkMaxWGRLimit(const WellEconProductionLimits& econ_production_limits,
-                 const SingleWellState& ws,
-                 RatioLimitCheckReport& report) const
-{
-    assert(FluidSystem::phaseIsActive(FluidSystem::waterPhaseIdx));
-    assert(FluidSystem::phaseIsActive(FluidSystem::gasPhaseIdx));
-
-    // function to calculate wgr based on rates
-    auto wgr = [](const std::vector<double>& rates,
-                  const PhaseUsage& pu) {
-
-        const double water_rate = -rates[pu.phase_pos[Water]];
-        const double gas_rate = -rates[pu.phase_pos[Gas]];
-        if (water_rate <= 0.)
-            return 0.;
-        else if (gas_rate <= 0.)
-            return 1.e100; // big value to mark it as violated
-        else
-            return (water_rate / gas_rate);
-    };
-
-    const double max_wgr_limit = econ_production_limits.maxWaterGasRatio();
-    assert(max_wgr_limit > 0.);
-
-    const bool wgr_limit_violated = WellConstraints(*this).checkMaxRatioLimitWell(ws, max_wgr_limit, wgr);
-
-    if (wgr_limit_violated) {
-        report.ratio_limit_violated = true;
-        WellConstraints(*this).checkMaxRatioLimitCompletions(ws, max_wgr_limit, wgr, parallel_well_info_, report);
-    }
-}
-
-template<typename FluidSystem>
-void
-WellInterfaceFluidSystem<FluidSystem>::
 checkRatioEconLimits(const WellEconProductionLimits& econ_production_limits,
                      const SingleWellState& ws,
                      RatioLimitCheckReport& report,
@@ -288,7 +253,9 @@ checkRatioEconLimits(const WellEconProductionLimits& econ_production_limits,
     }
 
     if (econ_production_limits.onMaxWaterGasRatio()) {
-        checkMaxWGRLimit(econ_production_limits, ws, report);
+        assert(FluidSystem::phaseIsActive(FluidSystem::waterPhaseIdx));
+        assert(FluidSystem::phaseIsActive(FluidSystem::gasPhaseIdx));
+        WellConstraints(*this).checkMaxWGRLimit(econ_production_limits, ws, parallel_well_info_, report);
     }
 
     if (econ_production_limits.onMaxGasLiquidRatio()) {
