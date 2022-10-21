@@ -48,16 +48,8 @@ class WellInterfaceFluidSystem : public WellInterfaceGeneric {
 protected:
     using RateConverterType = RateConverter::
     SurfaceToReservoirVoidage<FluidSystem, std::vector<int>>;
-    // to indicate a invalid completion
-    static constexpr int INVALIDCOMPLETION = std::numeric_limits<int>::max();
 
 public:
-    void updateWellTestState(const SingleWellState& ws,
-                             const double& simulationTime,
-                             const bool& writeMessageToOPMLog,
-                             WellTestState& wellTestState,
-                             DeferredLogger& deferred_logger) const;
-
     int flowPhaseToEbosPhaseIdx(const int phaseIdx) const;
 
     static constexpr int Water = BlackoilPhases::Aqua;
@@ -98,12 +90,6 @@ protected:
                           const Schedule& schedule,
                           const SummaryState& summaryState,
                           DeferredLogger& deferred_logger) const;
-
-    void updateWellTestStateEconomic(const SingleWellState& ws,
-                                     const double simulation_time,
-                                     const bool write_message_to_opmlog,
-                                     WellTestState& well_test_state,
-                                     DeferredLogger& deferred_logger) const;
 
     std::optional<double>
     getGroupInjectionTargetRate(const Group& group,

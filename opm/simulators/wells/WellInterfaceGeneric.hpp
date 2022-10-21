@@ -187,12 +187,14 @@ public:
         return this->changed_to_open_this_step_;
     }
 
+    void updateWellTestState(const SingleWellState& ws,
+                             const double& simulationTime,
+                             const bool& writeMessageToOPMLog,
+                             WellTestState& wellTestState,
+                             DeferredLogger& deferred_logger) const;
+
 protected:
     bool getAllowCrossFlow() const;
-    void updateWellTestStatePhysical(const double simulation_time,
-                                     const bool write_message_to_opmlog,
-                                     WellTestState& well_test_state,
-                                     DeferredLogger& deferred_logger) const;
 
     // definition of the struct OperabilityStatus
     struct OperabilityStatus {
