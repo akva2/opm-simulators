@@ -20,7 +20,7 @@
 */
 
 #include <config.h>
-#include <opm/simulators/wells/WellInterfaceEval.hpp>
+#include <opm/simulators/wells/WellAssemble.hpp>
 
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
@@ -44,25 +44,25 @@ namespace Opm
 {
 
 template<class FluidSystem>
-WellInterfaceEval<FluidSystem>::
-WellInterfaceEval(const WellInterfaceFluidSystem<FluidSystem>& baseif)
+WellAssemble<FluidSystem>::
+WellAssemble(const WellInterfaceFluidSystem<FluidSystem>& baseif)
     : baseif_(baseif)
 {}
 
 template<class FluidSystem>
 template<class EvalWell>
 void
-WellInterfaceEval<FluidSystem>::
-assembleControlEqProd_(const WellState& well_state,
-                       const GroupState& group_state,
-                       const Schedule& schedule,
-                       const SummaryState& summaryState,
-                       const Well::ProductionControls& controls,
-                       const EvalWell& bhp,
-                       const std::vector<EvalWell>& rates, // Always 3 canonical rates.
-                       const std::function<EvalWell()>& bhp_from_thp,
-                       EvalWell& control_eq,
-                       DeferredLogger& deferred_logger) const
+WellAssemble<FluidSystem>::
+assembleControlEqProd(const WellState& well_state,
+                      const GroupState& group_state,
+                      const Schedule& schedule,
+                      const SummaryState& summaryState,
+                      const Well::ProductionControls& controls,
+                      const EvalWell& bhp,
+                      const std::vector<EvalWell>& rates, // Always 3 canonical rates.
+                      const std::function<EvalWell()>& bhp_from_thp,
+                      EvalWell& control_eq,
+                      DeferredLogger& deferred_logger) const
 {
     const auto current = well_state.well(baseif_.indexOfWell()).production_cmode;
     const auto& pu = baseif_.phaseUsage();
@@ -177,17 +177,17 @@ assembleControlEqProd_(const WellState& well_state,
 template<class FluidSystem>
 template<class EvalWell>
 void
-WellInterfaceEval<FluidSystem>::
-assembleControlEqInj_(const WellState& well_state,
-                      const GroupState& group_state,
-                      const Schedule& schedule,
-                      const SummaryState& summaryState,
-                      const Well::InjectionControls& controls,
-                      const EvalWell& bhp,
-                      const EvalWell& injection_rate,
-                      const std::function<EvalWell()>& bhp_from_thp,
-                      EvalWell& control_eq,
-                      DeferredLogger& deferred_logger) const
+WellAssemble<FluidSystem>::
+assembleControlEqInj(const WellState& well_state,
+                     const GroupState& group_state,
+                     const Schedule& schedule,
+                     const SummaryState& summaryState,
+                     const Well::InjectionControls& controls,
+                     const EvalWell& bhp,
+                     const EvalWell& injection_rate,
+                     const std::function<EvalWell()>& bhp_from_thp,
+                     EvalWell& control_eq,
+                     DeferredLogger& deferred_logger) const
 {
     auto current = well_state.well(baseif_.indexOfWell()).injection_cmode;
     const InjectorType injectorType = controls.injector_type;
@@ -261,32 +261,32 @@ assembleControlEqInj_(const WellState& well_state,
 }
 
 #define INSTANCE_METHODS(A,...) \
-template void WellInterfaceEval<A>:: \
-assembleControlEqProd_<__VA_ARGS__>(const WellState&, \
-                                    const GroupState&, \
-                                    const Schedule&, \
-                                    const SummaryState&, \
-                                    const Well::ProductionControls&, \
-                                    const __VA_ARGS__&, \
-                                    const std::vector<__VA_ARGS__>&, \
-                                    const std::function<__VA_ARGS__()>&, \
-                                    __VA_ARGS__&, \
-                                    DeferredLogger&) const; \
-template void WellInterfaceEval<A>:: \
-assembleControlEqInj_<__VA_ARGS__>(const WellState&, \
+template void WellAssemble<A>:: \
+assembleControlEqProd<__VA_ARGS__>(const WellState&, \
                                    const GroupState&, \
                                    const Schedule&, \
                                    const SummaryState&, \
-                                   const Well::InjectionControls&, \
+                                   const Well::ProductionControls&, \
                                    const __VA_ARGS__&, \
-                                   const __VA_ARGS__&, \
+                                   const std::vector<__VA_ARGS__>&, \
                                    const std::function<__VA_ARGS__()>&, \
                                    __VA_ARGS__&, \
-                                   DeferredLogger&) const;
+                                   DeferredLogger&) const; \
+template void WellAssemble<A>:: \
+assembleControlEqInj<__VA_ARGS__>(const WellState&, \
+                                  const GroupState&, \
+                                  const Schedule&, \
+                                  const SummaryState&, \
+                                  const Well::InjectionControls&, \
+                                  const __VA_ARGS__&, \
+                                  const __VA_ARGS__&, \
+                                  const std::function<__VA_ARGS__()>&, \
+                                  __VA_ARGS__&, \
+                                  DeferredLogger&) const;
 
 using FluidSys = BlackOilFluidSystem<double, BlackOilDefaultIndexTraits>;
 
-template class WellInterfaceEval<FluidSys>;
+template class WellAssemble<FluidSys>;
 
 INSTANCE_METHODS(FluidSys, DenseAd::Evaluation<double,3,0u>)
 INSTANCE_METHODS(FluidSys, DenseAd::Evaluation<double,4,0u>)
