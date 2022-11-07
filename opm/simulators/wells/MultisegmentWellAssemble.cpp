@@ -241,6 +241,34 @@ assembleFlowTerm(const int seg,
     }
 }
 
+template<typename FluidSystem, typename Indices, typename Scalar>
+template<class EvalWell>
+void MultisegmentWellAssemble<FluidSystem,Indices,Scalar>::
+assemblePerfTerm(const int seg,
+                 const int cell_idx,
+                 const int comp_idx,
+                 const EvalWell& cq_s_effective,
+                 MultisegmentWellEquations<Indices,Scalar>& eqns) const
+{
+    // subtract sum of phase fluxes in the well equations.
+    eqns.resWell_[seg][comp_idx] += cq_s_effective.value();
+
+         // assemble the jacobians
+    for (int pv_idx = 0; pv_idx < eqns.numWellEq; ++pv_idx) {
+
+             // also need to consider the efficiency factor when manipulating the jacobians.
+        eqns.duneC_[seg][cell_idx][pv_idx][comp_idx] -= cq_s_effective.derivative(pv_idx + Indices::numEq); // intput in transformed matrix
+
+                  // the index name for the D should be eq_idx / pv_idx
+        eqns.duneD_[seg][seg][comp_idx][pv_idx] += cq_s_effective.derivative(pv_idx + Indices::numEq);
+    }
+
+    for (int pv_idx = 0; pv_idx < Indices::numEq; ++pv_idx) {
+        // also need to consider the efficiency factor when manipulating the jacobians.
+        eqns.duneB_[seg][cell_idx][comp_idx][pv_idx] += cq_s_effective.derivative(pv_idx);
+    }
+}
+
 #define INSTANCE(Dim,...) \
 template class MultisegmentWellAssemble<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>,__VA_ARGS__,double>; \
 template void \
@@ -282,6 +310,13 @@ assembleFlowTerm(const int, \
                  const int, \
                  const int, \
                  const int, \
+                 const int, \
+                 const int, \
+                 const DenseAd::Evaluation<double,Dim,0u>&, \
+                 MultisegmentWellEquations<__VA_ARGS__,double>&) const; \
+template void \
+MultisegmentWellAssemble<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>,__VA_ARGS__,double>:: \
+assemblePerfTerm(const int, \
                  const int, \
                  const int, \
                  const DenseAd::Evaluation<double,Dim,0u>&, \

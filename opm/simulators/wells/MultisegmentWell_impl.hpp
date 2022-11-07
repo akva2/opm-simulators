@@ -19,12 +19,9 @@
 */
 
 
-#include <opm/simulators/linalg/SmallDenseMatrixUtils.hpp>
 #include <opm/simulators/wells/MultisegmentWellAssemble.hpp>
-#include <opm/simulators/wells/MSWellHelpers.hpp>
 #include <opm/simulators/wells/WellBhpThpCalculator.hpp>
 #include <opm/simulators/utils/DeferredLoggingErrorHelpers.hpp>
-#include <opm/input/eclipse/Schedule/MSW/Valve.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <string>
@@ -1692,23 +1689,12 @@ namespace Opm
 
                     this->connectionRates_[perf][comp_idx] = Base::restrictEval(cq_s_effective);
 
-                    // subtract sum of phase fluxes in the well equations.
-                    this->linSys_.resWell_[seg][comp_idx] += cq_s_effective.value();
-
-                    // assemble the jacobians
-                    for (int pv_idx = 0; pv_idx < numWellEq; ++pv_idx) {
-
-                        // also need to consider the efficiency factor when manipulating the jacobians.
-                        this->linSys_.duneC_[seg][cell_idx][pv_idx][comp_idx] -= cq_s_effective.derivative(pv_idx + Indices::numEq); // intput in transformed matrix
-
-                        // the index name for the D should be eq_idx / pv_idx
-                        this->linSys_.duneD_[seg][seg][comp_idx][pv_idx] += cq_s_effective.derivative(pv_idx + Indices::numEq);
-                    }
-
-                    for (int pv_idx = 0; pv_idx < Indices::numEq; ++pv_idx) {
-                        // also need to consider the efficiency factor when manipulating the jacobians.
-                        this->linSys_.duneB_[seg][cell_idx][comp_idx][pv_idx] += cq_s_effective.derivative(pv_idx);
-                    }
+                    MultisegmentWellAssemble<FluidSystem,Indices,Scalar>(*this).
+                        assemblePerfTerm(seg,
+                                         cell_idx,
+                                         comp_idx,
+                                         cq_s_effective,
+                                         this->linSys_);
                 }
             }
 

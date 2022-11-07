@@ -95,6 +95,13 @@ public:
                           const EvalWell& segment_rate,
                           MultisegmentWellEquations<Indices,Scalar>& eqns) const;
 
+    template<class EvalWell>
+    void assemblePerfTerm(const int seg,
+                          const int cell_idx,
+                          const int comp_idx,
+                          const EvalWell& cq_s_effective,
+                          MultisegmentWellEquations<Indices,Scalar>& eqns) const;
+
 private:
     const WellInterfaceIndices<FluidSystem,Indices,Scalar>& well_;
 };
