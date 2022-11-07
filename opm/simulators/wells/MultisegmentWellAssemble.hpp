@@ -85,6 +85,16 @@ public:
                                   const EvalWell& accumulation_term,
                                   MultisegmentWellEquations<Indices,Scalar>& eqns) const;
 
+    template<class EvalWell>
+    void assembleFlowTerm(const int seg,
+                          const int seg_upwind,
+                          const int comp_idx,
+                          const int WFrac,
+                          const int GFrac,
+                          const int WQTotal,
+                          const EvalWell& segment_rate,
+                          MultisegmentWellEquations<Indices,Scalar>& eqns) const;
+
 private:
     const WellInterfaceIndices<FluidSystem,Indices,Scalar>& well_;
 };

@@ -217,6 +217,30 @@ assembleAccelerationTerm(const int seg,
     }
 }
 
+template<typename FluidSystem, typename Indices, typename Scalar>
+template<class EvalWell>
+void MultisegmentWellAssemble<FluidSystem,Indices,Scalar>::
+assembleFlowTerm(const int seg,
+                 const int seg_upwind,
+                 const int comp_idx,
+                 const int WFrac,
+                 const int GFrac,
+                 const int WQTotal,
+                 const EvalWell& segment_rate,
+                 MultisegmentWellEquations<Indices,Scalar>& eqns) const
+{
+    // pressure derivative should be zero
+
+    eqns.resWell_[seg][comp_idx] -= segment_rate.value();
+    eqns.duneD_[seg][seg][comp_idx][WQTotal] -= segment_rate.derivative(WQTotal + Indices::numEq);
+    if (WFrac > -1) {
+        eqns.duneD_[seg][seg_upwind][comp_idx][WFrac] -= segment_rate.derivative(WFrac + Indices::numEq);
+    }
+    if (GFrac > -1) {
+        eqns.duneD_[seg][seg_upwind][comp_idx][GFrac] -= segment_rate.derivative(GFrac + Indices::numEq);
+    }
+}
+
 #define INSTANCE(Dim,...) \
 template class MultisegmentWellAssemble<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>,__VA_ARGS__,double>; \
 template void \
@@ -251,7 +275,17 @@ MultisegmentWellAssemble<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>,
 assembleAccelerationTerm(const int, \
                          const int, \
                          const DenseAd::Evaluation<double,Dim,0u>&, \
-                         MultisegmentWellEquations<__VA_ARGS__,double>&) const;
+                         MultisegmentWellEquations<__VA_ARGS__,double>&) const; \
+template void \
+MultisegmentWellAssemble<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>,__VA_ARGS__,double>:: \
+assembleFlowTerm(const int, \
+                 const int, \
+                 const int, \
+                 const int, \
+                 const int, \
+                 const int, \
+                 const DenseAd::Evaluation<double,Dim,0u>&, \
+                 MultisegmentWellEquations<__VA_ARGS__,double>&) const;
 
 // One phase
 INSTANCE(3, BlackOilOnePhaseIndices<0u,0u,0u,0u,false,false,0u,1u,0u>)
