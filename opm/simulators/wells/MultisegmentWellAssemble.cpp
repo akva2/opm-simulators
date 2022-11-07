@@ -32,6 +32,8 @@
 #include <opm/models/blackoil/blackoilonephaseindices.hh>
 #include <opm/models/blackoil/blackoiltwophaseindices.hh>
 
+#include <opm/simulators/linalg/matrixblock.hh>
+
 #include <opm/simulators/wells/MultisegmentWellEquations.hpp>
 #include <opm/simulators/wells/WellAssemble.hpp>
 #include <opm/simulators/wells/WellBhpThpCalculator.hpp>
@@ -269,7 +271,77 @@ assemblePerfTerm(const int seg,
     }
 }
 
-#define INSTANCE(Dim,...) \
+template<typename FluidSystem, typename Indices, typename Scalar>
+template<class PressureMatrix, class BVector>
+void MultisegmentWellAssemble<FluidSystem,Indices,Scalar>::
+addWellPressureEqs(const BVector& weights,
+                   const int pressureVarIndex,
+                   const int seg_pressure_var_ind,
+                   const WellState& well_state,
+                   const MultisegmentWellEquations<Indices,Scalar>& eqns,
+                   PressureMatrix& jacobian) const
+{
+    // Add the pressure contribution to the cpr system for the well
+
+    // Add for coupling from well to reservoir
+    const int welldof_ind = eqns.duneC_.M() + well_.indexOfWell();
+    if (!well_.isPressureControlled(well_state)) {
+        for (size_t rowC = 0; rowC < eqns.duneC_.N(); ++rowC) {
+            for (auto colC = eqns.duneC_[rowC].begin(),
+                      endC = eqns.duneC_[rowC].end(); colC != endC; ++colC) {
+                const auto row_index = colC.index();
+                const auto& bw = weights[row_index];
+                double matel = 0.0;
+
+                for(size_t i = 0; i< bw.size(); ++i){
+                    matel += bw[i]*(*colC)[seg_pressure_var_ind][i];
+                }
+                jacobian[row_index][welldof_ind] += matel;
+            }
+        }
+    }
+    // make cpr weights for well by pure avarage of reservoir weights of the perforations
+    if (!well_.isPressureControlled(well_state)) {
+        auto well_weight = weights[0];
+        well_weight = 0.0;
+        int num_perfs = 0;
+        for (size_t rowB = 0; rowB < eqns.duneB_.N(); ++rowB) {
+            for (auto colB = eqns.duneB_[rowB].begin(),
+                      endB = eqns.duneB_[rowB].end(); colB != endB; ++colB) {
+                const auto col_index = colB.index();
+                const auto& bw = weights[col_index];
+                well_weight += bw;
+                num_perfs += 1;
+            }
+        }
+
+        well_weight /= num_perfs;
+        assert(num_perfs>0);
+
+        // Add for coupling from reservoir to well and caclulate diag elelement corresping to incompressible standard well
+        double diag_ell = 0.0;
+        for (size_t rowB = 0; rowB < eqns.duneB_.N(); ++rowB) {
+            const auto& bw = well_weight;
+            for (auto colB = eqns.duneB_[rowB].begin(),
+                      endB = eqns.duneB_[rowB].end(); colB != endB; ++colB) {
+                const auto col_index = colB.index();
+                double matel = 0.0;
+                for(size_t i = 0; i< bw.size(); ++i){
+                    matel += bw[i] *(*colB)[i][pressureVarIndex];
+                }
+                jacobian[welldof_ind][col_index] += matel;
+                diag_ell -= matel;
+            }
+        }
+
+        assert(diag_ell > 0.0);
+        jacobian[welldof_ind][welldof_ind] = diag_ell;
+    } else {
+        jacobian[welldof_ind][welldof_ind] = 1.0; // maybe we could have used diag_ell if calculated
+    }
+}
+
+#define INSTANCE(Dim,Block,...) \
 template class MultisegmentWellAssemble<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>,__VA_ARGS__,double>; \
 template void \
 MultisegmentWellAssemble<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>,__VA_ARGS__,double>:: \
@@ -320,33 +392,41 @@ assemblePerfTerm(const int, \
                  const int, \
                  const int, \
                  const DenseAd::Evaluation<double,Dim,0u>&, \
-                 MultisegmentWellEquations<__VA_ARGS__,double>&) const;
+                 MultisegmentWellEquations<__VA_ARGS__,double>&) const; \
+template void \
+MultisegmentWellAssemble<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>,__VA_ARGS__,double>:: \
+addWellPressureEqs(const Dune::BlockVector<Dune::FieldVector<double,Block>>&, \
+                   const int, \
+                   const int, \
+                   const WellState&, \
+                   const MultisegmentWellEquations<__VA_ARGS__,double>&, \
+                   Dune::BCRSMatrix<MatrixBlock<double,1,1>>& jacobian) const;
 
 // One phase
-INSTANCE(3, BlackOilOnePhaseIndices<0u,0u,0u,0u,false,false,0u,1u,0u>)
-INSTANCE(4, BlackOilOnePhaseIndices<0u,0u,0u,1u,false,false,0u,1u,0u>)
-INSTANCE(8, BlackOilOnePhaseIndices<0u,0u,0u,0u,false,false,0u,1u,5u>)
+INSTANCE(3, 1, BlackOilOnePhaseIndices<0u,0u,0u,0u,false,false,0u,1u,0u>)
+INSTANCE(4, 2, BlackOilOnePhaseIndices<0u,0u,0u,1u,false,false,0u,1u,0u>)
+INSTANCE(8, 6, BlackOilOnePhaseIndices<0u,0u,0u,0u,false,false,0u,1u,5u>)
 
 // Two phase
-INSTANCE(5, BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,false,0u,0u,0u>)
-INSTANCE(5, BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,false,0u,1u,0u>)
-INSTANCE(5, BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,false,0u,2u,0u>)
-INSTANCE(6, BlackOilTwoPhaseIndices<0u,0u,1u,0u,false,false,0u,2u,0u>)
-INSTANCE(6, BlackOilTwoPhaseIndices<0u,0u,0u,1u,false,false,0u,1u,0u>)
-INSTANCE(6, BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,true,0u,0u,0u>)
-INSTANCE(6, BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,true,0u,2u,0u>)
-INSTANCE(7, BlackOilTwoPhaseIndices<0u,0u,2u,0u,false,false,0u,2u,0u>)
+INSTANCE(5, 2, BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,false,0u,0u,0u>)
+INSTANCE(5, 2, BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,false,0u,1u,0u>)
+INSTANCE(5, 2, BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,false,0u,2u,0u>)
+INSTANCE(6, 3, BlackOilTwoPhaseIndices<0u,0u,1u,0u,false,false,0u,2u,0u>)
+INSTANCE(6, 3, BlackOilTwoPhaseIndices<0u,0u,0u,1u,false,false,0u,1u,0u>)
+INSTANCE(6, 3, BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,true,0u,0u,0u>)
+INSTANCE(6, 3, BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,true,0u,2u,0u>)
+INSTANCE(7, 4, BlackOilTwoPhaseIndices<0u,0u,2u,0u,false,false,0u,2u,0u>)
 
 // Blackoil
-INSTANCE(7, BlackOilIndices<0u,0u,0u,0u,false,false,0u,0u>)
-INSTANCE(7, BlackOilIndices<0u,0u,0u,0u,false,false,1u,0u>)
-INSTANCE(8, BlackOilIndices<0u,0u,0u,0u,true,false,0u,0u>)
-INSTANCE(8, BlackOilIndices<0u,0u,0u,0u,false,true,0u,0u>)
-INSTANCE(8, BlackOilIndices<0u,1u,0u,0u,false,false,0u,0u>)
-INSTANCE(8, BlackOilIndices<0u,0u,1u,0u,false,false,0u,0u>)
-INSTANCE(8, BlackOilIndices<0u,0u,0u,1u,false,false,0u,0u>)
-INSTANCE(8, BlackOilIndices<1u,0u,0u,0u,false,false,0u,0u>)
-INSTANCE(8, BlackOilIndices<0u,0u,0u,0u,false,true,2u,0u>)
-INSTANCE(9, BlackOilIndices<0u,0u,0u,1u,false,true,0u,0u>)
+INSTANCE(7, 3, BlackOilIndices<0u,0u,0u,0u,false,false,0u,0u>)
+INSTANCE(7, 3, BlackOilIndices<0u,0u,0u,0u,false,false,1u,0u>)
+INSTANCE(8, 4, BlackOilIndices<0u,0u,0u,0u,true,false,0u,0u>)
+INSTANCE(8, 4, BlackOilIndices<0u,0u,0u,0u,false,true,0u,0u>)
+INSTANCE(8, 4, BlackOilIndices<0u,1u,0u,0u,false,false,0u,0u>)
+INSTANCE(8, 4, BlackOilIndices<0u,0u,1u,0u,false,false,0u,0u>)
+INSTANCE(8, 4, BlackOilIndices<0u,0u,0u,1u,false,false,0u,0u>)
+INSTANCE(8, 4, BlackOilIndices<1u,0u,0u,0u,false,false,0u,0u>)
+INSTANCE(8, 4, BlackOilIndices<0u,0u,0u,0u,false,true,2u,0u>)
+INSTANCE(9, 5, BlackOilIndices<0u,0u,0u,1u,false,true,0u,0u>)
 
 }

@@ -102,6 +102,14 @@ public:
                           const EvalWell& cq_s_effective,
                           MultisegmentWellEquations<Indices,Scalar>& eqns) const;
 
+    template<class PressureMatrix, class BVector>
+    void addWellPressureEqs(const BVector& weights,
+                            const int pressureVarIndex,
+                            const int seg_pressure_var_ind,
+                            const WellState& well_state,
+                            const MultisegmentWellEquations<Indices,Scalar>& eqns,
+                            PressureMatrix& jacobian) const;
+
 private:
     const WellInterfaceIndices<FluidSystem,Indices,Scalar>& well_;
 };
