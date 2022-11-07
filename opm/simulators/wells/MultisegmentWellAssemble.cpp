@@ -36,6 +36,7 @@
 #include <opm/simulators/wells/WellAssemble.hpp>
 #include <opm/simulators/wells/WellBhpThpCalculator.hpp>
 #include <opm/simulators/wells/WellInterfaceIndices.hpp>
+#include <opm/simulators/wells/WellState.hpp>
 
 namespace Opm {
 
@@ -159,6 +160,37 @@ assembleControlEq(const WellState& well_state,
     }
 }
 
+template<typename FluidSystem, typename Indices, typename Scalar>
+template<class EvalWell>
+void MultisegmentWellAssemble<FluidSystem,Indices,Scalar>::
+assemblePressureEq(const int seg,
+                   const int seg_upwind,
+                   const EvalWell& pressure_equation,
+                   const EvalWell& outlet_pressure,
+                   const int WFrac,
+                   const int GFrac,
+                   const int SPres,
+                   const int WQTotal,
+                   const int outlet_segment_index,
+                   MultisegmentWellEquations<Indices,Scalar>& eqns) const
+{
+    eqns.resWell_[seg][SPres] = pressure_equation.value();
+    eqns.duneD_[seg][seg][SPres][SPres] += pressure_equation.derivative(SPres + Indices::numEq);
+    eqns.duneD_[seg][seg][SPres][WQTotal] += pressure_equation.derivative(WQTotal + Indices::numEq);
+    if (WFrac > -1) {
+        eqns.duneD_[seg][seg_upwind][SPres][WFrac] += pressure_equation.derivative(WFrac + Indices::numEq);
+    }
+    if (GFrac > -1) {
+        eqns.duneD_[seg][seg_upwind][SPres][GFrac] += pressure_equation.derivative(GFrac + Indices::numEq);
+    }
+
+    // contribution from the outlet segment
+    eqns.resWell_[seg][SPres] -= outlet_pressure.value();
+    for (int pv_idx = 0; pv_idx < eqns.numWellEq; ++pv_idx) {
+        eqns.duneD_[seg][outlet_segment_index][SPres][pv_idx] = -outlet_pressure.derivative(pv_idx + Indices::numEq);
+    }
+}
+
 #define INSTANCE(Dim,...) \
 template class MultisegmentWellAssemble<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>,__VA_ARGS__,double>; \
 template void \
@@ -175,7 +207,19 @@ assembleControlEq(const WellState&, \
                   const int, \
                   const std::function<DenseAd::Evaluation<double,Dim,0u>(int)>&, \
                   MultisegmentWellEquations<__VA_ARGS__,double>&, \
-                  DeferredLogger&) const;
+                  DeferredLogger&) const; \
+template void \
+MultisegmentWellAssemble<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>,__VA_ARGS__,double>:: \
+assemblePressureEq(const int, \
+                   const int, \
+                   const DenseAd::Evaluation<double,Dim,0u>&, \
+                   const DenseAd::Evaluation<double,Dim,0u>&, \
+                   const int, \
+                   const int, \
+                   const int, \
+                   const int, \
+                   const int, \
+                   MultisegmentWellEquations<__VA_ARGS__,double>&) const;
 
 // One phase
 INSTANCE(3, BlackOilOnePhaseIndices<0u,0u,0u,0u,false,false,0u,1u,0u>)
@@ -194,12 +238,14 @@ INSTANCE(7, BlackOilTwoPhaseIndices<0u,0u,2u,0u,false,false,0u,2u,0u>)
 
 // Blackoil
 INSTANCE(7, BlackOilIndices<0u,0u,0u,0u,false,false,0u,0u>)
+INSTANCE(7, BlackOilIndices<0u,0u,0u,0u,false,false,1u,0u>)
 INSTANCE(8, BlackOilIndices<0u,0u,0u,0u,true,false,0u,0u>)
 INSTANCE(8, BlackOilIndices<0u,0u,0u,0u,false,true,0u,0u>)
 INSTANCE(8, BlackOilIndices<0u,1u,0u,0u,false,false,0u,0u>)
 INSTANCE(8, BlackOilIndices<0u,0u,1u,0u,false,false,0u,0u>)
 INSTANCE(8, BlackOilIndices<0u,0u,0u,1u,false,false,0u,0u>)
 INSTANCE(8, BlackOilIndices<1u,0u,0u,0u,false,false,0u,0u>)
+INSTANCE(8, BlackOilIndices<0u,0u,0u,0u,false,true,2u,0u>)
 INSTANCE(9, BlackOilIndices<0u,0u,0u,1u,false,true,0u,0u>)
 
 }

@@ -26,6 +26,7 @@
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
 #include <functional>
+#include <vector>
 
 namespace Opm
 {
@@ -59,6 +60,18 @@ public:
                            const std::function<EvalWell(int)>& getQs,
                            MultisegmentWellEquations<Indices,Scalar>& eqns,
                            DeferredLogger& deferred_logger) const;
+
+    template<class EvalWell>
+    void assemblePressureEq(const int seg,
+                            const int seg_upwind,
+                            const EvalWell& pressure_equation,
+                            const EvalWell& outlet_pressure,
+                            const int WFrac,
+                            const int GFrac,
+                            const int SPres,
+                            const int WQTotal,
+                            const int outlet_segment_index,
+                            MultisegmentWellEquations<Indices,Scalar>& eqns) const;
 
 private:
     const WellInterfaceIndices<FluidSystem,Indices,Scalar>& well_;
