@@ -23,15 +23,11 @@
 #define OPM_MULTISEGMENTWELL_EVAL_HEADER_INCLUDED
 
 #include <opm/simulators/wells/MultisegmentWellGeneric.hpp>
+#include <opm/simulators/wells/MultisegmentWellEquations.hpp>
 
 #include <opm/material/densead/Evaluation.hpp>
 
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
-
-#include <dune/common/fmatrix.hh>
-#include <dune/common/fvector.hh>
-#include <dune/istl/bcrsmatrix.hh>
-#include <dune/istl/bvector.hh>
 
 #include <array>
 #include <memory>
@@ -46,7 +42,6 @@ namespace Opm
 class ConvergenceReport;
 class GroupState;
 class Schedule;
-class WellContributions;
 template<class FluidSystem, class Indices, class Scalar> class WellInterfaceIndices;
 class WellState;
 
@@ -54,8 +49,8 @@ template<typename FluidSystem, typename Indices, typename Scalar>
 class MultisegmentWellEval : public MultisegmentWellGeneric<Scalar>
 {
 public:
-        /// add the contribution (C, D, B matrices) of this Well to the WellContributions object
-        void addWellContribution(WellContributions& wellContribs) const;
+    /// add the contribution (C, D, B matrices) of this Well to the WellContributions object
+    void addWellContribution(WellContributions& wellContribs) const;
 
 protected:
     // TODO: for now, not considering the polymer, solvent and so on to simplify the development process.
@@ -86,27 +81,9 @@ protected:
     static constexpr int GFrac = has_gfrac_variable ? has_wfrac_variable + 1 : -1000;
     static constexpr int SPres = has_wfrac_variable + has_gfrac_variable + 1;
 
-    //  the number of well equations  TODO: it should have a more general strategy for it
-    static constexpr int numWellEq = Indices::numPhases + 1;
+    static constexpr int numWellEq = MultisegmentWellEquations<Indices,Scalar>::numWellEq;
 
-    // sparsity pattern for the matrices
-    // [A C^T    [x       =  [ res
-    //  B  D ]   x_well]      res_well]
-
-    // the vector type for the res_well and x_well
-    using VectorBlockWellType = Dune::FieldVector<Scalar, numWellEq>;
-    using BVectorWell = Dune::BlockVector<VectorBlockWellType>;
-
-    using VectorBlockType = Dune::FieldVector<Scalar, Indices::numEq>;
-    using BVector = Dune::BlockVector<VectorBlockType>;
-
-    // the matrix type for the diagonal matrix D
-    using DiagMatrixBlockWellType = Dune::FieldMatrix<Scalar, numWellEq, numWellEq>;
-    using DiagMatWell = Dune::BCRSMatrix<DiagMatrixBlockWellType>;
-
-    // the matrix type for the non-diagonal matrix B and C^T
-    using OffDiagMatrixBlockWellType = Dune::FieldMatrix<Scalar, numWellEq, Indices::numEq>;
-    using OffDiagMatWell = Dune::BCRSMatrix<OffDiagMatrixBlockWellType>;
+    using BVectorWell = typename MultisegmentWellEquations<Indices,Scalar>::BVectorWell;
 
     // TODO: for more efficient implementation, we should have EvalReservoir, EvalWell, and EvalRerservoirAndWell
     //                                                         EvalR (Eval), EvalW, EvalRW
@@ -157,10 +134,6 @@ protected:
 
     // handling the overshooting and undershooting of the fractions
     void processFractions(const int seg) const;
-
-    // xw = inv(D)*(rw - C*x)
-    void recoverSolutionWell(const BVector& x,
-                             BVectorWell& xw) const;
 
     void updatePrimaryVariables(const WellState& well_state) const;
 
@@ -243,20 +216,7 @@ protected:
 
     const WellInterfaceIndices<FluidSystem,Indices,Scalar>& baseif_;
 
-    // TODO, the following should go to a class for computing purpose
-    // two off-diagonal matrices
-    mutable OffDiagMatWell duneB_;
-    mutable OffDiagMatWell duneC_;
-    // "diagonal" matrix for the well. It has offdiagonal entries for inlets and outlets.
-    mutable DiagMatWell duneD_;
-
-    /// \brief solver for diagonal matrix
-    ///
-    /// This is a shared_ptr as MultisegmentWell is copied in computeWellPotentials...
-    mutable std::shared_ptr<Dune::UMFPack<DiagMatWell> > duneDSolver_;
-
-    // residuals of the well equations
-    mutable BVectorWell resWell_;
+    MultisegmentWellEquations<Indices,Scalar> linSys_;
 
     // the values for the primary varibles
     // based on different solutioin strategies, the wells can have different primary variables

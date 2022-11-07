@@ -224,6 +224,22 @@ accelerationalPressureLossConsidered() const
     return (segmentSet().compPressureDrop() == WellSegments::CompPressureDrop::HFA);
 }
 
+template<typename Scalar>
+int
+MultisegmentWellGeneric<Scalar>::numPerfs() const
+{
+    return baseif_.numPerfs();
+}
+
+
+template<typename Scalar>
+const std::vector<int>&
+MultisegmentWellGeneric<Scalar>::
+cells() const
+{
+    return baseif_.cells();
+}
+
 template class MultisegmentWellGeneric<double>;
 
 } // namespace Opm

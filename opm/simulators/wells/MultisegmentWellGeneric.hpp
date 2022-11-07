@@ -40,6 +40,31 @@ class WellState;
 template <typename Scalar>
 class MultisegmentWellGeneric
 {
+public:
+    /// number of segments for this well
+    int numberOfSegments() const;
+
+    /// const reference to inlets
+    const std::vector<std::vector<int>>& inlets() const
+    { return segment_inlets_; }
+
+    /// const reference to segment performations
+    const std::vector<std::vector<int>>& segmentPerforations() const
+    { return segment_perforations_; }
+
+    /// number of perforations
+    int numPerfs() const;
+
+    // segment number is an ID of the segment, it is specified in the deck
+    // get the loation of the segment with a segment number in the segmentSet
+    int segmentNumberToIndex(const int segment_number) const;
+
+    // get the WellSegments from the well_ecl_
+    const WellSegments& segmentSet() const;
+
+    /// Well cells.
+    const std::vector<int>& cells() const;
+
 protected:
     MultisegmentWellGeneric(WellInterfaceGeneric& baseif);
 
@@ -47,18 +72,8 @@ protected:
     void scaleSegmentRatesWithWellRates(WellState& well_state) const;
     void scaleSegmentPressuresWithBhp(WellState& well_state) const;
 
-    // get the WellSegments from the well_ecl_
-    const WellSegments& segmentSet() const;
-
     // components of the pressure drop to be included
     WellSegments::CompPressureDrop compPressureDrop() const;
-
-    // segment number is an ID of the segment, it is specified in the deck
-    // get the loation of the segment with a segment number in the segmentSet
-    int segmentNumberToIndex(const int segment_number) const;
-
-    /// number of segments for this well
-    int numberOfSegments() const;
 
     /// Detect oscillation or stagnation based on the residual measure history
     void detectOscillations(const std::vector<double>& measure_history,

@@ -67,8 +67,6 @@ namespace Opm
 
         using typename MSWEval::EvalWell;
         using typename MSWEval::BVectorWell;
-        using typename MSWEval::DiagMatWell;
-        using typename MSWEval::OffDiagMatrixBlockWellType;
         using MSWEval::GFrac;
         using MSWEval::WFrac;
         using MSWEval::WQTotal;
