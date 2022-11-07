@@ -79,6 +79,12 @@ public:
                            const int WQTotal,
                            MultisegmentWellEquations<Indices,Scalar>& eqns) const;
 
+    template<class EvalWell>
+    void assembleAccelerationTerm(const int seg,
+                                  const int comp_idx,
+                                  const EvalWell& accumulation_term,
+                                  MultisegmentWellEquations<Indices,Scalar>& eqns) const;
+
 private:
     const WellInterfaceIndices<FluidSystem,Indices,Scalar>& well_;
 };

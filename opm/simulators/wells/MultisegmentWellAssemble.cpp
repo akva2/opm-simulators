@@ -203,6 +203,20 @@ assembleTrivialEq(const int seg,
     eqns.duneD_[seg][seg][SPres][WQTotal] = 1.;
 }
 
+template<typename FluidSystem, typename Indices, typename Scalar>
+template<class EvalWell>
+void MultisegmentWellAssemble<FluidSystem,Indices,Scalar>::
+assembleAccelerationTerm(const int seg,
+                         const int comp_idx,
+                         const EvalWell& accumulation_term,
+                         MultisegmentWellEquations<Indices,Scalar>& eqns) const
+{
+    eqns.resWell_[seg][comp_idx] += accumulation_term.value();
+    for (int pv_idx = 0; pv_idx < eqns.numWellEq; ++pv_idx) {
+        eqns.duneD_[seg][seg][comp_idx][pv_idx] += accumulation_term.derivative(pv_idx + Indices::numEq);
+    }
+}
+
 #define INSTANCE(Dim,...) \
 template class MultisegmentWellAssemble<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>,__VA_ARGS__,double>; \
 template void \
@@ -231,7 +245,13 @@ assemblePressureEq(const int, \
                    const int, \
                    const int, \
                    const int, \
-                   MultisegmentWellEquations<__VA_ARGS__,double>&) const;
+                   MultisegmentWellEquations<__VA_ARGS__,double>&) const; \
+template void \
+MultisegmentWellAssemble<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>,__VA_ARGS__,double>:: \
+assembleAccelerationTerm(const int, \
+                         const int, \
+                         const DenseAd::Evaluation<double,Dim,0u>&, \
+                         MultisegmentWellEquations<__VA_ARGS__,double>&) const;
 
 // One phase
 INSTANCE(3, BlackOilOnePhaseIndices<0u,0u,0u,0u,false,false,0u,1u,0u>)
