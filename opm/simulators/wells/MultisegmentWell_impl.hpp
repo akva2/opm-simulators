@@ -20,6 +20,7 @@
 
 
 #include <opm/simulators/linalg/SmallDenseMatrixUtils.hpp>
+#include <opm/simulators/wells/MultisegmentWellAssemble.hpp>
 #include <opm/simulators/wells/MSWellHelpers.hpp>
 #include <opm/simulators/wells/WellBhpThpCalculator.hpp>
 #include <opm/simulators/utils/DeferredLoggingErrorHelpers.hpp>
@@ -1718,14 +1719,21 @@ namespace Opm
             if (seg == 0) { // top segment, pressure equation is the control equation
                 const auto& summaryState = ebosSimulator.vanguard().summaryState();
                 const Schedule& schedule = ebosSimulator.vanguard().schedule();
-                this->assembleControlEq(well_state,
-                                        group_state,
-                                        schedule,
-                                        summaryState,
-                                        inj_controls,
-                                        prod_controls,
-                                        getRefDensity(),
-                                        deferred_logger);
+                std::function<EvalWell(int)> gQ = [this](int a) { return this->getQs(a); };
+                MultisegmentWellAssemble<FluidSystem,Indices,Scalar>(*this).
+                    assembleControlEq(well_state,
+                                      group_state,
+                                      schedule,
+                                      summaryState,
+                                      inj_controls,
+                                      prod_controls,
+                                      this->getWQTotal(),
+                                      this->getBhp(),
+                                      getRefDensity(),
+                                      this->SPres,
+                                      gQ,
+                                      this->linSys_,
+                                      deferred_logger);
             } else {
                 const UnitSystem& unit_system = ebosSimulator.vanguard().eclState().getDeckUnitSystem();
                 this->assemblePressureEq(seg, unit_system, well_state, deferred_logger);

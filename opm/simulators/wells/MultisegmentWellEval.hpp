@@ -96,15 +96,6 @@ protected:
     void initMatrixAndVectors(const int num_cells) const;
     void initPrimaryVariablesEvaluation() const;
 
-    void assembleControlEq(const WellState& well_state,
-                           const GroupState& group_state,
-                           const Schedule& schedule,
-                           const SummaryState& summaryState,
-                           const Well::InjectionControls& inj_controls,
-                           const Well::ProductionControls& prod_controls,
-                           const double rho,
-                           DeferredLogger& deferred_logger);
-
     void assembleDefaultPressureEq(const int seg,
                                    WellState& well_state) const;
 
@@ -216,7 +207,7 @@ protected:
 
     const WellInterfaceIndices<FluidSystem,Indices,Scalar>& baseif_;
 
-    MultisegmentWellEquations<Indices,Scalar> linSys_;
+    mutable MultisegmentWellEquations<Indices,Scalar> linSys_;
 
     // the values for the primary varibles
     // based on different solutioin strategies, the wells can have different primary variables

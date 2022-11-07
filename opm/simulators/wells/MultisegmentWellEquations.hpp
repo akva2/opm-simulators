@@ -37,6 +37,9 @@ template<class M> class UMFPack;
 namespace Opm
 {
 
+class BlackOilDefaultIndexTraits;
+template<class Scalar, class Indices> class BlackOilFluidSystem;
+template<class FluidSystem, class Indices, class Scalar> class MultisegmentWellAssemble;
 template<class T> class MultisegmentWellGeneric;
 class WellContributions;
 
@@ -104,6 +107,8 @@ public:
     mutable BVectorWell resWell_;
 
 protected:
+    friend class MultisegmentWellAssemble<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>,
+                                          Indices, Scalar>;
     /// \brief solver for diagonal matrix
     ///
     /// This is a shared_ptr as MultisegmentWell is copied in computeWellPotentials...
