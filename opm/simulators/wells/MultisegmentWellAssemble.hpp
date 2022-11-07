@@ -73,6 +73,12 @@ public:
                             const int outlet_segment_index,
                             MultisegmentWellEquations<Indices,Scalar>& eqns) const;
 
+    void assembleTrivialEq(const int seg,
+                           Scalar value,
+                           const int SPres,
+                           const int WQTotal,
+                           MultisegmentWellEquations<Indices,Scalar>& eqns) const;
+
 private:
     const WellInterfaceIndices<FluidSystem,Indices,Scalar>& well_;
 };
