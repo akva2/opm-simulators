@@ -96,6 +96,7 @@ public:
 
     const BVectorWell& residual() const { return resWell_; }
 
+protected:
     // TODO, the following should go to a class for computing purpose
     // two off-diagonal matrices
     mutable OffDiagMatWell duneB_;
@@ -106,7 +107,6 @@ public:
     // residuals of the well equations
     mutable BVectorWell resWell_;
 
-protected:
     friend class MultisegmentWellAssemble<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>,
                                           Indices, Scalar>;
     /// \brief solver for diagonal matrix

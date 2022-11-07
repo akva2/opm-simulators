@@ -194,6 +194,30 @@ assemblePressureEq(const int seg,
 }
 
 template<typename FluidSystem, typename Indices, typename Scalar>
+template<class EvalWell>
+void MultisegmentWellAssemble<FluidSystem,Indices,Scalar>::
+assemblePressureLoss(const int seg,
+                     const int seg_upwind,
+                     const EvalWell& accelerationPressureLoss,
+                     const int WFrac,
+                     const int GFrac,
+                     const int SPres,
+                     const int WQTotal,
+                     MultisegmentWellEquations<Indices,Scalar>& eqns) const
+{
+    eqns.resWell_[seg][SPres] -= accelerationPressureLoss.value();
+    eqns.duneD_[seg][seg][SPres][SPres] -= accelerationPressureLoss.derivative(SPres + Indices::numEq);
+    eqns.duneD_[seg][seg][SPres][WQTotal] -= accelerationPressureLoss.derivative(WQTotal + Indices::numEq);
+    if (WFrac > -1) {
+        eqns.duneD_[seg][seg_upwind][SPres][WFrac] -= accelerationPressureLoss.derivative(WFrac + Indices::numEq);
+    }
+    if (GFrac > -1) {
+        eqns.duneD_[seg][seg_upwind][SPres][GFrac] -= accelerationPressureLoss.derivative(GFrac + Indices::numEq);
+    }
+}
+
+
+template<typename FluidSystem, typename Indices, typename Scalar>
 void MultisegmentWellAssemble<FluidSystem,Indices,Scalar>::
 assembleTrivialEq(const int seg,
                   Scalar value,
@@ -370,6 +394,16 @@ assemblePressureEq(const int, \
                    const int, \
                    const int, \
                    MultisegmentWellEquations<__VA_ARGS__,double>&) const; \
+template void \
+MultisegmentWellAssemble<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>,__VA_ARGS__,double>:: \
+assemblePressureLoss(const int, \
+                     const int, \
+                     const DenseAd::Evaluation<double,Dim,0u>&, \
+                     const int, \
+                     const int, \
+                     const int, \
+                     const int, \
+                     MultisegmentWellEquations<__VA_ARGS__,double>&) const; \
 template void \
 MultisegmentWellAssemble<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>,__VA_ARGS__,double>:: \
 assembleAccelerationTerm(const int, \

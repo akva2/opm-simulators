@@ -73,6 +73,16 @@ public:
                             const int outlet_segment_index,
                             MultisegmentWellEquations<Indices,Scalar>& eqns) const;
 
+    template<class EvalWell>
+    void assemblePressureLoss(const int seg,
+                              const int seg_upwind,
+                              const EvalWell& accelerationPressureLoss,
+                              const int WFrac,
+                              const int GFrac,
+                              const int SPres,
+                              const int WQTotal,
+                              MultisegmentWellEquations<Indices,Scalar>& eqns) const;
+
     void assembleTrivialEq(const int seg,
                            Scalar value,
                            const int SPres,
