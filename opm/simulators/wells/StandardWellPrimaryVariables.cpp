@@ -349,6 +349,21 @@ wellVolumeFraction(const unsigned compIdx,
     return well_fraction;
 }
 
+template<class FluidSystem, class Indices, class Scalar>
+typename StandardWellPrimaryVariables<FluidSystem,Indices,Scalar>::EvalWell
+StandardWellPrimaryVariables<FluidSystem,Indices,Scalar>::
+wellVolumeFractionScaled(const int compIdx,
+                         const int numWellEq) const
+{
+    const int legacyCompIdx = well_.ebosCompIdxToFlowCompIdx(compIdx);
+    const double scal = well_.scalingFactor(legacyCompIdx);
+    if (scal > 0)
+        return this->wellVolumeFraction(compIdx, numWellEq) / scal;
+
+    // the scaling factor may be zero for RESV controlled wells.
+    return this->wellVolumeFraction(compIdx, numWellEq);
+}
+
 #define INSTANCE(...) \
 template class StandardWellPrimaryVariables<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>,__VA_ARGS__,double>;
 
