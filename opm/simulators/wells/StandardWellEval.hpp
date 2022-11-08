@@ -148,10 +148,6 @@ protected:
     void updateWellStateFromPrimaryVariables(WellState& well_state,
                                              DeferredLogger& deferred_logger) const;
 
-    void updatePrimaryVariablesNewton(const BVectorWell& dwells,
-                                      const double dFLimit,
-                                      const double dBHPLimit) const;
-
     // total number of the well equations and primary variables
     // there might be extra equations be used, numWellEq will be updated during the initialization
     int numWellEq_ = numStaticWellEq;
