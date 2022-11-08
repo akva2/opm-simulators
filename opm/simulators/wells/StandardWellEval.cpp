@@ -119,57 +119,6 @@ relaxationFactorFractionsProducer(const std::vector<double>& primary_variables,
 template<class FluidSystem, class Indices, class Scalar>
 typename StandardWellEval<FluidSystem,Indices,Scalar>::EvalWell
 StandardWellEval<FluidSystem,Indices,Scalar>::
-wellVolumeFraction(const unsigned compIdx) const
-{
-    if (FluidSystem::numActivePhases() == 1) {
-        return EvalWell(numWellEq_ + Indices::numEq, 1.0);
-    }
-
-    if (FluidSystem::phaseIsActive(FluidSystem::oilPhaseIdx)) {
-        if (has_wfrac_variable && compIdx == Indices::canonicalToActiveComponentIndex(FluidSystem::waterCompIdx)) {
-            return primary_variables_.evaluation_[WFrac];
-        }
-
-        if (has_gfrac_variable && compIdx == Indices::canonicalToActiveComponentIndex(FluidSystem::gasCompIdx)) {
-            return primary_variables_.evaluation_[GFrac];
-        }
-
-        if (Indices::enableSolvent && compIdx == (unsigned)Indices::contiSolventEqIdx) {
-            return primary_variables_.evaluation_[SFrac];
-        }
-    }
-    else if (FluidSystem::phaseIsActive(FluidSystem::waterPhaseIdx)) {
-        if (has_gfrac_variable && compIdx == Indices::canonicalToActiveComponentIndex(FluidSystem::gasCompIdx)) {
-            return primary_variables_.evaluation_[GFrac];
-        }
-    }
-
-    // Oil or WATER fraction
-    EvalWell well_fraction(numWellEq_ + Indices::numEq, 1.0);
-    if (FluidSystem::phaseIsActive(FluidSystem::oilPhaseIdx)) {
-        if (FluidSystem::phaseIsActive(FluidSystem::waterPhaseIdx)) {
-            well_fraction -= primary_variables_.evaluation_[WFrac];
-        }
-
-        if (FluidSystem::phaseIsActive(FluidSystem::gasPhaseIdx)) {
-            well_fraction -= primary_variables_.evaluation_[GFrac];
-        }
-
-        if (Indices::enableSolvent) {
-            well_fraction -= primary_variables_.evaluation_[SFrac];
-        }
-    }
-    else if (FluidSystem::phaseIsActive(FluidSystem::waterPhaseIdx) && (FluidSystem::phaseIsActive(FluidSystem::gasPhaseIdx))) {
-
-            well_fraction -= primary_variables_.evaluation_[GFrac];
-    }
-
-    return well_fraction;
-}
-
-template<class FluidSystem, class Indices, class Scalar>
-typename StandardWellEval<FluidSystem,Indices,Scalar>::EvalWell
-StandardWellEval<FluidSystem,Indices,Scalar>::
 getQs(const int comp_idx) const
 {
     // Note: currently, the WQTotal definition is still depends on Injector/Producer.
@@ -222,10 +171,10 @@ wellVolumeFractionScaled(const int compIdx) const
     const int legacyCompIdx = baseif_.ebosCompIdxToFlowCompIdx(compIdx);
     const double scal = baseif_.scalingFactor(legacyCompIdx);
     if (scal > 0)
-        return  wellVolumeFraction(compIdx) / scal;
+        return this->primary_variables_.wellVolumeFraction(compIdx, numWellEq_) / scal;
 
     // the scaling factor may be zero for RESV controlled wells.
-    return wellVolumeFraction(compIdx);
+    return this->primary_variables_.wellVolumeFraction(compIdx, numWellEq_);
 }
 
 template<class FluidSystem, class Indices, class Scalar>
