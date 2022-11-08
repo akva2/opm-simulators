@@ -77,7 +77,7 @@ namespace Opm
     void StandardWell<TypeTag>::
     initPrimaryVariablesEvaluation() const
     {
-        this->StdWellEval::initPrimaryVariablesEvaluation();
+        this->primary_variables_.init(this->numWellEq_);
     }
 
 
@@ -129,7 +129,7 @@ namespace Opm
         if (has_polymermw) {
             if (this->isInjector()) {
                 const int pskin_index = Bhp + 1 + this->numPerfs() + perf;
-                skin_pressure = this->primary_variables_evaluation_[pskin_index];
+                skin_pressure = this->primary_variables_.evaluation_[pskin_index];
             }
         }
 
@@ -199,7 +199,7 @@ namespace Opm
         if (has_polymermw) {
             if (this->isInjector()) {
                 const int pskin_index = Bhp + 1 + this->numPerfs() + perf;
-                skin_pressure = getValue(this->primary_variables_evaluation_[pskin_index]);
+                skin_pressure = getValue(this->primary_variables_.evaluation_[pskin_index]);
             }
         }
 
@@ -953,7 +953,7 @@ namespace Opm
 
         updateExtraPrimaryVariables(dwells);
 
-        for (double v : this->primary_variables_) {
+        for (double v : this->primary_variables_.value_) {
             if(!isfinite(v))
                 OPM_DEFLOG_THROW(NumericalIssue, "Infinite primary variable after newton update well: " << this->name(),  deferred_logger);
         }
@@ -2044,12 +2044,12 @@ namespace Opm
                 const auto& water_velocity = perf_data.water_velocity;
                 const auto& skin_pressure = perf_data.skin_pressure;
                 for (int perf = 0; perf < this->number_of_perforations_; ++perf) {
-                    this->primary_variables_[Bhp + 1 + perf] = water_velocity[perf];
-                    this->primary_variables_[Bhp + 1 + this->number_of_perforations_ + perf] = skin_pressure[perf];
+                    this->primary_variables_.value_[Bhp + 1 + perf] = water_velocity[perf];
+                    this->primary_variables_.value_[Bhp + 1 + this->number_of_perforations_ + perf] = skin_pressure[perf];
                 }
             }
         }
-        for (double v : this->primary_variables_) {
+        for (double v : this->primary_variables_.value_) {
             if(!isfinite(v))
                 OPM_DEFLOG_THROW(NumericalIssue, "Infinite primary variable after update from wellState well: " << this->name(),  deferred_logger);
         }
@@ -2266,7 +2266,7 @@ namespace Opm
                 auto& ws = well_state.well(this->index_of_well_);
                 auto& perf_water_throughput = ws.perf_data.water_throughput;
                 for (int perf = 0; perf < this->number_of_perforations_; ++perf) {
-                    const double perf_water_vel = this->primary_variables_[Bhp + 1 + perf];
+                    const double perf_water_vel = this->primary_variables_.value_[Bhp + 1 + perf];
                     // we do not consider the formation damage due to water flowing from reservoir into wellbore
                     if (perf_water_vel > 0.) {
                         perf_water_throughput[perf] += perf_water_vel * dt;
@@ -2297,7 +2297,7 @@ namespace Opm
 
         // water rate is update to use the form from water velocity, since water velocity is
         // a primary variable now
-        cq_s[water_comp_idx] = area * this->primary_variables_evaluation_[wat_vel_index] * b_w;
+        cq_s[water_comp_idx] = area * this->primary_variables_.evaluation_[wat_vel_index] * b_w;
     }
 
 
@@ -2322,7 +2322,7 @@ namespace Opm
         const int wat_vel_index = Bhp + 1 + perf;
 
         // equation for the water velocity
-        const EvalWell eq_wat_vel = this->primary_variables_evaluation_[wat_vel_index] - water_velocity;
+        const EvalWell eq_wat_vel = this->primary_variables_.evaluation_[wat_vel_index] - water_velocity;
 
         const auto& ws = well_state.well(this->index_of_well_);
         const auto& perf_data = ws.perf_data;
@@ -2334,8 +2334,8 @@ namespace Opm
         poly_conc.setValue(this->wpolymer());
 
         // equation for the skin pressure
-        const EvalWell eq_pskin = this->primary_variables_evaluation_[pskin_index]
-                                  - pskin(throughput, this->primary_variables_evaluation_[wat_vel_index], poly_conc, deferred_logger);
+        const EvalWell eq_pskin = this->primary_variables_.evaluation_[pskin_index]
+                                  - pskin(throughput, this->primary_variables_.evaluation_[wat_vel_index], poly_conc, deferred_logger);
 
         StandardWellAssemble<FluidSystem,Indices,Scalar>(*this).
             assembleInjectivityEq(eq_pskin,
@@ -2384,7 +2384,7 @@ namespace Opm
         EvalWell cq_s_polymw = cq_s_poly;
         if (this->isInjector()) {
             const int wat_vel_index = Bhp + 1 + perf;
-            const EvalWell water_velocity = this->primary_variables_evaluation_[wat_vel_index];
+            const EvalWell water_velocity = this->primary_variables_.evaluation_[wat_vel_index];
             if (water_velocity > 0.) { // injecting
                 const auto& ws = well_state.well(this->index_of_well_);
                 const auto& perf_water_throughput = ws.perf_data.water_throughput;

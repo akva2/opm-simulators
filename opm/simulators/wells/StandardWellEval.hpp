@@ -25,6 +25,7 @@
 
 #include <opm/simulators/wells/StandardWellEquations.hpp>
 #include <opm/simulators/wells/StandardWellGeneric.hpp>
+#include <opm/simulators/wells/StandardWellPrimaryVariables.hpp>
 
 #include <opm/material/densead/DynamicEvaluation.hpp>
 
@@ -102,16 +103,14 @@ protected:
 
     const WellInterfaceIndices<FluidSystem,Indices,Scalar>& baseif_;
 
-    void initPrimaryVariablesEvaluation() const;
-
     const EvalWell& getBhp() const
     {
-        return primary_variables_evaluation_[Bhp];
+        return primary_variables_.evaluation_[Bhp];
     }
 
     const EvalWell& getWQTotal() const
     {
-        return primary_variables_evaluation_[WQTotal];
+        return primary_variables_.evaluation_[WQTotal];
     }
 
     EvalWell extendEval(const Eval& in) const;
@@ -173,12 +172,7 @@ protected:
     // there might be extra equations be used, numWellEq will be updated during the initialization
     int numWellEq_ = numStaticWellEq;
 
-    // the values for the primary varibles
-    // based on different solutioin strategies, the wells can have different primary variables
-    mutable std::vector<double> primary_variables_;
-
-    // the Evaluation for the well primary variables, which contain derivativles and are used in AD calculation
-    mutable std::vector<EvalWell> primary_variables_evaluation_;
+    mutable StandardWellPrimaryVariables<FluidSystem,Indices,Scalar> primary_variables_;
 
     // the saturations in the well bore under surface conditions at the beginning of the time step
     std::vector<double> F0_;
