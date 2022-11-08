@@ -87,6 +87,9 @@ public:
     EvalWell getQs(const int compIdx,
                    const int numWellEq) const;
 
+    //! \brief Handle non-reasonable fractions due to numerical overshoot.
+    void processFractions();
+
 private:
     EvalWell wellVolumeFraction(const unsigned compIdx,
                                 const int numWellEq) const;
