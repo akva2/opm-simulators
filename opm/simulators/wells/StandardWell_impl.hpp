@@ -530,14 +530,14 @@ namespace Opm
                 resWell_loc += (this->primary_variables_.wellSurfaceVolumeFraction(componentIdx, this->numWellEq_) -
                                 this->F0_[componentIdx]) * volume / dt;
             }
-            resWell_loc -= this->getQs(componentIdx) * this->well_efficiency_factor_;
+            resWell_loc -= this->primary_variables_.getQs(componentIdx, this->numWellEq_) * this->well_efficiency_factor_;
             StandardWellAssemble<FluidSystem,Indices,Scalar>(*this).
                 assembleSourceEq(resWell_loc, componentIdx, this->numWellEq_, this->linSys_);
         }
 
         const auto& summaryState = ebosSimulator.vanguard().summaryState();
         const Schedule& schedule = ebosSimulator.vanguard().schedule();
-        std::function<EvalWell(int)> gQ = [this](int a) { return this->getQs(a); };
+        std::function<EvalWell(int)> gQ = [this](int a) { return this->primary_variables_.getQs(a, this->numWellEq_); };
         StandardWellAssemble<FluidSystem,Indices,Scalar>(*this).
             assembleControlEq(well_state, group_state,
                               schedule, summaryState,
