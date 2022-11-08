@@ -37,7 +37,9 @@ template<class FluidSystem, class Indices, class Scalar>
 class StandardWellPrimaryVariables {
 public:
     static constexpr int numStaticWellEq = StandardWellEquations<Indices,Scalar>::numStaticWellEq;
+    static constexpr int Bhp = StandardWellEquations<Indices,Scalar>::Bhp;
     using EvalWell = DenseAd::DynamicEvaluation<Scalar, numStaticWellEq + Indices::numEq + 1>;
+    using BVectorWell = typename StandardWellEquations<Indices,Scalar>::BVectorWell;
 
     StandardWellPrimaryVariables(const WellInterfaceIndices<FluidSystem,Indices,Scalar>& well)
         : well_(well)
@@ -56,8 +58,11 @@ public:
     //! \brief Resize values and evaluations.
     void resize(const int numWellEq);
 
+    //! \brief Update polymer molecular weight values from solution vector.
+    void updatePolyMW(const BVectorWell& dwells);
+
 private:
-    const WellInterfaceIndices<FluidSystem,Indices,Scalar>& well_;
+    const WellInterfaceIndices<FluidSystem,Indices,Scalar>& well_; //!< Reference to well interface
 };
 
 }
