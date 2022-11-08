@@ -364,6 +364,23 @@ wellVolumeFractionScaled(const int compIdx,
     return this->wellVolumeFraction(compIdx, numWellEq);
 }
 
+template<class FluidSystem, class Indices, class Scalar>
+typename StandardWellPrimaryVariables<FluidSystem,Indices,Scalar>::EvalWell
+StandardWellPrimaryVariables<FluidSystem,Indices,Scalar>::
+wellSurfaceVolumeFraction(const int compIdx,
+                          const int numWellEq) const
+{
+    EvalWell sum_volume_fraction_scaled(numWellEq + Indices::numEq, 0.);
+    for (int idx = 0; idx < well_.numComponents(); ++idx) {
+        sum_volume_fraction_scaled += this->wellVolumeFractionScaled(idx, numWellEq);
+    }
+
+    assert(sum_volume_fraction_scaled.value() != 0.);
+
+    return this->wellVolumeFractionScaled(compIdx, numWellEq) / sum_volume_fraction_scaled;
+ }
+
+
 #define INSTANCE(...) \
 template class StandardWellPrimaryVariables<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>,__VA_ARGS__,double>;
 

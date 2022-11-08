@@ -82,6 +82,8 @@ public:
 
     EvalWell wellVolumeFractionScaled(const int compIdx,
                                       const int numWellEq) const;
+    EvalWell wellSurfaceVolumeFraction(const int compIdx,
+                                       const int numWellEq) const;
 
 private:
     EvalWell wellVolumeFraction(const unsigned compIdx,

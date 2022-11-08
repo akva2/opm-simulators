@@ -165,21 +165,6 @@ getQs(const int comp_idx) const
 }
 
 template<class FluidSystem, class Indices, class Scalar>
-typename StandardWellEval<FluidSystem,Indices,Scalar>::EvalWell
-StandardWellEval<FluidSystem,Indices,Scalar>::
-wellSurfaceVolumeFraction(const int compIdx) const
-{
-    EvalWell sum_volume_fraction_scaled(numWellEq_ + Indices::numEq, 0.);
-    for (int idx = 0; idx < baseif_.numComponents(); ++idx) {
-        sum_volume_fraction_scaled += primary_variables_.wellVolumeFractionScaled(idx, numWellEq_);
-    }
-
-    assert(sum_volume_fraction_scaled.value() != 0.);
-
-    return this->primary_variables_.wellVolumeFractionScaled(compIdx, numWellEq_) / sum_volume_fraction_scaled;
- }
-
-template<class FluidSystem, class Indices, class Scalar>
 void
 StandardWellEval<FluidSystem,Indices,Scalar>::
 updatePrimaryVariables(const WellState& well_state, DeferredLogger& deferred_logger) const
@@ -313,7 +298,7 @@ StandardWellEval<FluidSystem,Indices,Scalar>::
 computeAccumWell()
 {
     for (size_t eq_idx = 0; eq_idx < F0_.size(); ++eq_idx) {
-        F0_[eq_idx] = wellSurfaceVolumeFraction(eq_idx).value();
+        F0_[eq_idx] = this->primary_variables_.wellSurfaceVolumeFraction(eq_idx, numWellEq_).value();
     }
 }
 

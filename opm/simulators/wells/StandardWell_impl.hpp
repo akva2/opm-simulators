@@ -136,7 +136,7 @@ namespace Opm
         // surface volume fraction of fluids within wellbore
         std::vector<EvalWell> cmix_s(this->numComponents(), EvalWell{this->numWellEq_ + Indices::numEq});
         for (int componentIdx = 0; componentIdx < this->numComponents(); ++componentIdx) {
-            cmix_s[componentIdx] = this->wellSurfaceVolumeFraction(componentIdx);
+            cmix_s[componentIdx] = this->primary_variables_.wellSurfaceVolumeFraction(componentIdx, this->numWellEq_);
         }
 
         computePerfRate(mob,
@@ -210,7 +210,7 @@ namespace Opm
         // surface volume fraction of fluids within wellbore
         std::vector<Scalar> cmix_s(this->numComponents(), 0.0);
         for (int componentIdx = 0; componentIdx < this->numComponents(); ++componentIdx) {
-            cmix_s[componentIdx] = getValue(this->wellSurfaceVolumeFraction(componentIdx));
+            cmix_s[componentIdx] = getValue(this->primary_variables_.wellSurfaceVolumeFraction(componentIdx, this->numWellEq_));
         }
 
         computePerfRate(mob,
@@ -527,7 +527,8 @@ namespace Opm
             EvalWell resWell_loc(this->numWellEq_ + Indices::numEq, 0.0);
             if (FluidSystem::numActivePhases() > 1) {
                 assert(dt > 0);
-                resWell_loc += (this->wellSurfaceVolumeFraction(componentIdx) - this->F0_[componentIdx]) * volume / dt;
+                resWell_loc += (this->primary_variables_.wellSurfaceVolumeFraction(componentIdx, this->numWellEq_) -
+                                this->F0_[componentIdx]) * volume / dt;
             }
             resWell_loc -= this->getQs(componentIdx) * this->well_efficiency_factor_;
             StandardWellAssemble<FluidSystem,Indices,Scalar>(*this).
