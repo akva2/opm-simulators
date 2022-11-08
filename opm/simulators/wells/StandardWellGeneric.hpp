@@ -43,9 +43,7 @@ class WellState;
 template<class Scalar>
 class StandardWellGeneric
 {
-protected:
-    StandardWellGeneric(const WellInterfaceGeneric& baseif);
-
+public:
     // calculate a relaxation factor to avoid overshoot of total rates
     static double relaxationFactorRate(const std::vector<double>& primary_variables,
                                        const double newton_update);
@@ -53,6 +51,9 @@ protected:
     // relaxation factor considering only one fraction value
     static double relaxationFactorFraction(const double old_value,
                                            const double dx);
+
+protected:
+    StandardWellGeneric(const WellInterfaceGeneric& baseif);
 
     void computeConnectionPressureDelta();
 

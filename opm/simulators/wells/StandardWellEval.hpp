@@ -115,11 +115,6 @@ protected:
 
     EvalWell extendEval(const Eval& in) const;
 
-    // calculate a relaxation factor to avoid overshoot of the fractions for producers
-    // which might result in negative rates
-    static double relaxationFactorFractionsProducer(const std::vector<double>& primary_variables,
-                                                    const BVectorWell& dwells);
-
     // computing the accumulation term for later use in well mass equations
     void computeAccumWell();
 
