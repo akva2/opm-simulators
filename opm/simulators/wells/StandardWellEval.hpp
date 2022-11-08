@@ -164,8 +164,6 @@ protected:
                                       const double dFLimit,
                                       const double dBHPLimit) const;
 
-    void updateWellStateFromPrimaryVariablesPolyMW(WellState& well_state) const;
-
     // total number of the well equations and primary variables
     // there might be extra equations be used, numWellEq will be updated during the initialization
     int numWellEq_ = numStaticWellEq;

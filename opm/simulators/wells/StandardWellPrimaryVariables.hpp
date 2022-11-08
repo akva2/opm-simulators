@@ -32,6 +32,7 @@ namespace Opm
 {
 
 template<class FluidSystem, class Indices, class Scalar> class WellInterfaceIndices;
+class WellState;
 
 template<class FluidSystem, class Indices, class Scalar>
 class StandardWellPrimaryVariables {
@@ -60,6 +61,9 @@ public:
 
     //! \brief Update polymer molecular weight values from solution vector.
     void updatePolyMW(const BVectorWell& dwells);
+
+    //! \brief Copy values to well state.
+    void copyToWellStatePolyMW(WellState& well_state) const;
 
 private:
     const WellInterfaceIndices<FluidSystem,Indices,Scalar>& well_; //!< Reference to well interface
