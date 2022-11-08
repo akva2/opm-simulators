@@ -68,6 +68,9 @@ public:
     //! \brief Resize values and evaluations.
     void resize(const int numWellEq);
 
+    //! \brief Copy values from well state.
+    void update(const WellState& well_state, DeferredLogger& deferred_logger);
+
     //! \brief Update polymer molecular weight values from solution vector.
     void updatePolyMW(const BVectorWell& dwells);
 
