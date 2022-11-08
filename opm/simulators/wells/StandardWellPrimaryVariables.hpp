@@ -31,14 +31,23 @@
 namespace Opm
 {
 
+class DeferredLogger;
 template<class FluidSystem, class Indices, class Scalar> class WellInterfaceIndices;
 class WellState;
 
 template<class FluidSystem, class Indices, class Scalar>
 class StandardWellPrimaryVariables {
 public:
+    static constexpr bool has_wfrac_variable = Indices::waterEnabled && Indices::oilEnabled;
+    static constexpr bool has_gfrac_variable = Indices::gasEnabled && Indices::numPhases > 1;
+
+    static constexpr int WQTotal = 0;
     static constexpr int numStaticWellEq = StandardWellEquations<Indices,Scalar>::numStaticWellEq;
     static constexpr int Bhp = StandardWellEquations<Indices,Scalar>::Bhp;
+    static constexpr int WFrac = has_wfrac_variable ? 1 : -1000;
+    static constexpr int GFrac = has_gfrac_variable ? has_wfrac_variable + 1 : -1000;
+    static constexpr int SFrac = Indices::enableSolvent ? 3 : -1000;
+
     using EvalWell = DenseAd::DynamicEvaluation<Scalar, numStaticWellEq + Indices::numEq + 1>;
     using BVectorWell = typename StandardWellEquations<Indices,Scalar>::BVectorWell;
 
@@ -63,6 +72,9 @@ public:
     void updatePolyMW(const BVectorWell& dwells);
 
     //! \brief Copy values to well state.
+    void copyToWellState(WellState& well_state, DeferredLogger& deferred_logger) const;
+
+    //! \brief Copy polymer molecular weight values to well state.
     void copyToWellStatePolyMW(WellState& well_state) const;
 
 private:
