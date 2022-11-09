@@ -92,6 +92,11 @@ public:
     EvalWell getQs(const int compIdx,
                    const int numWellEq) const;
 
+    const EvalWell& getBhp() const
+    {
+        return evaluation_[Bhp];
+    }
+
 private:
     EvalWell wellVolumeFraction(const unsigned compIdx,
                                 const int numWellEq) const;
