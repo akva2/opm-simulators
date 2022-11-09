@@ -2016,7 +2016,7 @@ namespace Opm
     template<typename TypeTag>
     void
     StandardWell<TypeTag>::
-    updatePrimaryVariables(const WellState& well_state, DeferredLogger& deferred_logger) const
+    updatePrimaryVariables(const WellState& well_state, DeferredLogger& deferred_logger)
     {
         if (!this->isOperableAndSolvable() && !this->wellIsStopped()) return;
 
