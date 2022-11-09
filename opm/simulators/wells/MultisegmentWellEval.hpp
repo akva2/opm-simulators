@@ -97,20 +97,20 @@ protected:
     void initPrimaryVariablesEvaluation() const;
 
     void assembleDefaultPressureEq(const int seg,
-                                   WellState& well_state) const;
+                                   WellState& well_state);
 
 
     // assemble pressure equation for ICD segments
     void assembleICDPressureEq(const int seg,
                                const UnitSystem& unit_system,
                                WellState& well_state,
-                               DeferredLogger& deferred_logger) const;
+                               DeferredLogger& deferred_logger);
 
 
     void assemblePressureEq(const int seg,
                             const UnitSystem& unit_system,
                             WellState& well_state,
-                            DeferredLogger& deferred_logger) const;
+                            DeferredLogger& deferred_logger);
 
     /// check whether the well equations get converged for this well
     ConvergenceReport getWellConvergence(const WellState& well_state,
@@ -173,7 +173,7 @@ protected:
                                    DeferredLogger& deferred_logger) const;
 
     void handleAccelerationPressureLoss(const int seg,
-                                        WellState& well_state) const;
+                                        WellState& well_state);
 
     // pressure drop for Autonomous ICD segment (WSEGAICD)
     EvalWell pressureDropAutoICD(const int seg,
@@ -207,7 +207,7 @@ protected:
 
     const WellInterfaceIndices<FluidSystem,Indices,Scalar>& baseif_;
 
-    mutable MultisegmentWellEquations<Indices,Scalar> linSys_;
+    MultisegmentWellEquations<Indices,Scalar> linSys_;
 
     // the values for the primary varibles
     // based on different solutioin strategies, the wells can have different primary variables
