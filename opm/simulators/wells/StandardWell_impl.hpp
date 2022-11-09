@@ -2014,13 +2014,7 @@ namespace Opm
     {
         if (!this->isOperableAndSolvable() && !this->wellIsStopped()) return;
 
-        this->primary_variables_.update(well_state, deferred_logger);
-
-        // other primary variables related to polymer injection
-        if constexpr (Base::has_polymermw) {
-            this->primary_variables_.updatePolyMW(well_state);
-        }
-
+        this->primary_variables_.update(Base::has_polymermw, well_state, deferred_logger);
         this->primary_variables_.checkFinite(deferred_logger);
     }
 

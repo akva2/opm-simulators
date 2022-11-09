@@ -119,7 +119,9 @@ resize(const int numWellEq)
 
 template<class FluidSystem, class Indices, class Scalar>
 void StandardWellPrimaryVariables<FluidSystem,Indices,Scalar>::
-update(const WellState& well_state, DeferredLogger& deferred_logger)
+update(const bool has_polymermw,
+       const WellState& well_state,
+       DeferredLogger& deferred_logger)
 {
     static constexpr int Water = BlackoilPhases::Aqua;
     static constexpr int Oil = BlackoilPhases::Liquid;
@@ -217,6 +219,10 @@ update(const WellState& well_state, DeferredLogger& deferred_logger)
 
     // BHP
     value_[Bhp] = ws.bhp;
+
+    if (has_polymermw) {
+        this->updatePolyMW(well_state);
+    }
 }
 
 template<class FluidSystem, class Indices, class Scalar>

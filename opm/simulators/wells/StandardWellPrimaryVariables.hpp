@@ -62,10 +62,7 @@ public:
     void resize(const int numWellEq);
 
     //! \brief Copy values from well state.
-    void update(const WellState& well_state, DeferredLogger& deferred_logger);
-
-    //! \brief Copy polymer molecular weigt values from well state.
-    void updatePolyMW(const WellState& well_state);
+    void update(const bool has_polymermw, const WellState& well_state, DeferredLogger& deferred_logger);
 
     //! \brief Update values from newton update vector.
     void updateNewton(const BVectorWell& dwells,
@@ -110,6 +107,9 @@ private:
 
     //! \brief Update polymer molecular weight values from newton update vector.
     void updateNewtonPolyMW(const BVectorWell& dwells);
+
+    //! \brief Copy polymer molecular weight values from well state.
+    void updatePolyMW(const WellState& well_state);
 
     //! \brief The values for the primary variables.
     //! \details Based on different solution strategies, the wells can have different primary variables.
