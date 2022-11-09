@@ -139,7 +139,7 @@ protected:
     // there might be extra equations be used, numWellEq will be updated during the initialization
     int numWellEq_ = numStaticWellEq;
 
-    mutable StandardWellPrimaryVariables<FluidSystem,Indices,Scalar> primary_variables_;
+    StandardWellPrimaryVariables<FluidSystem,Indices,Scalar> primary_variables_;
 
     // the saturations in the well bore under surface conditions at the beginning of the time step
     std::vector<double> F0_;
