@@ -55,13 +55,6 @@ public:
         : well_(well)
     {}
 
-    // the values for the primary varibles
-    // based on different solutioin strategies, the wells can have different primary variables
-    std::vector<double> value_;
-
-    // the Evaluation for the well primary variables, which contain derivatives and are used in AD calculation
-    std::vector<EvalWell> evaluation_;
-
     //! \brief Initialize evaluations from values.
     void init(const int numWellEq);
 
@@ -98,15 +91,13 @@ public:
     EvalWell getQs(const int compIdx,
                    const int numWellEq) const;
 
-    const EvalWell& getBhp() const
-    {
-        return evaluation_[Bhp];
-    }
+    //! \brief Returns a const ref to an evaluation.
+    Scalar value(const int idx) const
+    { return value_[idx]; }
 
-    const EvalWell& getWQTotal() const
-    {
-        return evaluation_[WQTotal];
-    }
+    //! \brief Returns a const ref to an evaluation.
+    const EvalWell& eval(const int idx) const
+    { return evaluation_[idx]; }
 
 private:
     EvalWell wellVolumeFraction(const unsigned compIdx,
@@ -118,6 +109,12 @@ private:
 
     //! \brief Handle non-reasonable fractions due to numerical overshoot.
     void processFractions();
+
+    //! \brief The values for the primary variables.
+    //! \details Based on different solution strategies, the wells can have different primary variables.
+    std::vector<double> value_;
+
+    std::vector<EvalWell> evaluation_; //!< The AD evaluation for the primary variables
 
     const WellInterfaceIndices<FluidSystem,Indices,Scalar>& well_; //!< Reference to well interface
 };
