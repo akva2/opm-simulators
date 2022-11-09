@@ -70,10 +70,8 @@ public:
     //! \brief Update values from newton update vector.
     void updateNewton(const BVectorWell& dwells,
                       const double dFLimit,
-                      const double dBHPLimit);
-
-    //! \brief Update polymer molecular weight values from newton update vector.
-    void updateNewtonPolyMW(const BVectorWell& dwells);
+                      const double dBHPLimit,
+                      const bool has_polymermw);
 
     //! \brief Check that all values are finite.
     void checkFinite(DeferredLogger& deferred_logger) const;
@@ -109,6 +107,9 @@ private:
 
     //! \brief Handle non-reasonable fractions due to numerical overshoot.
     void processFractions();
+
+    //! \brief Update polymer molecular weight values from newton update vector.
+    void updateNewtonPolyMW(const BVectorWell& dwells);
 
     //! \brief The values for the primary variables.
     //! \details Based on different solution strategies, the wells can have different primary variables.

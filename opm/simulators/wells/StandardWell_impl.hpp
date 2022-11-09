@@ -950,13 +950,7 @@ namespace Opm
     {
         const double dFLimit = this->param_.dwell_fraction_max_;
         const double dBHPLimit = this->param_.dbhp_max_rel_;
-        this->primary_variables_.updateNewton(dwells, dFLimit, dBHPLimit);
-
-        // for the water velocity and skin pressure
-        if constexpr (Base::has_polymermw) {
-            this->primary_variables_.updateNewtonPolyMW(dwells);
-        }
-
+        this->primary_variables_.updateNewton(dwells, dFLimit, dBHPLimit, Base::has_polymermw);
         this->primary_variables_.checkFinite(deferred_logger);
     }
 

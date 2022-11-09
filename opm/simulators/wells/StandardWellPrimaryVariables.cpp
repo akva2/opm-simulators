@@ -92,7 +92,7 @@ Scalar relaxationFactorRate(const Scalar old_value,
     return relaxation_factor;
 }
 
-}
+} // anonymous namespace
 
 namespace Opm {
 
@@ -239,7 +239,8 @@ template<class FluidSystem, class Indices, class Scalar>
 void StandardWellPrimaryVariables<FluidSystem,Indices,Scalar>::
 updateNewton(const BVectorWell& dwells,
              [[maybe_unused]] const double dFLimit,
-             const double dBHPLimit)
+             const double dBHPLimit,
+             const bool has_polymermw)
 {
     const double relaxation_factor_rate = relaxationFactorRate(value_[WQTotal],
                                                                dwells[0][WQTotal]);
@@ -280,6 +281,11 @@ updateNewton(const BVectorWell& dwells,
                                                 std::abs(value_[Bhp]) * dBHPLimit);
     // 1e5 to make sure bhp will not be below 1bar
     value_[Bhp] = std::max(value_[Bhp] - dx1_limited, 1e5);
+
+    // for the water velocity and skin pressure
+    if (has_polymermw) {
+        this->updateNewtonPolyMW(dwells);
+    }
 }
 
 template<class FluidSystem, class Indices, class Scalar>
