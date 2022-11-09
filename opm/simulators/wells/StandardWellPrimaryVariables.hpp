@@ -97,6 +97,11 @@ public:
         return evaluation_[Bhp];
     }
 
+    const EvalWell& getWQTotal() const
+    {
+        return evaluation_[WQTotal];
+    }
+
 private:
     EvalWell wellVolumeFraction(const unsigned compIdx,
                                 const int numWellEq) const;

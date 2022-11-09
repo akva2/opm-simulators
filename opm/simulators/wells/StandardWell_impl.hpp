@@ -542,7 +542,7 @@ namespace Opm
             assembleControlEq(well_state, group_state,
                               schedule, summaryState,
                               this->numWellEq_,
-                              this->getWQTotal(),
+                              this->primary_variables_.getWQTotal(),
                               this->primary_variables_.getBhp(),
                               gQ,
                               this->getRho(),
