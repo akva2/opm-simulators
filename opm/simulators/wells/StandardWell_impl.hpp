@@ -954,11 +954,7 @@ namespace Opm
 
         updateExtraPrimaryVariables(dwells);
 
-        for (double v : this->primary_variables_.value_) {
-            if(!isfinite(v))
-                OPM_DEFLOG_THROW(NumericalIssue, "Infinite primary variable after newton update well: " << this->name(),  deferred_logger);
-        }
-
+        this->primary_variables_.checkFinite(deferred_logger);
     }
 
 
@@ -2042,10 +2038,8 @@ namespace Opm
         if constexpr (Base::has_polymermw) {
             this->primary_variables_.updatePolyMW(well_state);
         }
-        for (double v : this->primary_variables_.value_) {
-            if(!isfinite(v))
-                OPM_DEFLOG_THROW(NumericalIssue, "Infinite primary variable after update from wellState well: " << this->name(),  deferred_logger);
-        }
+
+        this->primary_variables_.checkFinite(deferred_logger);
     }
 
 
