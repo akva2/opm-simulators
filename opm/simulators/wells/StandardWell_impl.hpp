@@ -927,7 +927,7 @@ namespace Opm
     StandardWell<TypeTag>::
     updateWellState(const BVectorWell& dwells,
                     WellState& well_state,
-                    DeferredLogger& deferred_logger) const
+                    DeferredLogger& deferred_logger)
     {
         if (!this->isOperableAndSolvable() && !this->wellIsStopped()) return;
 
