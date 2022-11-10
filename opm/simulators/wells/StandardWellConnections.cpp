@@ -20,7 +20,7 @@
 */
 
 #include <config.h>
-#include <opm/simulators/wells/StandardWellGeneric.hpp>
+#include <opm/simulators/wells/StandardWellConnections.hpp>
 
 #include <opm/simulators/wells/ParallelWellInfo.hpp>
 #include <opm/simulators/wells/WellInterfaceGeneric.hpp>
@@ -29,8 +29,8 @@ namespace Opm
 {
 
 template<class Scalar>
-StandardWellGeneric<Scalar>::
-StandardWellGeneric(const WellInterfaceGeneric& baseif)
+StandardWellConnections<Scalar>::
+StandardWellConnections(const WellInterfaceGeneric& baseif)
     : baseif_(baseif)
     , perf_densities_(baseif_.numPerfs())
     , perf_pressure_diffs_(baseif_.numPerfs())
@@ -39,7 +39,7 @@ StandardWellGeneric(const WellInterfaceGeneric& baseif)
 
 template<class Scalar>
 void
-StandardWellGeneric<Scalar>::
+StandardWellConnections<Scalar>::
 computeConnectionPressureDelta()
 {
     // Algorithm:
@@ -74,6 +74,6 @@ computeConnectionPressureDelta()
     baseif_.parallelWellInfo().partialSumPerfValues(beg, end);
 }
 
-template class StandardWellGeneric<double>;
+template class StandardWellConnections<double>;
 
 }
