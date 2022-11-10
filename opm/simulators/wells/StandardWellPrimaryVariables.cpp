@@ -119,8 +119,7 @@ resize(const int numWellEq)
 
 template<class FluidSystem, class Indices, class Scalar>
 void StandardWellPrimaryVariables<FluidSystem,Indices,Scalar>::
-update(const bool has_polymermw,
-       const WellState& well_state,
+update(const WellState& well_state,
        DeferredLogger& deferred_logger)
 {
     static constexpr int Water = BlackoilPhases::Aqua;
@@ -245,8 +244,7 @@ template<class FluidSystem, class Indices, class Scalar>
 void StandardWellPrimaryVariables<FluidSystem,Indices,Scalar>::
 updateNewton(const BVectorWell& dwells,
              [[maybe_unused]] const double dFLimit,
-             const double dBHPLimit,
-             const bool has_polymermw)
+             const double dBHPLimit)
 {
     const double relaxation_factor_rate = relaxationFactorRate(value_[WQTotal],
                                                                dwells[0][WQTotal]);
@@ -410,6 +408,10 @@ copyToWellState(WellState& well_state,
                                     "Multi phase injectors are not supported, requested for well " + well_.name());
             break;
         }
+    }
+
+    if (has_polymermw) {
+        this->copyToWellStatePolyMW(well_state);
     }
 }
 

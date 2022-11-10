@@ -359,8 +359,6 @@ namespace Opm
                                           const WellState& well_state,
                                           DeferredLogger& deferred_logger);
 
-        void updateWellStateFromPrimaryVariables(WellState& well_state, DeferredLogger& deferred_logger) const;
-
         virtual void assembleWellEqWithoutIteration(const Simulator& ebosSimulator,
                                                     const double dt,
                                                     const Well::InjectionControls& inj_controls,

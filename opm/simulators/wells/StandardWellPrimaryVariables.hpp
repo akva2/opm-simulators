@@ -51,8 +51,9 @@ public:
     using EvalWell = DenseAd::DynamicEvaluation<Scalar, numStaticWellEq + Indices::numEq + 1>;
     using BVectorWell = typename StandardWellEquations<Indices,Scalar>::BVectorWell;
 
-    StandardWellPrimaryVariables(const WellInterfaceIndices<FluidSystem,Indices,Scalar>& well)
-        : well_(well)
+    StandardWellPrimaryVariables(const WellInterfaceIndices<FluidSystem,Indices,Scalar>& well,
+                                 const bool has_polymw)
+        : well_(well), has_polymermw(has_polymw)
     {}
 
     //! \brief Initialize evaluations from values.
@@ -62,22 +63,20 @@ public:
     void resize(const int numWellEq);
 
     //! \brief Copy values from well state.
-    void update(const bool has_polymermw, const WellState& well_state, DeferredLogger& deferred_logger);
+    void update(const WellState& well_state,
+                DeferredLogger& deferred_logger);
 
     //! \brief Update values from newton update vector.
     void updateNewton(const BVectorWell& dwells,
                       const double dFLimit,
-                      const double dBHPLimit,
-                      const bool has_polymermw);
+                      const double dBHPLimit);
 
     //! \brief Check that all values are finite.
     void checkFinite(DeferredLogger& deferred_logger) const;
 
     //! \brief Copy values to well state.
-    void copyToWellState(WellState& well_state, DeferredLogger& deferred_logger) const;
-
-    //! \brief Copy polymer molecular weight values to well state.
-    void copyToWellStatePolyMW(WellState& well_state) const;
+    void copyToWellState(WellState& well_state,
+                         DeferredLogger& deferred_logger) const;
 
     EvalWell wellVolumeFractionScaled(const int compIdx,
                                       const int numWellEq) const;
@@ -105,6 +104,9 @@ private:
     //! \brief Handle non-reasonable fractions due to numerical overshoot.
     void processFractions();
 
+    //! \brief Copy polymer molecular weight values to well state.
+    void copyToWellStatePolyMW(WellState& well_state) const;
+
     //! \brief Update polymer molecular weight values from newton update vector.
     void updateNewtonPolyMW(const BVectorWell& dwells);
 
@@ -118,6 +120,7 @@ private:
     std::vector<EvalWell> evaluation_; //!< The AD evaluation for the primary variables
 
     const WellInterfaceIndices<FluidSystem,Indices,Scalar>& well_; //!< Reference to well interface
+    const bool has_polymermw; //!< True if polymer molecular weight is enabled.
 };
 
 }

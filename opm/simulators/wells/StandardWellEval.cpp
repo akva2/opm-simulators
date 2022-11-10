@@ -48,10 +48,11 @@ namespace Opm
 
 template<class FluidSystem, class Indices, class Scalar>
 StandardWellEval<FluidSystem,Indices,Scalar>::
-StandardWellEval(const WellInterfaceIndices<FluidSystem,Indices,Scalar>& baseif)
-    : StandardWellGeneric<Scalar>(baseif)
+StandardWellEval(const WellInterfaceIndices<FluidSystem,Indices,Scalar>& baseif,
+                 const bool has_polymermw)
+    : StandardWellConnections<Scalar>(baseif)
     , baseif_(baseif)
-    , primary_variables_(baseif_)
+    , primary_variables_(baseif_, has_polymermw)
     , F0_(StandardWellEquations<Indices,Scalar>::numWellConservationEq)
     , linSys_(baseif_.parallelWellInfo())
 {

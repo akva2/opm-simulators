@@ -99,9 +99,8 @@ public:
     void addWellContribution(WellContributions& wellContribs) const;
 
 protected:
-    StandardWellEval(const WellInterfaceIndices<FluidSystem,Indices,Scalar>& baseif);
-
-    const WellInterfaceIndices<FluidSystem,Indices,Scalar>& baseif_;
+    StandardWellEval(const WellInterfaceIndices<FluidSystem,Indices,Scalar>& baseif,
+                     const bool has_polymermw);
 
     EvalWell extendEval(const Eval& in) const;
 
@@ -138,6 +137,8 @@ protected:
     // total number of the well equations and primary variables
     // there might be extra equations be used, numWellEq will be updated during the initialization
     int numWellEq_ = numStaticWellEq;
+
+    const WellInterfaceIndices<FluidSystem,Indices,Scalar>& baseif_;
 
     StandardWellPrimaryVariables<FluidSystem,Indices,Scalar> primary_variables_;
 

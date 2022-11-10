@@ -45,7 +45,7 @@ namespace Opm
                  const int index_of_well,
                  const std::vector<PerforationData>& perf_data)
     : Base(well, pw_info, time_step, param, rate_converter, pvtRegionIdx, num_components, num_phases, index_of_well, perf_data)
-    , StdWellEval(static_cast<const WellInterfaceIndices<FluidSystem,Indices,Scalar>&>(*this))
+    , StdWellEval(static_cast<const WellInterfaceIndices<FluidSystem,Indices,Scalar>&>(*this), has_polymermw)
     , regularize_(false)
     {
         assert(this->num_components_ == numWellConservationEq);
@@ -195,7 +195,7 @@ namespace Opm
             }
         }
 
-        Scalar skin_pressure =0.0;
+        Scalar skin_pressure = 0.0;
         if (has_polymermw) {
             if (this->isInjector()) {
                 const int pskin_index = Bhp + 1 + this->numPerfs() + perf;
@@ -933,7 +933,7 @@ namespace Opm
 
         updatePrimaryVariablesNewton(dwells, well_state, deferred_logger);
 
-        updateWellStateFromPrimaryVariables(well_state, deferred_logger);
+        this->updateWellStateFromPrimaryVariables(well_state, deferred_logger);
         Base::calculateReservoirRates(well_state.well(this->index_of_well_));
     }
 
@@ -950,25 +950,8 @@ namespace Opm
     {
         const double dFLimit = this->param_.dwell_fraction_max_;
         const double dBHPLimit = this->param_.dbhp_max_rel_;
-        this->primary_variables_.updateNewton(dwells, dFLimit, dBHPLimit, Base::has_polymermw);
+        this->primary_variables_.updateNewton(dwells, dFLimit, dBHPLimit);
         this->primary_variables_.checkFinite(deferred_logger);
-    }
-
-
-
-
-
-    template<typename TypeTag>
-    void
-    StandardWell<TypeTag>::
-    updateWellStateFromPrimaryVariables(WellState& well_state, DeferredLogger& deferred_logger) const
-    {
-        this->StdWellEval::updateWellStateFromPrimaryVariables(well_state, deferred_logger);
-
-        // other primary variables related to polymer injectivity study
-        if constexpr (Base::has_polymermw) {
-            this->primary_variables_.copyToWellStatePolyMW(well_state);
-        }
     }
 
 
@@ -2014,7 +1997,7 @@ namespace Opm
     {
         if (!this->isOperableAndSolvable() && !this->wellIsStopped()) return;
 
-        this->primary_variables_.update(Base::has_polymermw, well_state, deferred_logger);
+        this->primary_variables_.update(well_state, deferred_logger);
         this->primary_variables_.checkFinite(deferred_logger);
     }
 
