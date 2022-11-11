@@ -22,6 +22,12 @@
 #include <config.h>
 #include <opm/simulators/wells/StandardWellConnections.hpp>
 
+#include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
+
+#include <opm/models/blackoil/blackoilindices.hh>
+#include <opm/models/blackoil/blackoilonephaseindices.hh>
+#include <opm/models/blackoil/blackoiltwophaseindices.hh>
+
 #include <opm/simulators/utils/DeferredLogger.hpp>
 #include <opm/simulators/wells/ParallelWellInfo.hpp>
 #include <opm/simulators/wells/WellInterfaceGeneric.hpp>
@@ -34,9 +40,9 @@ namespace Opm
 template<class FluidSystem, class Indices, class Scalar>
 StandardWellConnections<FluidSystem,Indices,Scalar>::
 StandardWellConnections(const WellInterfaceGeneric& well)
-    : well_(well)
-    , perf_densities_(well_.numPerfs())
-    , perf_pressure_diffs_(well_.numPerfs())
+    : perf_densities_(well.numPerfs())
+    , perf_pressure_diffs_(well.numPerfs())
+    , well_(well)
 {
 }
 
@@ -94,7 +100,7 @@ computeConnectionDensities(const std::vector<Scalar>& perfComponentRates,
     //    component) exiting up the wellbore from each perforation,
     //    taking into account flow from lower in the well, and
     //    in/out-flow at each perforation.
-    std::vector<double> q_out_perf((nperf)*num_comp, 0.0);
+    std::vector<Scalar> q_out_perf((nperf)*num_comp, 0.0);
 
     // Step 1 depends on the order of the perforations. Hence we need to
     // do the modifications globally.
@@ -129,13 +135,13 @@ computeConnectionDensities(const std::vector<Scalar>& perfComponentRates,
     //    absolute values of the surface rates divided by their sum.
     //    Then compute volume ratios (formation factors) for each perforation.
     //    Finally compute densities for the segments associated with each perforation.
-    std::vector<double> mix(num_comp,0.0);
-    std::vector<double> x(num_comp);
-    std::vector<double> surf_dens(num_comp);
+    std::vector<Scalar> mix(num_comp,0.0);
+    std::vector<Scalar> x(num_comp);
+    std::vector<Scalar> surf_dens(num_comp);
 
     for (int perf = 0; perf < nperf; ++perf) {
         // Find component mix.
-        const double tot_surf_rate = std::accumulate(q_out_perf.begin() + num_comp*perf,
+        const Scalar tot_surf_rate = std::accumulate(q_out_perf.begin() + num_comp*perf,
                                                      q_out_perf.begin() + num_comp*(perf+1), 0.0);
         if (tot_surf_rate != 0.0) {
             for (int component = 0; component < num_comp; ++component) {
@@ -195,15 +201,15 @@ computeConnectionDensities(const std::vector<Scalar>& perfComponentRates,
         if (FluidSystem::phaseIsActive(FluidSystem::gasPhaseIdx) && FluidSystem::phaseIsActive(FluidSystem::oilPhaseIdx)) {
             const unsigned gaspos = Indices::canonicalToActiveComponentIndex(FluidSystem::gasCompIdx);
             const unsigned oilpos = Indices::canonicalToActiveComponentIndex(FluidSystem::oilCompIdx);
-            double rs = 0.0;
-            double rv = 0.0;
+            Scalar rs = 0.0;
+            Scalar rv = 0.0;
             if (!rsmax_perf.empty() && mix[oilpos] > 1e-12) {
                 rs = std::min(mix[gaspos]/mix[oilpos], rsmax_perf[perf]);
             }
             if (!rvmax_perf.empty() && mix[gaspos] > 1e-12) {
                 rv = std::min(mix[oilpos]/mix[gaspos], rvmax_perf[perf]);
             }
-            const double d = 1.0 - rs*rv;
+            const Scalar d = 1.0 - rs*rv;
             if (d <= 0.0) {
                 std::ostringstream sstr;
                 sstr << "Problematic d value " << d << " obtained for well " << well_.name()
@@ -231,7 +237,7 @@ computeConnectionDensities(const std::vector<Scalar>& perfComponentRates,
                 //│mix[waterpos]│   │ 0     Rvw    1 │  │x[waterpos │
                 //└             ┘   └                ┘  └           ┘
                 const unsigned waterpos = Indices::canonicalToActiveComponentIndex(FluidSystem::waterCompIdx);
-                double rvw = 0.0;
+                Scalar rvw = 0.0;
                 if (!rvwmax_perf.empty() && mix[gaspos] > 1e-12) {
                     rvw = std::min(mix[waterpos]/mix[gaspos], rvwmax_perf[perf]);
                 }
@@ -244,7 +250,7 @@ computeConnectionDensities(const std::vector<Scalar>& perfComponentRates,
             //no oil
             const unsigned gaspos = Indices::canonicalToActiveComponentIndex(FluidSystem::gasCompIdx);
             const unsigned waterpos = Indices::canonicalToActiveComponentIndex(FluidSystem::waterCompIdx);
-            double rvw = 0.0;
+            Scalar rvw = 0.0;
             if (!rvwmax_perf.empty() && mix[gaspos] > 1e-12) {
                 rvw = std::min(mix[waterpos]/mix[gaspos], rvwmax_perf[perf]);
             }
@@ -254,7 +260,7 @@ computeConnectionDensities(const std::vector<Scalar>& perfComponentRates,
             }
         }
 
-        double volrat = 0.0;
+        Scalar volrat = 0.0;
         for (int component = 0; component < num_comp; ++component) {
             volrat += x[component] / b_perf[perf*num_comp+ component];
         }
@@ -266,5 +272,35 @@ computeConnectionDensities(const std::vector<Scalar>& perfComponentRates,
         perf_densities_[perf] = std::inner_product(surf_dens.begin(), surf_dens.end(), mix.begin(), 0.0) / volrat;
     }
 }
+
+#define INSTANCE(...) \
+template class StandardWellConnections<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>,__VA_ARGS__,double>;
+
+// One phase
+INSTANCE(BlackOilOnePhaseIndices<0u,0u,0u,0u,false,false,0u,1u,0u>)
+INSTANCE(BlackOilOnePhaseIndices<0u,0u,0u,1u,false,false,0u,1u,0u>)
+INSTANCE(BlackOilOnePhaseIndices<0u,0u,0u,0u,false,false,0u,1u,5u>)
+
+// Two phase
+INSTANCE(BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,false,0u,0u,0u>)
+INSTANCE(BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,false,0u,1u,0u>)
+INSTANCE(BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,false,0u,2u,0u>)
+INSTANCE(BlackOilTwoPhaseIndices<0u,0u,1u,0u,false,false,0u,2u,0u>)
+INSTANCE(BlackOilTwoPhaseIndices<0u,0u,1u,0u,false,true,0u,2u,0u>)
+INSTANCE(BlackOilTwoPhaseIndices<0u,0u,0u,1u,false,false,0u,1u,0u>)
+INSTANCE(BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,true,0u,0u,0u>)
+INSTANCE(BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,true,0u,2u,0u>)
+INSTANCE(BlackOilTwoPhaseIndices<0u,0u,2u,0u,false,false,0u,2u,0u>)
+
+// Blackoil
+INSTANCE(BlackOilIndices<0u,0u,0u,0u,false,false,0u,0u>)
+INSTANCE(BlackOilIndices<1u,0u,0u,0u,false,false,0u,0u>)
+INSTANCE(BlackOilIndices<0u,1u,0u,0u,false,false,0u,0u>)
+INSTANCE(BlackOilIndices<0u,0u,1u,0u,false,false,0u,0u>)
+INSTANCE(BlackOilIndices<0u,0u,0u,1u,false,false,0u,0u>)
+INSTANCE(BlackOilIndices<0u,0u,0u,0u,true,false,0u,0u>)
+INSTANCE(BlackOilIndices<0u,0u,0u,0u,false,true,0u,0u>)
+INSTANCE(BlackOilIndices<0u,0u,0u,1u,false,true,0u,0u>)
+INSTANCE(BlackOilIndices<0u,0u,0u,1u,false,false,1u,0u>)
 
 }

@@ -39,6 +39,8 @@ public:
 
     void computeConnectionPressureDelta();
 
+    // TODO: not total sure whether it is a good idea to put this function here
+    // the major reason to put here is to avoid the usage of Wells struct
     void computeConnectionDensities(const std::vector<Scalar>& perfComponentRates,
                                     const std::vector<Scalar>& b_perf,
                                     const std::vector<Scalar>& rsmax_perf,
