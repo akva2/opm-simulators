@@ -30,14 +30,14 @@ namespace Opm
 {
 
 class DeferredLogger;
-class WellInterfaceGeneric;
+template<class FluidSystem, class Indices, class Scalar> class WellInterfaceIndices;
 class WellState;
 
 template<class FluidSystem, class Indices, class Scalar>
 class StandardWellConnections
 {
 public:
-    StandardWellConnections(const WellInterfaceGeneric& well);
+    StandardWellConnections(const WellInterfaceIndices<FluidSystem,Indices,Scalar>& well);
 
     void computeConnectionPressureDelta();
 
@@ -63,6 +63,18 @@ public:
                                                      std::vector<Scalar>& rvwmax_perf,
                                                      std::vector<Scalar>& surf_dens_perf) const;
 
+    void computeWellConnectionDensitesPressures(const WellState& well_state,
+                                                const std::function<Scalar(int,int)>& invB,
+                                                const std::function<Scalar(int,int)>& mobility,
+                                                const std::function<Scalar(int)>& solventInverseFormationVolumeFactor,
+                                                const std::function<Scalar(int)>& solventMobility,
+                                                const std::vector<double>& b_perf,
+                                                const std::vector<double>& rsmax_perf,
+                                                const std::vector<double>& rvmax_perf,
+                                                const std::vector<double>& rvwmax_perf,
+                                                const std::vector<double>& surf_dens_perf,
+                                                DeferredLogger& deferred_logger);
+
     Scalar getRho() const
     {
         return this->perf_densities_.empty() ? 0.0 : perf_densities_[0];
@@ -75,7 +87,7 @@ public:
 
 private:
     // Base interface reference
-    const WellInterfaceGeneric& well_;
+    const WellInterfaceIndices<FluidSystem,Indices,Scalar>& well_;
 };
 
 }
