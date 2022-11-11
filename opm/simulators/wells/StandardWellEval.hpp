@@ -45,7 +45,7 @@ template<class FluidSystem, class Indices, class Scalar> class WellInterfaceIndi
 class WellState;
 
 template<class FluidSystem, class Indices, class Scalar>
-class StandardWellEval : public StandardWellConnections<Scalar>
+class StandardWellEval
 {
 protected:
     using BVectorWell = typename StandardWellEquations<Indices,Scalar>::BVectorWell;
@@ -146,6 +146,7 @@ protected:
     std::vector<double> F0_;
 
     StandardWellEquations<Indices,Scalar> linSys_; //!< Equation system
+    StandardWellConnections<Scalar> connections_;
 };
 
 }

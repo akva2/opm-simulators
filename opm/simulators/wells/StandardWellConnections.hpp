@@ -34,7 +34,7 @@ template<class Scalar>
 class StandardWellConnections
 {
 public:
-    StandardWellConnections(const WellInterfaceGeneric& baseif);
+    StandardWellConnections(const WellInterfaceGeneric& well);
 
     void computeConnectionPressureDelta();
 
@@ -43,14 +43,14 @@ public:
         return this->perf_densities_.empty() ? 0.0 : perf_densities_[0];
     }
 
-protected:
-    // Base interface reference
-    const WellInterfaceGeneric& baseif_;
-
     // densities of the fluid in each perforation
     std::vector<Scalar> perf_densities_;
     // pressure drop between different perforations
     std::vector<Scalar> perf_pressure_diffs_;
+
+private:
+    // Base interface reference
+    const WellInterfaceGeneric& well_;
 };
 
 }
