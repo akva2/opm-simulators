@@ -28,15 +28,24 @@
 namespace Opm
 {
 
+class DeferredLogger;
 class WellInterfaceGeneric;
 
-template<class Scalar>
+template<class FluidSystem, class Indices, class Scalar>
 class StandardWellConnections
 {
 public:
     StandardWellConnections(const WellInterfaceGeneric& well);
 
     void computeConnectionPressureDelta();
+
+    void computeConnectionDensities(const std::vector<Scalar>& perfComponentRates,
+                                    const std::vector<Scalar>& b_perf,
+                                    const std::vector<Scalar>& rsmax_perf,
+                                    const std::vector<Scalar>& rvmax_perf,
+                                    const std::vector<Scalar>& rvwmax_perf,
+                                    const std::vector<Scalar>& surf_dens_perf,
+                                    DeferredLogger& deferred_logger);
 
     Scalar getRho() const
     {

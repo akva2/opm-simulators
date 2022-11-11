@@ -146,7 +146,7 @@ protected:
     std::vector<double> F0_;
 
     StandardWellEquations<Indices,Scalar> linSys_; //!< Equation system
-    StandardWellConnections<Scalar> connections_;
+    StandardWellConnections<FluidSystem,Indices,Scalar> connections_;
 };
 
 }
