@@ -95,10 +95,11 @@ void WellContributions::setBlockSize(unsigned int dim_, unsigned int dim_wells_)
     dim = dim_;
     dim_wells = dim_wells_;
 
-    if(dim != 3 || dim_wells != 4){
-        std::ostringstream oss;
-        oss << "WellContributions::setBlockSize error: dim and dim_wells must be equal to 3 and 4, repectivelly, otherwise the add well contributions kernel won't work.\n";
-        OPM_THROW(std::logic_error, oss.str());
+    if(dim != 3 || dim_wells != 4) {
+        OPM_THROW(std::logic_error,
+                  "WellContributions::setBlockSize error: dim and dim_wells must be "
+                  "equal to 3 and 4, respectively, otherwise the "
+                  "add well contributions kernel won't work.\n");
     }
 }
 
@@ -109,7 +110,8 @@ void WellContributions::setVectorSize(unsigned N_) {
 void WellContributions::addNumBlocks(unsigned int numBlocks)
 {
     if (allocated) {
-        OPM_THROW(std::logic_error, "Error cannot add more sizes after allocated in WellContributions");
+        OPM_THROW(std::logic_error,
+                  "Error cannot add more sizes after allocated in WellContributions");
     }
     num_blocks += numBlocks;
     num_std_wells++;

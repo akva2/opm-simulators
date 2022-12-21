@@ -393,7 +393,8 @@ WellState::currentWellRates(const std::string& wellName) const
     auto it = well_rates.find(wellName);
 
     if (it == well_rates.end())
-        OPM_THROW(std::logic_error, "Could not find any rates for well  " << wellName);
+        OPM_THROW(std::logic_error,
+                  fmt::format("Could not find any rates for well {}", wellName));
 
     return it->second.second;
 }
@@ -919,7 +920,8 @@ bool WellState::wellIsOwned(const std::string& wellName) const
 {
     const auto& well_index = this->index(wellName);
     if (!well_index.has_value())
-        OPM_THROW(std::logic_error, "Could not find well " << wellName << " in well map");
+        OPM_THROW(std::logic_error,
+                  fmt::format("Could not find well {} in well map", wellName));
 
     return wellIsOwned(well_index.value(), wellName);
 }

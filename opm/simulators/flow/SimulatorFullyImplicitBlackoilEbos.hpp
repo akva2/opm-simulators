@@ -22,6 +22,8 @@
 #ifndef OPM_SIMULATORFULLYIMPLICITBLACKOILEBOS_HEADER_INCLUDED
 #define OPM_SIMULATORFULLYIMPLICITBLACKOILEBOS_HEADER_INCLUDED
 
+#include <opm/material/densead/EvaluationFormat.hpp>
+
 #include <opm/simulators/flow/NonlinearSolverEbos.hpp>
 #include <opm/simulators/flow/BlackoilModelEbos.hpp>
 #include <opm/simulators/flow/BlackoilModelParametersEbos.hpp>

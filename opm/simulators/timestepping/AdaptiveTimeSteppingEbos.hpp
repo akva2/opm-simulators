@@ -3,9 +3,6 @@
 #ifndef OPM_ADAPTIVE_TIME_STEPPING_EBOS_HPP
 #define OPM_ADAPTIVE_TIME_STEPPING_EBOS_HPP
 
-#include <iostream>
-#include <utility>
-
 #include <opm/common/Exceptions.hpp>
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
@@ -21,6 +18,9 @@
 #include <opm/simulators/timestepping/AdaptiveSimulatorTimer.hpp>
 #include <opm/simulators/timestepping/TimeStepControlInterface.hpp>
 #include <opm/simulators/timestepping/TimeStepControl.hpp>
+
+#include <sstream>
+#include <utility>
 
 namespace Opm::Properties {
 
@@ -702,7 +702,7 @@ namespace Opm {
 
             }
             else
-                OPM_THROW(std::runtime_error,"Unsupported time step control selected "<< control);
+                OPM_THROW(std::runtime_error, "Unsupported time step control selected " + control);
 
             // make sure growth factor is something reasonable
             assert(growthFactor_ >= 1.0);

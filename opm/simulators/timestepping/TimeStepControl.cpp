@@ -50,11 +50,15 @@ namespace Opm
         , growthrate_( growthrate )
         , verbose_( verbose )
     {
-        if( decayrate_  > 1.0 ) {
-            OPM_THROW(std::runtime_error,"SimpleIterationCountTimeStepControl: decay should be <= 1 " << decayrate_ );
+        if( decayrate_ > 1.0 ) {
+            OPM_THROW(std::runtime_error,
+                      "SimpleIterationCountTimeStepControl: "
+                      "decay should be <= 1 " + std::to_string(decayrate_));
         }
         if( growthrate_ < 1.0 ) {
-            OPM_THROW(std::runtime_error,"SimpleIterationCountTimeStepControl: growth should be >= 1 " << growthrate_ );
+            OPM_THROW(std::runtime_error,
+                      "SimpleIterationCountTimeStepControl: "
+                      "growth should be >= 1 " + std::to_string(growthrate_));
         }
     }
 
@@ -89,7 +93,9 @@ namespace Opm
     {
         std::ifstream infile (filename);
         if (!infile.is_open()) {
-            OPM_THROW(std::runtime_error,"Incorrect or no filename is provided to the hardcodedTimeStep. Use timestep.control.filename=your_file_name");
+            OPM_THROW(std::runtime_error,
+                      "Incorrect or no filename is provided to the hardcodedTimeStep. "
+                      "Use timestep.control.filename=your_file_name");
         }
         std::string::size_type sz;
         std::string line;

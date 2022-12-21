@@ -293,7 +293,8 @@ initializeWellPerfData()
                 checker.connectionFound(connection_index);
                 if (connection.state() != Connection::State::SHUT) {
                     OPM_THROW(std::runtime_error,
-                              "Connection state: " << Connection::State2String(connection.state()) << " not handled");
+                              fmt::format("Connection state: {} not handled",
+                              Connection::State2String(connection.state())));
                 }
             }
             // Note: we rely on the connections being filtered! I.e. there are only connections

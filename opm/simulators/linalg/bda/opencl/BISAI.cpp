@@ -18,8 +18,6 @@
 */
 
 #include <config.h>
-#include <algorithm>
-#include <iostream>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/ErrorMacros.hpp>
@@ -32,6 +30,9 @@
 #include <opm/simulators/linalg/bda/opencl/openclKernels.hpp>
 #include <opm/simulators/linalg/bda/Reorder.hpp>
 #include <opm/simulators/linalg/bda/opencl/ChowPatelIlu.hpp> // disable BISAI if ChowPatel is selected
+
+#include <algorithm>
+#include <sstream>
 
 namespace Opm
 {
