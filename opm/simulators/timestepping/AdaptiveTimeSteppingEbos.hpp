@@ -14,9 +14,6 @@
 
 #include <opm/grid/utility/StopWatch.hpp>
 
-#include <opm/input/eclipse/Schedule/ScheduleState.hpp>
-#include <opm/input/eclipse/Units/Units.hpp>
-
 #include <opm/simulators/timestepping/SimulatorReport.hpp>
 #include <opm/simulators/timestepping/SimulatorTimer.hpp>
 #include <opm/simulators/timestepping/AdaptiveSimulatorTimer.hpp>
