@@ -20,7 +20,6 @@
 #ifndef OPM_SIMULATORTIMER_HEADER_INCLUDED
 #define OPM_SIMULATORTIMER_HEADER_INCLUDED
 
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/simulators/timestepping/SimulatorTimerInterface.hpp>
 
 #include <iosfwd>
@@ -32,6 +31,7 @@ namespace Opm
 {
 
     class ParameterGroup;
+    class Schedule;
 
     class SimulatorTimer : public SimulatorTimerInterface
     {

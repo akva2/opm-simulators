@@ -19,13 +19,18 @@
 
 #include "config.h"
 #include <opm/simulators/timestepping/SimulatorTimer.hpp>
+
 #include <opm/common/utility/parameters/ParameterGroup.hpp>
+
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
+
 #include <opm/input/eclipse/Units/Units.hpp>
-#include <ostream>
-#include <numeric>
 
 #include <boost/date_time/gregorian_calendar.hpp>
 #include <boost/date_time/posix_time/conversion.hpp>
+
+#include <ostream>
+#include <numeric>
 
 namespace Opm
 {
