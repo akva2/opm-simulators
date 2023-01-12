@@ -20,6 +20,7 @@
 #include <config.h>
 #include <opm/simulators/wells/GasLiftGroupInfo.hpp>
 
+#include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 
 namespace Opm {

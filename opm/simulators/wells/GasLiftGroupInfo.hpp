@@ -26,7 +26,6 @@
 #include <opm/core/props/BlackoilPhases.hpp>
 #include <opm/models/utils/propertysystem.hh>
 #include <opm/models/utils/parametersystem.hh>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/simulators/wells/GasLiftCommon.hpp>
 #include <opm/simulators/wells/WellState.hpp>
 #include <opm/simulators/wells/GroupState.hpp>
@@ -43,6 +42,7 @@ namespace Opm
 
 class GasLiftOpt;
 class Group;
+class Schedule;
 class SummaryState;
 class Well;
 
