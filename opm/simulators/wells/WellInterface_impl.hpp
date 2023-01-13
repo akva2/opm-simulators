@@ -23,7 +23,6 @@
 
 #include <opm/input/eclipse/Schedule/ScheduleTypes.hpp>
 #include <opm/simulators/utils/DeferredLoggingErrorHelpers.hpp>
-#include <opm/simulators/wells/GroupState.hpp>
 #include <opm/simulators/wells/TargetCalculator.hpp>
 #include <opm/simulators/wells/WellBhpThpCalculator.hpp>
 
