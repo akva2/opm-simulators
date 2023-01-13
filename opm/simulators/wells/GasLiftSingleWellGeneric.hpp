@@ -28,7 +28,6 @@
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/simulators/wells/GasLiftGroupInfo.hpp>
 #include <opm/simulators/wells/GasLiftCommon.hpp>
-#include <opm/simulators/wells/GroupState.hpp>
 
 #include <functional>
 #include <optional>
@@ -43,11 +42,11 @@ namespace Opm
 class DeferredLogger;
 class GasLiftWell;
 class GasLiftWellState;
+class GroupState;
 class Schedule;
 class SummaryState;
 class WellInterfaceGeneric;
 class WellState;
-class GroupState;
 
 class GasLiftSingleWellGeneric : public GasLiftCommon
 {
