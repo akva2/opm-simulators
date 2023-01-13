@@ -20,7 +20,6 @@
 #ifndef OPM_GASLIFT_GROUP_INFO_HEADER_INCLUDED
 #define OPM_GASLIFT_GROUP_INFO_HEADER_INCLUDED
 
-#include <opm/core/props/BlackoilPhases.hpp>
 #include <opm/models/utils/propertysystem.hh>
 #include <opm/models/utils/parametersystem.hh>
 #include <opm/simulators/wells/GasLiftCommon.hpp>
@@ -39,6 +38,7 @@ class DeferredLogger;
 class GasLiftOpt;
 class Group;
 class GroupState;
+struct PhaseUsage;
 class Schedule;
 class SummaryState;
 class Well;
@@ -59,11 +59,6 @@ protected:
         std::map<std::string, GroupRates>;
     using GroupIdxMap = std::map<std::string, int>;
 
-    // TODO: same definition with WellInterface, and
-    //   WellState eventually they should go to a common header file.
-    static const int Water = BlackoilPhases::Aqua;
-    static const int Oil = BlackoilPhases::Liquid;
-    static const int Gas = BlackoilPhases::Vapour;
 public:
     enum class Rate {oil, gas, water, liquid};
 

@@ -488,6 +488,9 @@ std::tuple<double, double, double, double, double, double>
 GasLiftGroupInfo::
 getProducerWellRates_(const Well* well, int well_index)
 {
+    constexpr int Water = BlackoilPhases::Aqua;
+    constexpr int Oil = BlackoilPhases::Liquid;
+    constexpr int Gas = BlackoilPhases::Vapour;
     const auto& pu = this->phase_usage_;
     const auto& ws= this->well_state_.well(well_index);
     const auto& wrate = ws.well_potentials;
