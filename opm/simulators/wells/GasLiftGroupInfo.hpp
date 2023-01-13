@@ -31,6 +31,7 @@
 
 #include <algorithm>
 #include <map>
+#include <optional>
 #include <string>
 #include <vector>
 #include <fmt/format.h>
