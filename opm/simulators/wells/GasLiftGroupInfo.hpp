@@ -27,7 +27,6 @@
 #include <opm/models/utils/propertysystem.hh>
 #include <opm/models/utils/parametersystem.hh>
 #include <opm/simulators/wells/GasLiftCommon.hpp>
-#include <opm/simulators/wells/GroupState.hpp>
 
 #include <algorithm>
 #include <map>
@@ -42,6 +41,7 @@ namespace Opm
 class DeferredLogger;
 class GasLiftOpt;
 class Group;
+class GroupState;
 class Schedule;
 class SummaryState;
 class Well;

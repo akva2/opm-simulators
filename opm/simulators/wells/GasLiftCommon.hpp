@@ -22,14 +22,13 @@
 
 #include <opm/simulators/utils/ParallelCommunication.hpp>
 
-#include <opm/simulators/wells/GroupState.hpp>
-
 #include <string>
 
 namespace Opm
 {
 
 class DeferredLogger;
+class GroupState;
 class WellState;
 
 class GasLiftCommon
