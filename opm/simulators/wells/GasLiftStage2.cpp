@@ -21,6 +21,7 @@
 #include <opm/simulators/wells/GasLiftStage2.hpp>
 
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
+#include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
 #include <opm/simulators/utils/DeferredLogger.hpp>
@@ -29,6 +30,7 @@
 #include <opm/simulators/wells/WellInterfaceGeneric.hpp>
 #include <opm/simulators/wells/WellState.hpp>
 #include <opm/simulators/wells/GasLiftGroupInfo.hpp>
+#include <opm/simulators/wells/GroupState.hpp>
 #include <cmath>
 #include <optional>
 #include <string>
