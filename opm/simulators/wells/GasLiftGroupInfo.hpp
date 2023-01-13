@@ -20,9 +20,6 @@
 #ifndef OPM_GASLIFT_GROUP_INFO_HEADER_INCLUDED
 #define OPM_GASLIFT_GROUP_INFO_HEADER_INCLUDED
 
-#include <dune/common/version.hh>
-#include <dune/common/parallel/mpihelper.hh>
-
 #include <opm/core/props/BlackoilPhases.hpp>
 #include <opm/models/utils/propertysystem.hh>
 #include <opm/models/utils/parametersystem.hh>
@@ -61,11 +58,6 @@ protected:
     using GroupRateMap =
         std::map<std::string, GroupRates>;
     using GroupIdxMap = std::map<std::string, int>;
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 7)
-    using Communication = Dune::Communication<Dune::MPIHelper::MPICommunicator>;
-#else
-    using Communication = Dune::CollectiveCommunication<Dune::MPIHelper::MPICommunicator>;
-#endif
 
     // TODO: same definition with WellInterface, and
     //   WellState eventually they should go to a common header file.

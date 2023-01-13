@@ -39,7 +39,7 @@ GasLiftGroupInfo(
     DeferredLogger &deferred_logger,
     WellState &well_state,
     const GroupState &group_state,
-    const Communication &comm,
+    const Parallel::Communication &comm,
     bool glift_debug
 ) :
     GasLiftCommon(well_state, group_state, deferred_logger, comm, glift_debug)
