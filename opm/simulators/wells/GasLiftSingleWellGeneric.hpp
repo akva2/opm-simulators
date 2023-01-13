@@ -20,21 +20,16 @@
 #ifndef OPM_GASLIFT_SINGLE_WELL_GENERIC_HEADER_INCLUDED
 #define OPM_GASLIFT_SINGLE_WELL_GENERIC_HEADER_INCLUDED
 
-#include <dune/common/version.hh>
-#include <dune/common/parallel/mpihelper.hh>
-
 #include <opm/core/props/BlackoilPhases.hpp>
 
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 #include <opm/simulators/wells/GasLiftGroupInfo.hpp>
 #include <opm/simulators/wells/GasLiftCommon.hpp>
 
-#include <functional>
 #include <optional>
 #include <set>
 #include <string>
 #include <tuple>
-#include <vector>
 #include <utility>
 
 namespace Opm
