@@ -20,11 +20,8 @@
 #ifndef OPM_GASLIFT_GROUP_INFO_HEADER_INCLUDED
 #define OPM_GASLIFT_GROUP_INFO_HEADER_INCLUDED
 
-#include <opm/models/utils/propertysystem.hh>
-#include <opm/models/utils/parametersystem.hh>
 #include <opm/simulators/wells/GasLiftCommon.hpp>
 
-#include <algorithm>
 #include <map>
 #include <optional>
 #include <string>
