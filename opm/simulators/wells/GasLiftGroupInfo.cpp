@@ -26,6 +26,8 @@
 
 #include <opm/simulators/wells/WellState.hpp>
 
+#include <fmt/format.h>
+
 namespace Opm {
 
 GasLiftGroupInfo::
