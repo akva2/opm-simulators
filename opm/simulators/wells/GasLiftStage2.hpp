@@ -23,10 +23,6 @@
 #include <opm/core/props/BlackoilPhases.hpp>
 #include <opm/simulators/wells/GasLiftSingleWellGeneric.hpp>
 
-#include <dune/common/version.hh>
-#include <dune/common/parallel/mpihelper.hh>
-
-#include <iterator>
 #include <map>
 #include <memory>
 #include <optional>
