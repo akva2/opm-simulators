@@ -20,7 +20,6 @@
 #ifndef OPM_GASLIFT_STAGE2_HEADER_INCLUDED
 #define OPM_GASLIFT_STAGE2_HEADER_INCLUDED
 
-#include <opm/core/props/BlackoilPhases.hpp>
 #include <opm/simulators/wells/GasLiftSingleWellGeneric.hpp>
 
 #include <map>
@@ -52,9 +51,7 @@ class GasLiftStage2 : public GasLiftCommon {
     using GradInfo = typename GasLiftSingleWellGeneric::GradInfo;
     using GradMap = std::map<std::string, GradInfo>;
     using MPIComm = typename Dune::MPIHelper::MPICommunicator;
-    static const int Water = BlackoilPhases::Aqua;
-    static const int Oil = BlackoilPhases::Liquid;
-    static const int Gas = BlackoilPhases::Vapour;
+
 public:
     GasLiftStage2(
         const int report_step_idx,
