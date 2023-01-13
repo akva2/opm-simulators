@@ -30,6 +30,7 @@ namespace Opm
 {
 
 class DeferredLogger;
+class WellState;
 
 class GasLiftCommon
 {

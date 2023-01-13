@@ -23,6 +23,8 @@
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
 
+#include <opm/simulators/wells/WellState.hpp>
+
 namespace Opm {
 
 GasLiftGroupInfo::
