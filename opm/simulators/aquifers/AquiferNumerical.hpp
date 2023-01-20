@@ -28,6 +28,8 @@
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.hpp>
 
 #include <opm/simulators/aquifers/AquiferInterface.hpp>
+#include <opm/simulators/aquifers/AquiferNumericalRestart.hpp>
+
 #include <opm/simulators/utils/DeferredLoggingErrorHelpers.hpp>
 
 #include <algorithm>
@@ -41,6 +43,7 @@ namespace Opm
 {
 template <typename TypeTag>
 class AquiferNumerical : public AquiferInterface<TypeTag>
+                       , public AquiferNumericalRestart<GetPropType<TypeTag, Properties::Scalar>>
 {
 public:
     using BlackoilIndices = GetPropType<TypeTag, Properties::Indices>;
@@ -51,12 +54,13 @@ public:
     using IntensiveQuantities = GetPropType<TypeTag, Properties::IntensiveQuantities>;
     using MaterialLaw = GetPropType<TypeTag, Properties::MaterialLaw>;
     using Simulator = GetPropType<TypeTag, Properties::Simulator>;
+    using Scalar = GetPropType<TypeTag, Properties::Scalar>;
 
     enum { dimWorld = GridView::dimensionworld };
     enum { numPhases = FluidSystem::numPhases };
     static constexpr int numEq = BlackoilIndices::numEq;
 
-    using Eval =  DenseAd::Evaluation<double, numEq>;
+    using Eval =  DenseAd::Evaluation<Scalar, numEq>;
     using Toolbox = MathToolbox<Eval>;
 
     using typename AquiferInterface<TypeTag>::RateVector;
@@ -65,9 +69,7 @@ public:
     AquiferNumerical(const SingleNumericalAquifer& aquifer,
                      const Simulator& ebos_simulator)
         : AquiferInterface<TypeTag>(aquifer.id(), ebos_simulator)
-        , flux_rate_      (0.0)
-        , cumulative_flux_(0.0)
-        , init_pressure_  (aquifer.numCells(), 0.0)
+        , AquiferNumericalRestart<Scalar>(aquifer.numCells())
     {
         this->cell_to_aquifer_cell_idx_.resize(this->ebos_simulator_.gridView().size(/*codim=*/0), -1);
 
@@ -88,23 +90,9 @@ public:
         }
     }
 
-    void initFromRestart(const data::Aquifers& aquiferSoln) override
+    void initFromRestart(const std::map<int,data::AquiferData>& aquiferSoln) override
     {
-        auto xaqPos = aquiferSoln.find(this->aquiferID());
-        if (xaqPos == aquiferSoln.end())
-            return;
-
-        if (this->connects_to_reservoir_) {
-            this->cumulative_flux_ = xaqPos->second.volume;
-        }
-
-        if (const auto* aqData = xaqPos->second.typeData.template get<data::AquiferType::Numerical>();
-            aqData != nullptr)
-        {
-            this->init_pressure_ = aqData->initPressure;
-        }
-
-        this->solution_set_from_restart_ = true;
+        this->initFromRestart_(aquiferSoln, this->aquiferID());
     }
 
     void beginTimeStep() override {}
@@ -119,16 +107,7 @@ public:
 
     data::AquiferData aquiferData() const override
     {
-        data::AquiferData data;
-        data.aquiferID = this->aquiferID();
-        data.pressure = this->pressure_;
-        data.fluxRate = this->flux_rate_;
-        data.volume = this->cumulative_flux_;
-
-        auto* aquNum = data.typeData.template create<data::AquiferType::Numerical>();
-        aquNum->initPressure = this->init_pressure_;
-
-        return data;
+        return this->aquiferData_(this->aquiferID());
     }
 
     void initialSolutionApplied() override
@@ -285,13 +264,6 @@ private:
 
         return aquifer_flux;
     }
-
-    double flux_rate_; // aquifer influx rate
-    double cumulative_flux_; // cumulative aquifer influx
-    std::vector<double> init_pressure_{};
-    double pressure_; // aquifer pressure
-    bool solution_set_from_restart_ {false};
-    bool connects_to_reservoir_ {false};
 
     // TODO: maybe unordered_map can also do the work to save memory?
     std::vector<int> cell_to_aquifer_cell_idx_;
