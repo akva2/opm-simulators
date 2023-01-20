@@ -21,8 +21,6 @@
 #ifndef OPM_AQUIFERNUMERICAL_HEADER_INCLUDED
 #define OPM_AQUIFERNUMERICAL_HEADER_INCLUDED
 
-#include <opm/output/data/Aquifer.hpp>
-
 #include <opm/material/densead/Math.hpp>
 
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.hpp>
@@ -35,12 +33,13 @@
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
-#include <unordered_map>
-#include <utility>
 #include <vector>
 
 namespace Opm
 {
+
+namespace data { class AquiferData; }
+
 template <typename TypeTag>
 class AquiferNumerical : public AquiferInterface<TypeTag>
                        , public AquiferNumericalRestart<GetPropType<TypeTag, Properties::Scalar>>
