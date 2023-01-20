@@ -23,8 +23,6 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
 
-#include <opm/output/data/Aquifer.hpp>
-
 #include <opm/simulators/aquifers/AquiferAnalytical.hpp>
 #include <opm/simulators/aquifers/AquiferFetkovichGeneric.hpp>
 
@@ -32,6 +30,8 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 namespace Opm {
+
+namespace data { class AquiferData; }
 
 template <typename TypeTag>
 class AquiferFetkovich : public AquiferAnalytical<TypeTag>
