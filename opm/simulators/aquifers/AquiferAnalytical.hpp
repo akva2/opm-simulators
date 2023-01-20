@@ -33,8 +33,6 @@
 
 #include <opm/models/blackoil/blackoilproperties.hh>
 
-#include <opm/output/data/Aquifer.hpp>
-
 #include <opm/simulators/aquifers/AquiferAnalyticalRestart.hpp>
 #include <opm/simulators/aquifers/AquiferInterface.hpp>
 #include <opm/simulators/utils/DeferredLoggingErrorHelpers.hpp>
@@ -49,6 +47,8 @@
 #include <vector>
 
 namespace Opm {
+
+namespace data { class AquiferData; }
 
 template <typename TypeTag>
 class AquiferAnalytical : public AquiferInterface<TypeTag>
