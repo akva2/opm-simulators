@@ -40,6 +40,7 @@ list (APPEND MAIN_SOURCE_FILES
   opm/core/props/phaseUsageFromDeck.cpp
   opm/core/props/satfunc/RelpermDiagnostics.cpp
   opm/simulators/aquifers/AquiferAnalyticalRestart.cpp
+  opm/simulators/aquifers/AquiferCarterTracyGeneric.cpp
   opm/simulators/flow/countGlobalCells.cpp
   opm/simulators/flow/ConvergenceOutputConfiguration.cpp
   opm/simulators/flow/ExtraConvergenceOutputThread.cpp
@@ -298,6 +299,7 @@ list (APPEND PUBLIC_HEADER_FILES
   opm/simulators/aquifers/AquiferAnalytical.hpp
   opm/simulators/aquifers/AquiferAnalyticalRestart.hpp
   opm/simulators/aquifers/AquiferCarterTracy.hpp
+  opm/simulators/aquifers/AquiferCarterTracyGeneric.hpp
   opm/simulators/aquifers/AquiferFetkovich.hpp
   opm/simulators/aquifers/AquiferInterface.hpp
   opm/simulators/aquifers/AquiferNumerical.hpp

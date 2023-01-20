@@ -21,20 +21,24 @@
 #ifndef OPM_AQUIFERCT_HEADER_INCLUDED
 #define OPM_AQUIFERCT_HEADER_INCLUDED
 
-#include <opm/simulators/aquifers/AquiferAnalytical.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/AquiferCT.hpp>
 
 #include <opm/output/data/Aquifer.hpp>
+
+#include <opm/simulators/aquifers/AquiferAnalytical.hpp>
+#include <opm/simulators/aquifers/AquiferCarterTracyGeneric.hpp>
 
 #include <exception>
 #include <memory>
 #include <stdexcept>
 #include <utility>
 
-namespace Opm
-{
+namespace Opm {
 
 template <typename TypeTag>
 class AquiferCarterTracy : public AquiferAnalytical<TypeTag>
+                         , public AquiferCarterTracyGeneric<GetPropType<TypeTag,
+                                                                        Properties::Scalar>>
 {
 public:
     using Base = AquiferAnalytical<TypeTag>;
@@ -54,7 +58,7 @@ public:
                        const Simulator& ebosSimulator,
                        const AquiferCT::AQUCT_data& aquct_data)
         : Base(aquct_data.aquiferID, connections, ebosSimulator)
-        , aquct_data_(aquct_data)
+        , AquiferCarterTracyGeneric<Scalar>(aquct_data)
     {}
 
     void endTimeStep() override
@@ -69,74 +73,24 @@ public:
 
     data::AquiferData aquiferData() const override
     {
-        data::AquiferData data;
-        data.aquiferID = this->aquiferID();
-        // TODO: not sure how to get this pressure value yet
-        data.pressure = this->pa0_;
-        data.fluxRate = 0.;
+        Scalar fluxRate = 0.;
         for (const auto& q : this->Qai_) {
-            data.fluxRate += q.value();
-        }
-        data.volume = this->W_flux_.value();
-        data.initPressure = this->pa0_;
-
-        auto* aquCT = data.typeData.template create<data::AquiferType::CarterTracy>();
-
-        aquCT->dimensionless_time = this->dimensionless_time_;
-        aquCT->dimensionless_pressure = this->dimensionless_pressure_;
-        aquCT->influxConstant = this->aquct_data_.influxConstant();
-
-        if (!this->co2store_()) {
-            aquCT->timeConstant = this->aquct_data_.timeConstant();
-            aquCT->waterDensity = this->aquct_data_.waterDensity();
-            aquCT->waterViscosity = this->aquct_data_.waterViscosity();
-        } else {
-            aquCT->waterDensity = this->rhow_;
-            aquCT->timeConstant = this->Tc_;
-            const auto x = this->aquct_data_.porosity * this->aquct_data_.total_compr * this->aquct_data_.inner_radius * this->aquct_data_.inner_radius;
-            aquCT->waterViscosity = this->Tc_ *  this->aquct_data_.permeability / x;
+            fluxRate += q.value();
         }
 
-        return data;
+        return this->aquiferData_(this->aquiferID(),
+                                  this->pa0_,
+                                  fluxRate,
+                                  this->W_flux_.value(),
+                                  this->Tc_,
+                                  this->rhow_,
+                                  this->co2store_());
     }
 
 protected:
-    // Variables constants
-    AquiferCT::AQUCT_data aquct_data_;
-
-    Scalar beta_; // Influx constant
-    // TODO: it is possible it should be a AD variable
-    Scalar fluxValue_{0}; // value of flux
-
-    Scalar dimensionless_time_{0};
-    Scalar dimensionless_pressure_{0};
-
     void assignRestartData(const data::AquiferData& xaq) override
     {
-        this->fluxValue_ = xaq.volume;
-        this->rhow_ = this->aquct_data_.waterDensity();
-    }
-
-    std::pair<Scalar, Scalar>
-    getInfluenceTableValues(const Scalar td_plus_dt)
-    {
-        // We use the opm-common numeric linear interpolator
-        this->dimensionless_pressure_ =
-            linearInterpolation(this->aquct_data_.dimensionless_time,
-                                this->aquct_data_.dimensionless_pressure,
-                                this->dimensionless_time_);
-
-        const auto PItd =
-            linearInterpolation(this->aquct_data_.dimensionless_time,
-                                this->aquct_data_.dimensionless_pressure,
-                                td_plus_dt);
-
-        const auto PItdprime =
-            linearInterpolationDerivative(this->aquct_data_.dimensionless_time,
-                                          this->aquct_data_.dimensionless_pressure,
-                                          td_plus_dt);
-
-        return std::make_pair(PItd, PItdprime);
+        this->rhow_ = this->assignRestartData_(xaq);
     }
 
     Scalar dpai(const int idx) const
@@ -154,25 +108,14 @@ protected:
     std::pair<Scalar, Scalar>
     calculateEqnConstants(const int idx, const Simulator& simulator)
     {
-        const Scalar td_plus_dt = (simulator.timeStepSize() + simulator.time()) / this->Tc_;
-        this->dimensionless_time_ = simulator.time() / this->Tc_;
-
-        const auto [PItd, PItdprime] = this->getInfluenceTableValues(td_plus_dt);
-
-        const auto denom = this->Tc_ * (PItd - this->dimensionless_time_*PItdprime);
-        const auto a = (this->beta_*dpai(idx) - this->fluxValue_*PItdprime) / denom;
-        const auto b = this->beta_ / denom;
-
-        return std::make_pair(a, b);
-    }
-
-    std::size_t pvtRegionIdx() const
-    {
-        return this->aquct_data_.pvttableID - 1;
+        return this->calculateEqnConstants_(simulator.timeStepSize(),
+                                            simulator.time(),
+                                            this->Tc_,
+                                            this->dpai(idx));
     }
 
     // This function implements Eq 5.7 of the EclipseTechnicalDescription
-    inline void calculateInflowRate(int idx, const Simulator& simulator) override
+    void calculateInflowRate(int idx, const Simulator& simulator) override
     {
         const auto [a, b] = this->calculateEqnConstants(idx, simulator);
 
@@ -180,22 +123,9 @@ protected:
             (a - b*(this->pressure_current_.at(idx) - this->pressure_previous_.at(idx)));
     }
 
-    inline void calculateAquiferConstants() override
+    void calculateAquiferConstants() override
     {
-        if(this->co2store_()) {
-             const auto press = this->aquct_data_.initial_pressure.value();
-             Scalar temp = FluidSystem::reservoirTemperature();
-             if (this->aquct_data_.initial_temperature.has_value())
-                 temp = this->aquct_data_.initial_temperature.value();
-
-             Scalar rs = 0.0; // no dissolved CO2
-             Scalar waterViscosity = FluidSystem::oilPvt().viscosity(pvtRegionIdx(), temp, press, rs);
-             const auto x = this->aquct_data_.porosity * this->aquct_data_.total_compr * this->aquct_data_.inner_radius * this->aquct_data_.inner_radius;
-             this->Tc_  = waterViscosity * x / this->aquct_data_.permeability;
-        } else {
-             this->Tc_ = this->aquct_data_.timeConstant();
-        }
-        this->beta_ = this->aquct_data_.influxConstant();
+        this->Tc_ = this->template calculateAquiferConstants_<FluidSystem>(this->co2store_());
     }
 
     inline void calculateAquiferCondition() override
@@ -218,20 +148,7 @@ protected:
         if (this->aquct_data_.initial_temperature.has_value())
             this->Ta0_ = this->aquct_data_.initial_temperature.value();
 
-        if(this->co2store_()) {
-             const auto press = this->aquct_data_.initial_pressure.value();
-
-             Scalar temp = FluidSystem::reservoirTemperature();
-             if (this->aquct_data_.initial_temperature.has_value())
-                 temp = this->aquct_data_.initial_temperature.value();
-
-             Scalar rs = 0.0; // no dissolved CO2
-             Scalar waterDensity = FluidSystem::oilPvt().inverseFormationVolumeFactor(pvtRegionIdx(), temp, press, rs)
-                     * FluidSystem::oilPvt().oilReferenceDensity(pvtRegionIdx());
-             this->rhow_  = waterDensity;
-        } else {
-            this->rhow_ = this->aquct_data_.waterDensity();
-        }
+        this->rhow_ = this->template waterDensity_<FluidSystem>(this->co2store_());
     }
 
     virtual Scalar aquiferDepth() const override

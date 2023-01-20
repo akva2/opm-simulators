@@ -24,8 +24,6 @@
 
 #include <opm/common/ErrorMacros.hpp>
 
-#include <opm/common/utility/numeric/linearInterpolation.hpp>
-
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquancon.hpp>
 
 #include <opm/material/common/MathToolbox.hpp>
