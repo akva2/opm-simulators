@@ -21,21 +21,22 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef OPM_AQUIFETP_HEADER_INCLUDED
 #define OPM_AQUIFETP_HEADER_INCLUDED
 
-#include <opm/simulators/aquifers/AquiferAnalytical.hpp>
+#include <opm/input/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
 
 #include <opm/output/data/Aquifer.hpp>
 
-#include <exception>
-#include <stdexcept>
-#include <utility>
+#include <opm/simulators/aquifers/AquiferAnalytical.hpp>
+#include <opm/simulators/aquifers/AquiferFetkovichGeneric.hpp>
 
-namespace Opm
-{
+#include <numeric>
+#include <vector>
+
+namespace Opm {
 
 template <typename TypeTag>
 class AquiferFetkovich : public AquiferAnalytical<TypeTag>
+                       , public AquiferFetkovichGeneric<GetPropType<TypeTag, Properties::Scalar>>
 {
-
 public:
     using Base = AquiferAnalytical<TypeTag>;
 
@@ -54,7 +55,7 @@ public:
                      const Simulator& ebosSimulator,
                      const Aquifetp::AQUFETP_data& aqufetp_data)
         : Base(aqufetp_data.aquiferID, connections, ebosSimulator)
-        , aqufetp_data_(aqufetp_data)
+        , AquiferFetkovichGeneric<Scalar>(aqufetp_data)
     {
     }
 
@@ -63,51 +64,29 @@ public:
         for (const auto& q : this->Qai_) {
             this->W_flux_ += q * this->ebos_simulator_.timeStepSize();
         }
-        aquifer_pressure_ = aquiferPressure();
+        this->aquifer_pressure_ = aquiferPressure();
     }
 
     data::AquiferData aquiferData() const override
     {
-        // TODO: how to unify the two functions?
-        auto data = data::AquiferData{};
-
-        data.aquiferID = this->aquiferID();
-        data.pressure = this->aquifer_pressure_;
-        data.fluxRate = std::accumulate(this->Qai_.begin(), this->Qai_.end(), 0.0,
-                                        [](const double flux, const auto& q) -> double
-                                        {
-                                            return flux + q.value();
-                                        });
-        data.volume = this->W_flux_.value();
-        data.initPressure = this->pa0_;
-
-        auto* aquFet = data.typeData.template create<data::AquiferType::Fetkovich>();
-        aquFet->initVolume = this->aqufetp_data_.initial_watvolume;
-        aquFet->prodIndex = this->aqufetp_data_.prod_index;
-        aquFet->timeConstant = this->aqufetp_data_.timeConstant();
-
-        return data;
+        Scalar fluxRate = std::accumulate(this->Qai_.begin(), this->Qai_.end(), 0.0,
+                                          [](const double flux, const auto& q) -> double
+                                          {
+                                              return flux + q.value();
+                                          });
+        return this->aquiferData_(this->aquiferID(),
+                                  fluxRate,
+                                  this->W_flux_.value(),
+                                  this->pa0_);
     }
 
 protected:
-    // Aquifer Fetkovich Specific Variables
-    Aquifetp::AQUFETP_data aqufetp_data_;
-    Scalar aquifer_pressure_; // aquifer
-
     void assignRestartData(const data::AquiferData& xaq) override
     {
-        if (! xaq.typeData.is<data::AquiferType::Fetkovich>()) {
-            throw std::invalid_argument {
-                "Analytic aquifer data for unexpected aquifer "
-                "type passed to Fetkovich aquifer"
-            };
-        }
-
-        this->aquifer_pressure_ = xaq.pressure;
-        this->rhow_ = this->aqufetp_data_.waterDensity();
+        this->rhow_ = this->assignRestartData_(xaq);
     }
 
-    inline Eval dpai(int idx)
+    Eval dpai(int idx)
     {
         const auto gdz =
             this->gravity_() * (this->cell_depth_[idx] - this->aquiferDepth());
@@ -117,7 +96,7 @@ protected:
     }
 
     // This function implements Eq 5.12 of the EclipseTechnicalDescription
-    inline Scalar aquiferPressure()
+    Scalar aquiferPressure()
     {
         Scalar Flux = this->W_flux_.value();
 
@@ -130,13 +109,13 @@ protected:
         return this->pa0_ - (Flux / denom);
     }
 
-    inline void calculateAquiferConstants() override
+    void calculateAquiferConstants() override
     {
         this->Tc_ = this->aqufetp_data_.timeConstant();
     }
 
     // This function implements Eq 5.14 of the EclipseTechnicalDescription
-    inline void calculateInflowRate(int idx, const Simulator& simulator) override
+    void calculateInflowRate(int idx, const Simulator& simulator) override
     {
         const Scalar td_Tc_ = simulator.timeStepSize() / this->Tc_;
         const Scalar coef = (1 - exp(-td_Tc_)) / td_Tc_;
@@ -145,7 +124,7 @@ protected:
             this->aqufetp_data_.prod_index * dpai(idx);
     }
 
-    inline void calculateAquiferCondition() override
+    void calculateAquiferCondition() override
     {
         if (this->solution_set_from_restart_) {
             return;
@@ -168,7 +147,7 @@ protected:
         this->aquifer_pressure_ = this->pa0_;
     }
 
-    virtual Scalar aquiferDepth() const override
+    Scalar aquiferDepth() const override
     {
         return this->aqufetp_data_.datum_depth;
     }
