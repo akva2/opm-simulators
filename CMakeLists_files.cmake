@@ -39,7 +39,7 @@ list (APPEND MAIN_SOURCE_FILES
   opm/core/props/BlackoilPhases.cpp
   opm/core/props/phaseUsageFromDeck.cpp
   opm/core/props/satfunc/RelpermDiagnostics.cpp
-  opm/simulators/timestepping/SimulatorReport.cpp
+  opm/simulators/aquifers/AquiferAnalyticalRestart.cpp
   opm/simulators/flow/countGlobalCells.cpp
   opm/simulators/flow/ConvergenceOutputConfiguration.cpp
   opm/simulators/flow/ExtraConvergenceOutputThread.cpp
@@ -68,19 +68,20 @@ list (APPEND MAIN_SOURCE_FILES
   opm/simulators/linalg/PreconditionerFactory6.cpp
   opm/simulators/linalg/PropertyTree.cpp
   opm/simulators/linalg/setupPropertyTree.cpp
-  opm/simulators/utils/PartiallySupportedFlowKeywords.cpp
-  opm/simulators/utils/readDeck.cpp
-  opm/simulators/utils/UnsupportedFlowKeywords.cpp
   opm/simulators/timestepping/AdaptiveSimulatorTimer.cpp
   opm/simulators/timestepping/AdaptiveTimeSteppingEbos.cpp
+  opm/simulators/timestepping/gatherConvergenceReport.cpp
   opm/simulators/timestepping/TimeStepControl.cpp
+  opm/simulators/timestepping/SimulatorReport.cpp
   opm/simulators/timestepping/SimulatorTimer.cpp
   opm/simulators/timestepping/SimulatorTimerInterface.cpp
-  opm/simulators/timestepping/gatherConvergenceReport.cpp
   opm/simulators/utils/DeferredLogger.cpp
   opm/simulators/utils/gatherDeferredLogger.cpp
   opm/simulators/utils/ParallelFileMerger.cpp
   opm/simulators/utils/ParallelRestart.cpp
+  opm/simulators/utils/PartiallySupportedFlowKeywords.cpp
+  opm/simulators/utils/readDeck.cpp
+  opm/simulators/utils/UnsupportedFlowKeywords.cpp
   opm/simulators/wells/ALQState.cpp
   opm/simulators/wells/BlackoilWellModelConstraints.cpp
   opm/simulators/wells/BlackoilWellModelGeneric.cpp
@@ -295,6 +296,7 @@ list (APPEND PUBLIC_HEADER_FILES
   opm/simulators/wells/SegmentState.hpp
   opm/simulators/wells/WellContainer.hpp
   opm/simulators/aquifers/AquiferAnalytical.hpp
+  opm/simulators/aquifers/AquiferAnalyticalRestart.hpp
   opm/simulators/aquifers/AquiferCarterTracy.hpp
   opm/simulators/aquifers/AquiferFetkovich.hpp
   opm/simulators/aquifers/AquiferInterface.hpp

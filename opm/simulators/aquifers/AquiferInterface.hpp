@@ -22,10 +22,14 @@
 #ifndef OPM_AQUIFERINTERFACE_HEADER_INCLUDED
 #define OPM_AQUIFERINTERFACE_HEADER_INCLUDED
 
-#include <opm/output/data/Aquifer.hpp>
+#include <opm/models/common/multiphasebaseproperties.hh>
+#include <opm/models/discretization/common/fvbaseproperties.hh>
+#include <opm/models/utils/propertysystem.hh>
 
 namespace Opm
 {
+
+namespace data { class AquiferData; }
 
 template <typename TypeTag>
 class AquiferInterface
@@ -46,7 +50,7 @@ public:
     // Destructor
     virtual ~AquiferInterface() = default;
 
-    virtual void initFromRestart(const data::Aquifers& aquiferSoln) = 0;
+    virtual void initFromRestart(const std::map<int,data::AquiferData>& aquiferSoln) = 0;
 
     virtual void initialSolutionApplied() = 0;
 

@@ -22,32 +22,39 @@
 #ifndef OPM_AQUIFERANALYTICAL_HEADER_INCLUDED
 #define OPM_AQUIFERANALYTICAL_HEADER_INCLUDED
 
-#include <opm/simulators/aquifers/AquiferInterface.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 #include <opm/common/utility/numeric/linearInterpolation.hpp>
+
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquancon.hpp>
-
-#include <opm/output/data/Aquifer.hpp>
-
-#include <opm/simulators/utils/DeferredLoggingErrorHelpers.hpp>
 
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/densead/Math.hpp>
 #include <opm/material/fluidstates/BlackOilFluidState.hpp>
 
+#include <opm/models/blackoil/blackoilproperties.hh>
+
+#include <opm/output/data/Aquifer.hpp>
+
+#include <opm/simulators/aquifers/AquiferAnalyticalRestart.hpp>
+#include <opm/simulators/aquifers/AquiferInterface.hpp>
+#include <opm/simulators/utils/DeferredLoggingErrorHelpers.hpp>
+
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <limits>
 #include <numeric>
+#include <optional>
 #include <unordered_map>
 #include <vector>
 
-namespace Opm
-{
+namespace Opm {
+
 template <typename TypeTag>
 class AquiferAnalytical : public AquiferInterface<TypeTag>
+                        , public AquiferAnalyticalRestart<GetPropType<TypeTag, Properties::Scalar>>
 {
 public:
     using Simulator = GetPropType<TypeTag, Properties::Simulator>;
@@ -57,6 +64,7 @@ public:
     using RateVector = GetPropType<TypeTag, Properties::RateVector>;
     using IntensiveQuantities = GetPropType<TypeTag, Properties::IntensiveQuantities>;
     using ElementMapper = GetPropType<TypeTag, Properties::ElementMapper>;
+    using Scalar = GetPropType<TypeTag, Properties::Scalar>;
 
     enum { enableTemperature = getPropValue<TypeTag, Properties::EnableTemperature>() };
     enum { enableEnergy = getPropValue<TypeTag, Properties::EnableEnergy>() };
@@ -67,7 +75,6 @@ public:
     enum { enableSaltPrecipitation = getPropValue<TypeTag, Properties::EnableSaltPrecipitation>() };
 
     static constexpr int numEq = BlackoilIndices::numEq;
-    using Scalar = double;
 
     using Eval = DenseAd::Evaluation<double, /*size=*/numEq>;
 
@@ -96,17 +103,11 @@ public:
     {
     }
 
-    void initFromRestart(const data::Aquifers& aquiferSoln) override
+    void initFromRestart(const std::map<int,data::AquiferData>& aquiferSoln) override
     {
-        auto xaqPos = aquiferSoln.find(this->aquiferID());
-        if (xaqPos == aquiferSoln.end())
-            return;
-
-        this->assignRestartData(xaqPos->second);
-
-        this->W_flux_ = xaqPos->second.volume;
-        this->pa0_ = xaqPos->second.initPressure;
-        this->solution_set_from_restart_ = true;
+        const auto volume = this->initRestart_(aquiferSoln, this->aquiferID());
+        if (volume.has_value())
+            this->W_flux_ = *volume;
     }
 
     void initialSolutionApplied() override
@@ -184,7 +185,6 @@ public:
     }
 
 protected:
-    virtual void assignRestartData(const data::AquiferData& xaq) = 0;
     virtual void calculateInflowRate(int idx, const Simulator& simulator) = 0;
     virtual void calculateAquiferCondition() = 0;
     virtual void calculateAquiferConstants() = 0;
@@ -410,13 +410,10 @@ protected:
     std::vector<Scalar> alphai_;
 
     Scalar Tc_{}; // Time constant
-    Scalar pa0_{}; // initial aquifer pressure
     std::optional<Scalar> Ta0_{}; // initial aquifer temperature
     Scalar rhow_{};
 
     Eval W_flux_;
-
-    bool solution_set_from_restart_ {false};
 };
 
 } // namespace Opm

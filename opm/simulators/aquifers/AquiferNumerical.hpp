@@ -23,6 +23,8 @@
 
 #include <opm/output/data/Aquifer.hpp>
 
+#include <opm/material/densead/Math.hpp>
+
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.hpp>
 
 #include <opm/simulators/aquifers/AquiferInterface.hpp>
