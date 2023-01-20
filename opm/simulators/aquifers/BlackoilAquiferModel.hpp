@@ -30,11 +30,10 @@
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferCT.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
 
-#include <opm/output/data/Aquifer.hpp>
-
 #include <opm/simulators/aquifers/AquiferCarterTracy.hpp>
 #include <opm/simulators/aquifers/AquiferFetkovich.hpp>
 #include <opm/simulators/aquifers/AquiferNumerical.hpp>
+#include <opm/simulators/aquifers/BlackoilAquiferModelGeneric.hpp>
 
 #include <opm/grid/CpGrid.hpp>
 #ifdef USE_POLYHEDRALGRID
@@ -78,20 +77,20 @@ class SupportsFaceTag<Dune::ALUGrid<3, 3, Dune::cube, Dune::nonconforming>>
 {};
 #endif
 
+namespace data { struct AquiferData; }
 
 /// Class for handling the blackoil well model.
 template <typename TypeTag>
-class BlackoilAquiferModel
+class BlackoilAquiferModel : public BlackoilAquiferModelGeneric
 {
     using Simulator = GetPropType<TypeTag, Properties::Simulator>;
     using RateVector = GetPropType<TypeTag, Properties::RateVector>;
-
 
 public:
     explicit BlackoilAquiferModel(Simulator& simulator);
 
     void initialSolutionApplied();
-    void initFromRestart(const data::Aquifers& aquiferSoln);
+    void initFromRestart(const std::map<int,data::AquiferData>& aquiferSoln);
 
     void beginEpisode();
     void beginTimeStep();
@@ -104,8 +103,6 @@ public:
     void endTimeStep();
     void endEpisode();
 
-    data::Aquifers aquiferData() const;
-
     template <class Restarter>
     void serialize(Restarter& res);
 
@@ -113,6 +110,8 @@ public:
     void deserialize(Restarter& res);
 
 protected:
+    std::vector<const AquiferInterfaceRestart*> getRestartAquifers() const override;
+
     // ---------      Types      ---------
     using ElementContext = GetPropType<TypeTag, Properties::ElementContext>;
     using Scalar = GetPropType<TypeTag, Properties::Scalar>;

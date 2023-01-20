@@ -33,7 +33,7 @@
 
 namespace Opm {
 
-namespace data { class AquiferData; }
+namespace data { struct AquiferData; }
 
 template <typename TypeTag>
 class AquiferCarterTracy : public AquiferAnalytical<TypeTag>
@@ -43,22 +43,17 @@ class AquiferCarterTracy : public AquiferAnalytical<TypeTag>
 public:
     using Base = AquiferAnalytical<TypeTag>;
 
-    using typename Base::BlackoilIndices;
-    using typename Base::ElementContext;
-    using typename Base::Eval;
-    using typename Base::FluidState;
     using typename Base::FluidSystem;
-    using typename Base::IntensiveQuantities;
-    using typename Base::RateVector;
     using typename Base::Scalar;
     using typename Base::Simulator;
-    using typename Base::ElementMapper;
 
     AquiferCarterTracy(const std::vector<Aquancon::AquancCell>& connections,
                        const Simulator& ebosSimulator,
                        const AquiferCT::AQUCT_data& aquct_data)
         : Base(aquct_data.aquiferID, connections, ebosSimulator)
-        , AquiferCarterTracyGeneric<Scalar>(aquct_data)
+        , AquiferCarterTracyGeneric<Scalar>(aquct_data,
+                                            this->aquiferID(),
+                                            this->co2store_())
     {}
 
     void endTimeStep() override
@@ -71,23 +66,36 @@ public:
         comm.sum(&this->fluxValue_, 1);
     }
 
-    data::AquiferData aquiferData() const override
+protected:
+    Scalar getFlux() const override
     {
-        Scalar fluxRate = 0.;
-        for (const auto& q : this->Qai_) {
-            fluxRate += q.value();
-        }
-
-        return this->aquiferData_(this->aquiferID(),
-                                  this->pa0_,
-                                  fluxRate,
-                                  this->W_flux_.value(),
-                                  this->Tc_,
-                                  this->rhow_,
-                                  this->co2store_());
+        return std::accumulate(this->Qai_.begin(), this->Qai_.end(), 0.0,
+                               [](const double flux, const auto& q) -> double
+                               {
+                                   return flux + q.value();
+                               });
     }
 
-protected:
+    Scalar getVolumeFlux() const override
+    {
+        return this->W_flux_.value();
+    }
+
+    Scalar getInitialPressure() const override
+    {
+        return this->pa0_;
+    }
+
+    Scalar getWaterDensity() const override
+    {
+        return this->rhow_;
+    }
+
+    Scalar getTimeConstant() const override
+    {
+        return this->Tc_;
+    }
+
     void assignRestartData(const data::AquiferData& xaq) override
     {
         this->rhow_ = this->assignRestartData_(xaq);
@@ -125,7 +133,7 @@ protected:
 
     void calculateAquiferConstants() override
     {
-        this->Tc_ = this->template calculateAquiferConstants_<FluidSystem>(this->co2store_());
+        this->Tc_ = this->template calculateAquiferConstants_<FluidSystem>();
     }
 
     inline void calculateAquiferCondition() override
@@ -148,7 +156,7 @@ protected:
         if (this->aquct_data_.initial_temperature.has_value())
             this->Ta0_ = this->aquct_data_.initial_temperature.value();
 
-        this->rhow_ = this->template waterDensity_<FluidSystem>(this->co2store_());
+        this->rhow_ = this->template waterDensity_<FluidSystem>();
     }
 
     virtual Scalar aquiferDepth() const override

@@ -21,23 +21,23 @@
 #include <config.h>
 #include <opm/simulators/aquifers/AquiferNumericalRestart.hpp>
 
-#include <opm/output/data/Aquifer.hpp>
+#include <opm/output/eclipse/RestartValue.hpp>
 
 namespace Opm {
 
 template<class Scalar>
 AquiferNumericalRestart<Scalar>::
-AquiferNumericalRestart(const std::size_t size)
-    : init_pressure_(size, 0.0)
+AquiferNumericalRestart(const std::size_t size, const int aquiferID)
+    : AquiferInterfaceRestart(aquiferID)
+    , init_pressure_(size, 0.0)
 {}
 
 template<class Scalar>
 void AquiferNumericalRestart<Scalar>::
-initFromRestart_(const data::Aquifers& aquiferSoln,
-                 const int aquiferID)
+initFromRestart_(const RestartValue& aquiferSoln)
 {
-    auto xaqPos = aquiferSoln.find(aquiferID);
-    if (xaqPos == aquiferSoln.end())
+    auto xaqPos = aquiferSoln.aquifer.find(aquiferID_);
+    if (xaqPos == aquiferSoln.aquifer.end())
         return;
 
     if (this->connects_to_reservoir_) {
@@ -55,10 +55,10 @@ initFromRestart_(const data::Aquifers& aquiferSoln,
 
 template<class Scalar>
 data::AquiferData AquiferNumericalRestart<Scalar>::
-aquiferData_(const int aquiferID) const
+aquiferData() const
 {
     data::AquiferData data;
-    data.aquiferID = aquiferID;
+    data.aquiferID = aquiferID_;
     data.pressure = this->pressure_;
     data.fluxRate = this->flux_rate_;
     data.volume = this->cumulative_flux_;

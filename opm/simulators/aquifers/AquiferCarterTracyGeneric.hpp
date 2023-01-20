@@ -23,27 +23,26 @@
 
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferCT.hpp>
 
+#include <opm/simulators/aquifers/AquiferInterfaceRestart.hpp>
+
 #include <utility>
 
 namespace Opm {
 
-namespace data { class AquiferData; }
+namespace data { struct AquiferData; }
 
 template<class Scalar>
-class AquiferCarterTracyGeneric {
+class AquiferCarterTracyGeneric : public AquiferInterfaceRestart {
 protected:
-    AquiferCarterTracyGeneric(const AquiferCT::AQUCT_data& aquct_data)
-        : aquct_data_(aquct_data)
+    AquiferCarterTracyGeneric(const AquiferCT::AQUCT_data& aquct_data,
+                              const int aquiferID, bool co2store)
+        : AquiferInterfaceRestart(aquiferID)
+        , aquct_data_(aquct_data)
+        , co2Store_(co2store)
     {}
 
     Scalar assignRestartData_(const data::AquiferData& xaq);
-    data::AquiferData aquiferData_(const int aquiferID,
-                                   const Scalar pa0,
-                                   const Scalar flux,
-                                   const Scalar volume,
-                                   const Scalar Tc,
-                                   const Scalar rhow,
-                                   const bool co2store) const;
+    data::AquiferData aquiferData() const override;
 
     std::pair<Scalar, Scalar> getInfluenceTableValues(const Scalar td_plus_dt);
     std::pair<Scalar, Scalar> calculateEqnConstants_(const Scalar timeStepSize,
@@ -52,14 +51,20 @@ protected:
                                                      const Scalar dpai);
 
     template<class FluidSystem>
-    Scalar calculateAquiferConstants_(const bool co2store);
+    Scalar calculateAquiferConstants_();
     template<class FluidSystem>
-    Scalar waterDensity_(const bool co2store);
+    Scalar waterDensity_();
 
     std::size_t pvtRegionIdx() const
     {
         return this->aquct_data_.pvttableID - 1;
     }
+
+    virtual Scalar getFlux() const = 0;
+    virtual Scalar getInitialPressure() const = 0;
+    virtual Scalar getTimeConstant() const = 0;
+    virtual Scalar getVolumeFlux() const = 0;
+    virtual Scalar getWaterDensity() const = 0;
 
     // Variables constants
     AquiferCT::AQUCT_data aquct_data_;
@@ -70,6 +75,8 @@ protected:
 
     Scalar dimensionless_time_{0};
     Scalar dimensionless_pressure_{0};
+
+    bool co2Store_{false};
 };
 
 } // namespace Opm

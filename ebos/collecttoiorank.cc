@@ -28,6 +28,8 @@
 #include <opm/grid/CpGrid.hpp>
 #include <opm/grid/polyhedralgrid.hh>
 
+#include <opm/output/data/Aquifer.hpp>
+
 #include <dune/common/version.hh>
 #include <dune/grid/common/gridenums.hh>
 #include <dune/grid/common/mcmgmapper.hh>
@@ -806,6 +808,17 @@ public:
 };
 
 template <class Grid, class EquilGrid, class GridView>
+struct CollectDataToIORank<Grid,EquilGrid,GridView>::GlobalData {
+    data::Solution cellData;
+    std::map<std::pair<std::string, int>, double> blockData;
+    std::map<std::size_t, double> WBPData;
+    data::Wells wellData;
+    data::GroupAndNetworkValues groupAndNetworkData;
+    data::Aquifers aquiferData;
+    WellTestState wellTestState;
+};
+
+template <class Grid, class EquilGrid, class GridView>
 CollectDataToIORank<Grid,EquilGrid,GridView>::
 CollectDataToIORank(const Grid& grid, const EquilGrid* equilGrid,
                     const GridView& localGridView,
@@ -929,6 +942,80 @@ CollectDataToIORank(const Grid& grid, const EquilGrid* equilGrid,
 }
 
 template <class Grid, class EquilGrid, class GridView>
+CollectDataToIORank<Grid,EquilGrid,GridView>::~CollectDataToIORank() = default;
+
+template <class Grid, class EquilGrid, class GridView>
+const std::map<std::size_t, double>&
+CollectDataToIORank<Grid,EquilGrid,GridView>::globalWBPData() const
+{
+    if (!globalData_) {
+        throw std::runtime_error("Attempt to access global data before it has been collected");
+    }
+
+    return this->globalData_->WBPData;
+}
+
+template <class Grid, class EquilGrid, class GridView>
+const std::map<std::pair<std::string, int>, double>&
+CollectDataToIORank<Grid,EquilGrid,GridView>::globalBlockData() const
+{
+    if (!globalData_) {
+        throw std::runtime_error("Attempt to access global data before it has been collected");
+    }
+    return this->globalData_->blockData;
+}
+
+template <class Grid, class EquilGrid, class GridView>
+const data::Solution&
+CollectDataToIORank<Grid,EquilGrid,GridView>::globalCellData() const
+{
+    if (!globalData_) {
+        throw std::runtime_error("Attempt to access global data before it has been collected");
+    }
+    return this->globalData_->cellData;
+}
+
+template <class Grid, class EquilGrid, class GridView>
+const data::Wells&
+CollectDataToIORank<Grid,EquilGrid,GridView>::globalWellData() const
+{
+    if (!globalData_) {
+        throw std::runtime_error("Attempt to access global data before it has been collected");
+    }
+    return this->globalData_->wellData;
+}
+
+template <class Grid, class EquilGrid, class GridView>
+const WellTestState&
+CollectDataToIORank<Grid,EquilGrid,GridView>::globalWellTestState() const
+{
+    if (!globalData_) {
+        throw std::runtime_error("Attempt to access global data before it has been collected");
+    }
+    return this->globalData_->wellTestState;
+}
+
+template <class Grid, class EquilGrid, class GridView>
+const data::GroupAndNetworkValues&
+CollectDataToIORank<Grid,EquilGrid,GridView>::globalGroupAndNetworkData() const
+{
+    if (!globalData_) {
+        throw std::runtime_error("Attempt to access global data before it has been collected");
+    }
+    return this->globalData_->groupAndNetworkData;
+}
+
+template <class Grid, class EquilGrid, class GridView>
+const std::map<int,data::AquiferData>&
+CollectDataToIORank<Grid,EquilGrid,GridView>::globalAquiferData() const
+{
+    if (!globalData_) {
+        throw std::runtime_error("Attempt to access global data before it has been collected");
+    }
+    return this->globalData_->aquiferData;
+}
+
+template <class Grid, class EquilGrid, class GridView>
 void CollectDataToIORank<Grid,EquilGrid,GridView>::
 collect(const data::Solution& localCellData,
         const std::map<std::pair<std::string, int>, double>& localBlockData,
@@ -939,14 +1026,7 @@ collect(const data::Solution& localCellData,
         const WellTestState& localWellTestState,
         const EclInterRegFlowMap& localInterRegFlows)
 {
-    globalCellData_ = {};
-    globalBlockData_.clear();
-    globalWBPData_.clear();
-    globalWellData_.clear();
-    globalGroupAndNetworkData_.clear();
-    globalAquiferData_.clear();
-    globalWellTestState_.clear();
-    this->globalInterRegFlows_.clear();
+    this->globalData_ = std::make_unique<GlobalData>();
 
     // index maps only have to be build when reordering is needed
     if(!needsReordering && !isParallel())
@@ -955,7 +1035,7 @@ collect(const data::Solution& localCellData,
     // this also linearises the local buffers on ioRank
     PackUnPackCellData packUnpackCellData {
         localCellData,
-        this->globalCellData_,
+        this->globalData_->cellData,
         this->localIndexMap_,
         this->indexMaps_,
         this->numCells(),
@@ -969,37 +1049,37 @@ collect(const data::Solution& localCellData,
 
     PackUnPackWellData packUnpackWellData {
         localWellData,
-                this->globalWellData_,
-                this->isIORank()
+        this->globalData_->wellData,
+        this->isIORank()
     };
 
     PackUnPackGroupAndNetworkValues packUnpackGroupAndNetworkData {
         localGroupAndNetworkData,
-                this->globalGroupAndNetworkData_,
-                this->isIORank()
+        this->globalData_->groupAndNetworkData,
+        this->isIORank()
     };
 
     PackUnPackBlockData packUnpackBlockData {
         localBlockData,
-                this->globalBlockData_,
-                this->isIORank()
+        this->globalData_->blockData,
+        this->isIORank()
     };
 
     PackUnPackWBPData packUnpackWBPData {
         localWBPData,
-                this->globalWBPData_,
-                this->isIORank()
+        this->globalData_->WBPData,
+        this->isIORank()
     };
 
     PackUnPackAquiferData packUnpackAquiferData {
         localAquiferData,
-                this->globalAquiferData_,
-                this->isIORank()
+        this->globalData_->aquiferData,
+        this->isIORank()
     };
 
     PackUnPackWellTestState packUnpackWellTestState {
         localWellTestState,
-        this->globalWellTestState_,
+        this->globalData_->wellTestState,
         this->isIORank()
     };
 

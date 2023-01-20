@@ -22,17 +22,17 @@
 #include <config.h>
 #include <opm/simulators/aquifers/AquiferAnalyticalRestart.hpp>
 
-#include <opm/output/data/Aquifer.hpp>
+#include <opm/output/eclipse/RestartValue.hpp>
 
 namespace Opm {
 
 template<class Scalar>
 std::optional<Scalar> AquiferAnalyticalRestart<Scalar>::
-initRestart_(const std::map<int,data::AquiferData>& aquiferSoln,
+initRestart_(const RestartValue& aquiferSoln,
              const int aquiferID)
 {
-    auto xaqPos = aquiferSoln.find(aquiferID);
-    if (xaqPos == aquiferSoln.end())
+    auto xaqPos = aquiferSoln.aquifer.find(aquiferID);
+    if (xaqPos == aquiferSoln.aquifer.end())
         return std::nullopt;
 
     this->assignRestartData(xaqPos->second);

@@ -27,15 +27,18 @@
 #ifndef EWOMS_ECL_BASE_AQUIFER_MODEL_HH
 #define EWOMS_ECL_BASE_AQUIFER_MODEL_HH
 
-#include <opm/output/data/Aquifer.hpp>
-
+#include <opm/models/discretization/common/fvbaseproperties.hh>
+#include <opm/models/utils/basicproperties.hh>
 #include <opm/models/utils/propertysystem.hh>
 
 #include <exception>
+#include <map>
 #include <stdexcept>
 #include <vector>
 
 namespace Opm {
+
+namespace data { class AquiferData; }
 
 /*!
  * \ingroup EclBaseAquiferModel
@@ -72,7 +75,7 @@ public:
      *        aquifer pressure and the base run's total produced liquid
      *        volume from the model's aquifers.
      */
-    void initFromRestart(const data::Aquifers&)
+    void initFromRestart(const std::map<int,data::AquiferData>&)
     {
         throw std::logic_error {
             "Initialization from restart data not supported "
@@ -149,10 +152,8 @@ public:
     void deserialize(Restarter&)
     { }
 
-
-    data::Aquifers aquiferData() const
-    { return data::Aquifers{}; }
-
+    // unimplemented as it is unsed and we want to avoid pulling in header
+    std::map<int,data::AquiferData> aquiferData() const;
 
 protected:
     Simulator& simulator_;

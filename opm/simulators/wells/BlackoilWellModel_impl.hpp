@@ -1953,8 +1953,4 @@ namespace Opm {
         }
     }
 
-
-
-
-
 } // namespace Opm

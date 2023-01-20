@@ -22,19 +22,19 @@
 #ifndef OPM_AQUIFERANALYTICAL_RESTART_HEADER_INCLUDED
 #define OPM_AQUIFERANALYTICAL_RESTART_HEADER_INCLUDED
 
-#include <map>
 #include <optional>
 
 namespace Opm {
 
-namespace data { class AquiferData; }
+namespace data { struct AquiferData; }
+class RestartValue;
 
 template<class Scalar>
 class AquiferAnalyticalRestart {
 protected:
     virtual void assignRestartData(const data::AquiferData& xaq) = 0;
 
-    std::optional<Scalar> initRestart_(const std::map<int,data::AquiferData>& aquiferSoln,
+    std::optional<Scalar> initRestart_(const RestartValue& aquiferSoln,
                                        const int aquiferID);
 
     Scalar pa0_{}; // initial aquifer pressure

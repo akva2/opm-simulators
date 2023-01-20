@@ -23,22 +23,28 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
 
+#include <opm/simulators/aquifers/AquiferInterfaceRestart.hpp>
+
 namespace Opm {
 
-namespace data { class AquiferData; }
+namespace data { struct AquiferData; }
 
 template<class Scalar>
-class AquiferFetkovichGeneric {
+class AquiferFetkovichGeneric : public AquiferInterfaceRestart {
 protected:
-    AquiferFetkovichGeneric(const Aquifetp::AQUFETP_data& aqufetp_data)
-        : aqufetp_data_(aqufetp_data)
+    AquiferFetkovichGeneric(const Aquifetp::AQUFETP_data& aqufetp_data,
+                            const int aquiferID)
+        : AquiferInterfaceRestart(aquiferID)
+        , aqufetp_data_(aqufetp_data)
     {}
 
+    data::AquiferData aquiferData() const override;
+
     Scalar assignRestartData_(const data::AquiferData& xaq);
-    data::AquiferData aquiferData_(const int aquiferID,
-                                   const Scalar flux,
-                                   const Scalar volume,
-                                   const Scalar pa0) const;
+
+    virtual Scalar getFlux() const = 0;
+    virtual Scalar getVolumeFlux() const = 0;
+    virtual Scalar getInitialPressure() const = 0;
 
     // Aquifer Fetkovich Specific Variables
     Aquifetp::AQUFETP_data aqufetp_data_;

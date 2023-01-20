@@ -82,21 +82,16 @@ calculateEqnConstants_(const Scalar timeStepSize,
 
 template<class Scalar>
 data::AquiferData AquiferCarterTracyGeneric<Scalar>::
-aquiferData_(const int aquiferID,
-             const Scalar pa0,
-             const Scalar flux,
-             const Scalar volume,
-             const Scalar Tc,
-             const Scalar rhow,
-             const bool co2store) const
+aquiferData() const
 {
     data::AquiferData data;
-    data.aquiferID = aquiferID;
+    data.aquiferID = aquiferID_;
+
     // TODO: not sure how to get this pressure value yet
-    data.pressure = pa0;
-    data.fluxRate = flux;
-    data.volume = volume;
-    data.initPressure = pa0;
+    data.pressure = this->getInitialPressure();
+    data.fluxRate = this->getFlux();
+    data.volume = this->getVolumeFlux();
+    data.initPressure = this->getInitialPressure();
 
     auto* aquCT = data.typeData.template create<data::AquiferType::CarterTracy>();
 
@@ -104,14 +99,14 @@ aquiferData_(const int aquiferID,
     aquCT->dimensionless_pressure = this->dimensionless_pressure_;
     aquCT->influxConstant = this->aquct_data_.influxConstant();
 
-    if (co2store) {
-        aquCT->waterDensity = rhow;
-        aquCT->timeConstant = Tc;
+    if (co2Store_) {
+        aquCT->waterDensity = this->getWaterDensity();
+        aquCT->timeConstant = this->getTimeConstant();
         const auto x = this->aquct_data_.porosity *
                        this->aquct_data_.total_compr *
                        this->aquct_data_.inner_radius *
                        this->aquct_data_.inner_radius;
-        aquCT->waterViscosity = Tc *  this->aquct_data_.permeability / x;
+        aquCT->waterViscosity = this->getTimeConstant() *  this->aquct_data_.permeability / x;
     } else {
         aquCT->timeConstant = this->aquct_data_.timeConstant();
         aquCT->waterDensity = this->aquct_data_.waterDensity();
@@ -124,10 +119,10 @@ aquiferData_(const int aquiferID,
 template<class Scalar>
 template<class FluidSystem>
 Scalar AquiferCarterTracyGeneric<Scalar>::
-calculateAquiferConstants_(const bool co2store)
+calculateAquiferConstants_()
 {
     this->beta_ = this->aquct_data_.influxConstant();
-    if (co2store) {
+    if (co2Store_) {
          const auto press = this->aquct_data_.initial_pressure.value();
          Scalar temp = FluidSystem::reservoirTemperature();
          if (this->aquct_data_.initial_temperature.has_value())
@@ -149,9 +144,9 @@ calculateAquiferConstants_(const bool co2store)
 template<class Scalar>
 template<class FluidSystem>
 Scalar AquiferCarterTracyGeneric<Scalar>::
-waterDensity_(const bool co2store)
+waterDensity_()
 {
-    if (co2store) {
+    if (co2Store_) {
          const auto press = this->aquct_data_.initial_pressure.value();
 
          Scalar temp = FluidSystem::reservoirTemperature();
@@ -171,7 +166,7 @@ waterDensity_(const bool co2store)
 
 template class AquiferCarterTracyGeneric<double>;
 using FS = BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>;
-template double AquiferCarterTracyGeneric<double>::calculateAquiferConstants_<FS>(const bool);
-template double AquiferCarterTracyGeneric<double>::waterDensity_<FS>(const bool);
+template double AquiferCarterTracyGeneric<double>::calculateAquiferConstants_<FS>();
+template double AquiferCarterTracyGeneric<double>::waterDensity_<FS>();
 
 } // namespace Opm

@@ -35,10 +35,9 @@
 #include <cstddef>
 #include <vector>
 
-namespace Opm
-{
+namespace Opm {
 
-namespace data { class AquiferData; }
+namespace data { struct AquiferData; }
 
 template <typename TypeTag>
 class AquiferNumerical : public AquiferInterface<TypeTag>
@@ -68,7 +67,7 @@ public:
     AquiferNumerical(const SingleNumericalAquifer& aquifer,
                      const Simulator& ebos_simulator)
         : AquiferInterface<TypeTag>(aquifer.id(), ebos_simulator)
-        , AquiferNumericalRestart<Scalar>(aquifer.numCells())
+        , AquiferNumericalRestart<Scalar>(aquifer.numCells(), this->aquiferID())
     {
         this->cell_to_aquifer_cell_idx_.resize(this->ebos_simulator_.gridView().size(/*codim=*/0), -1);
 
@@ -89,9 +88,9 @@ public:
         }
     }
 
-    void initFromRestart(const std::map<int,data::AquiferData>& aquiferSoln) override
+    void initFromRestart(const RestartValue& aquiferSoln) override
     {
-        this->initFromRestart_(aquiferSoln, this->aquiferID());
+        this->initFromRestart_(aquiferSoln);
     }
 
     void beginTimeStep() override {}
@@ -102,11 +101,6 @@ public:
         this->pressure_ = this->calculateAquiferPressure();
         this->flux_rate_ = this->calculateAquiferFluxRate();
         this->cumulative_flux_ += this->flux_rate_ * this->ebos_simulator_.timeStepSize();
-    }
-
-    data::AquiferData aquiferData() const override
-    {
-        return this->aquiferData_(this->aquiferID());
     }
 
     void initialSolutionApplied() override

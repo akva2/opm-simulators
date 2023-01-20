@@ -43,6 +43,7 @@ list (APPEND MAIN_SOURCE_FILES
   opm/simulators/aquifers/AquiferCarterTracyGeneric.cpp
   opm/simulators/aquifers/AquiferFetkovichGeneric.cpp
   opm/simulators/aquifers/AquiferNumericalRestart.cpp
+  opm/simulators/aquifers/BlackoilAquiferModelGeneric.cpp
   opm/simulators/flow/countGlobalCells.cpp
   opm/simulators/flow/ConvergenceOutputConfiguration.cpp
   opm/simulators/flow/ExtraConvergenceOutputThread.cpp
@@ -309,6 +310,7 @@ list (APPEND PUBLIC_HEADER_FILES
   opm/simulators/aquifers/AquiferNumericalRestart.hpp
   opm/simulators/aquifers/BlackoilAquiferModel.hpp
   opm/simulators/aquifers/BlackoilAquiferModel_impl.hpp
+  opm/simulators/aquifers/BlackoilAquiferModelGeneric.hpp
   opm/simulators/linalg/bda/amgclSolverBackend.hpp
   opm/simulators/linalg/bda/BdaBridge.hpp
   opm/simulators/linalg/bda/BdaResult.hpp

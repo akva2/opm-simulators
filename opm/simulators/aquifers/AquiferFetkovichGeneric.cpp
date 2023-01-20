@@ -44,19 +44,16 @@ assignRestartData_(const data::AquiferData& xaq)
 
 template<class Scalar>
 data::AquiferData AquiferFetkovichGeneric<Scalar>::
-aquiferData_(const int aquiferID,
-             const Scalar flux,
-             const Scalar volume,
-             const Scalar pa0) const
+aquiferData() const
 {
     // TODO: how to unify the two functions?
     auto data = data::AquiferData{};
 
-    data.aquiferID = aquiferID;
+    data.aquiferID = aquiferID_;
     data.pressure = this->aquifer_pressure_;
-    data.fluxRate = flux;
-    data.volume = volume;
-    data.initPressure = pa0;
+    data.fluxRate = this->getFlux();
+    data.volume = this->getVolumeFlux();
+    data.initPressure = this->getInitialPressure();
 
     auto* aquFet = data.typeData.template create<data::AquiferType::Fetkovich>();
     aquFet->initVolume = this->aqufetp_data_.initial_watvolume;

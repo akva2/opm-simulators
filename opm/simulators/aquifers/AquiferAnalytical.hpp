@@ -48,7 +48,7 @@
 
 namespace Opm {
 
-namespace data { class AquiferData; }
+namespace data { struct AquiferData; }
 
 template <typename TypeTag>
 class AquiferAnalytical : public AquiferInterface<TypeTag>
@@ -101,7 +101,7 @@ public:
     {
     }
 
-    void initFromRestart(const std::map<int,data::AquiferData>& aquiferSoln) override
+    void initFromRestart(const RestartValue& aquiferSoln) override
     {
         const auto volume = this->initRestart_(aquiferSoln, this->aquiferID());
         if (volume.has_value())

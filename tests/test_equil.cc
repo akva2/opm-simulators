@@ -37,6 +37,10 @@
 #include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/models/utils/start.hh>
+
+#include <opm/output/data/Aquifer.hpp>
+#include <opm/output/eclipse/RestartValue.hpp>
+
 #include <opm/simulators/linalg/parallelbicgstabbackend.hh>
 
 #include <opm/simulators/flow/BlackoilModelParametersEbos.hpp>

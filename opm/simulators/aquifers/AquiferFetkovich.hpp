@@ -31,7 +31,7 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace Opm {
 
-namespace data { class AquiferData; }
+namespace data { struct AquiferData; }
 
 template <typename TypeTag>
 class AquiferFetkovich : public AquiferAnalytical<TypeTag>
@@ -55,7 +55,7 @@ public:
                      const Simulator& ebosSimulator,
                      const Aquifetp::AQUFETP_data& aqufetp_data)
         : Base(aqufetp_data.aquiferID, connections, ebosSimulator)
-        , AquiferFetkovichGeneric<Scalar>(aqufetp_data)
+        , AquiferFetkovichGeneric<Scalar>(aqufetp_data, this->aquiferID())
     {
     }
 
@@ -67,20 +67,26 @@ public:
         this->aquifer_pressure_ = aquiferPressure();
     }
 
-    data::AquiferData aquiferData() const override
+protected:
+    Scalar getFlux() const override
     {
-        Scalar fluxRate = std::accumulate(this->Qai_.begin(), this->Qai_.end(), 0.0,
-                                          [](const double flux, const auto& q) -> double
-                                          {
-                                              return flux + q.value();
-                                          });
-        return this->aquiferData_(this->aquiferID(),
-                                  fluxRate,
-                                  this->W_flux_.value(),
-                                  this->pa0_);
+        return std::accumulate(this->Qai_.begin(), this->Qai_.end(), 0.0,
+                               [](const double flux, const auto& q) -> double
+                               {
+                                   return flux + q.value();
+                               });
     }
 
-protected:
+    Scalar getVolumeFlux() const override
+    {
+        return this->W_flux_.value();
+    }
+
+    Scalar getInitialPressure() const override
+    {
+        return this->pa0_;
+    }
+
     void assignRestartData(const data::AquiferData& xaq) override
     {
         this->rhow_ = this->assignRestartData_(xaq);

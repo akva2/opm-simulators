@@ -27,6 +27,7 @@
 #include <ebos/eclmpiserializer.hh>
 #endif
 
+#include <opm/output/data/Aquifer.hpp>
 #include <opm/output/eclipse/EclipseIO.hpp>
 #include <opm/input/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/output/eclipse/RestartValue.hpp>

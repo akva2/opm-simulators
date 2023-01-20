@@ -23,7 +23,6 @@
 #ifndef EWOMS_COLLECT_TO_IO_RANK_HH
 #define EWOMS_COLLECT_TO_IO_RANK_HH
 
-#include <opm/output/data/Aquifer.hpp>
 #include <opm/output/data/Cells.hpp>
 #include <opm/output/data/Solution.hpp>
 #include <opm/output/data/Wells.hpp>
@@ -42,6 +41,8 @@ template<class Grid> class CartesianIndexMapper;
 }
 
 namespace Opm {
+
+namespace data { struct AquiferData; }
 
 template <class Grid, class EquilGrid, class GridView>
 class CollectDataToIORank
@@ -66,36 +67,31 @@ public:
                         const Dune::CartesianIndexMapper<EquilGrid>* equilCartMapper,
                         const std::set<std::string>& fipRegionsInterregFlow = {});
 
+    ~CollectDataToIORank();
+
     // gather solution to rank 0 for EclipseWriter
     void collect(const data::Solution& localCellData,
                  const std::map<std::pair<std::string, int>, double>& localBlockData,
                  const std::map<std::size_t, double>& localWBPData,
                  const data::Wells& localWellData,
                  const data::GroupAndNetworkValues& localGroupAndNetworkData,
-                 const data::Aquifers& localAquiferData,
+                 const std::map<int,data::AquiferData>& localAquiferData,
                  const WellTestState& localWellTestState,
                  const EclInterRegFlowMap& interRegFlows);
 
-    const std::map<std::size_t, double>& globalWBPData() const
-    { return this->globalWBPData_; }
+    const std::map<std::size_t, double>& globalWBPData() const;
 
-    const std::map<std::pair<std::string, int>, double>& globalBlockData() const
-    { return globalBlockData_; }
+    const std::map<std::pair<std::string, int>, double>& globalBlockData() const;
 
-    const data::Solution& globalCellData() const
-    { return globalCellData_; }
+    const data::Solution& globalCellData() const;
 
-    const data::Wells& globalWellData() const
-    { return globalWellData_; }
+    const data::Wells& globalWellData() const;
 
-    const WellTestState& globalWellTestState() const
-    { return this->globalWellTestState_; }
+    const WellTestState& globalWellTestState() const;
 
-    const data::GroupAndNetworkValues& globalGroupAndNetworkData() const
-    { return globalGroupAndNetworkData_; }
+    const data::GroupAndNetworkValues& globalGroupAndNetworkData() const;
 
-    const data::Aquifers& globalAquiferData() const
-    { return globalAquiferData_; }
+    const std::map<int,data::AquiferData>& globalAquiferData() const;
 
     EclInterRegFlowMap& globalInterRegFlows()
     { return this->globalInterRegFlows_; }
@@ -134,13 +130,8 @@ protected:
     IndexMapType localIndexMap_;
     IndexMapStorageType indexMaps_;
     std::vector<int> globalRanks_;
-    data::Solution globalCellData_;
-    std::map<std::pair<std::string, int>, double> globalBlockData_;
-    std::map<std::size_t, double> globalWBPData_;
-    data::Wells globalWellData_;
-    data::GroupAndNetworkValues globalGroupAndNetworkData_;
-    data::Aquifers globalAquiferData_;
-    WellTestState globalWellTestState_;
+    struct GlobalData;
+    std::unique_ptr<GlobalData> globalData_;
     std::vector<int> localIdxToGlobalIdx_;
     /// \brief sorted list of cartesian indices present-
     ///

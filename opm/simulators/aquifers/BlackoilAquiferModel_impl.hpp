@@ -42,7 +42,7 @@ BlackoilAquiferModel<TypeTag>::initialSolutionApplied()
 
 template <typename TypeTag>
 void
-BlackoilAquiferModel<TypeTag>::initFromRestart(const data::Aquifers& aquiferSoln)
+BlackoilAquiferModel<TypeTag>::initFromRestart(const std::map<int,data::AquiferData>& aquiferSoln)
 {
     for (auto& aquifer : this->aquifers)
         aquifer->initFromRestart(aquiferSoln);
@@ -174,14 +174,17 @@ BlackoilAquiferModel<TypeTag>::init()
     }
 }
 
-template<typename TypeTag>
-data::Aquifers BlackoilAquiferModel<TypeTag>::aquiferData() const
+template <typename TypeTag>
+std::vector<const AquiferInterfaceRestart*>
+BlackoilAquiferModel<TypeTag>::getRestartAquifers() const
 {
-    data::Aquifers data;
-    for (const auto& aqu : this->aquifers)
-        data.insert_or_assign(aqu->aquiferID(), aqu->aquiferData());
+    std::vector<const AquiferInterfaceRestart*> res;
+    res.reserve(this->aquifers.size());
+    for (const auto& aqu : this->aquifers) {
+        res.push_back(dynamic_cast<const AquiferInterfaceRestart*>(aqu.get()));
+    }
 
-    return data;
+    return res;
 }
 
 } // namespace Opm

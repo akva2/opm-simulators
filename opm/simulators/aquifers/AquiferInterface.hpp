@@ -26,13 +26,18 @@
 #include <opm/models/discretization/common/fvbaseproperties.hh>
 #include <opm/models/utils/propertysystem.hh>
 
-namespace Opm
-{
+namespace Opm {
 
-namespace data { class AquiferData; }
+class RestartValue;
+
+namespace data { struct AquiferData; }
+
+class AquiferInterfaceInit {
+    virtual void initFromRestart(const RestartValue&) = 0;
+};
 
 template <typename TypeTag>
-class AquiferInterface
+class AquiferInterface : public AquiferInterfaceInit
 {
 public:
     using FluidSystem = GetPropType<TypeTag, Properties::FluidSystem>;
@@ -50,14 +55,10 @@ public:
     // Destructor
     virtual ~AquiferInterface() = default;
 
-    virtual void initFromRestart(const std::map<int,data::AquiferData>& aquiferSoln) = 0;
-
     virtual void initialSolutionApplied() = 0;
 
     virtual void beginTimeStep() = 0;
     virtual void endTimeStep() = 0;
-
-    virtual data::AquiferData aquiferData() const = 0;
 
     template <class Context>
     void addToSource(RateVector& rates,

@@ -28,12 +28,13 @@
 #include <opm/grid/cpgrid/GridHelpers.hpp>
 #include <opm/grid/polyhedralgrid.hh>
 #include <opm/grid/utility/cartesianToCompressed.hpp>
-#if HAVE_DUNE_ALUGRID
-#include "eclalugridvanguard.hh"
-#include <dune/alugrid/grid.hh>
-#include <dune/alugrid/3d/gridview.hh>
-#endif // HAVE_DUNE_ALUGRID
 
+#include <opm/material/fluidsystems/BlackOilDefaultIndexTraits.hpp>
+#include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
+
+#include <opm/models/discretization/ecfv/ecfvstencil.hh>
+
+#include <opm/output/data/Aquifer.hpp>
 #include <opm/output/eclipse/EclipseIO.hpp>
 #include <opm/output/eclipse/RestartValue.hpp>
 #include <opm/output/eclipse/Summary.hpp>
@@ -49,6 +50,8 @@
 #include <opm/input/eclipse/Schedule/Well/WellMatcher.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
+#include <opm/simulators/utils/ParallelRestart.hpp>
+
 #include <dune/grid/common/mcmgmapper.hh>
 
 #if HAVE_MPI
@@ -60,6 +63,11 @@
 #include <dune/fem/gridpart/common/gridpart2gridview.hh>
 #include <ebos/femcpgridcompat.hh>
 #endif // HAVE_DUNE_FEM
+
+#if HAVE_DUNE_ALUGRID
+#include <dune/alugrid/grid.hh>
+#include <dune/alugrid/3d/gridview.hh>
+#endif // HAVE_DUNE_ALUGRID
 
 #if HAVE_MPI
 #include <mpi.h>
@@ -555,6 +563,78 @@ globalTrans() const
     return *globalTrans_;
 }
 
+template<class Grid, class EquilGrid, class GridView, class ElementMapper, class Scalar>
+template<class FluidSystem, class DofMapper, class Stencil>
+void EclGenericWriter<Grid,EquilGrid,GridView,ElementMapper,Scalar>::
+loadRestart(SummaryState& summaryState,
+            Action::State& actionState,
+            EclGenericOutputBlackoilModule<FluidSystem,Scalar>& outputModule,
+            EclGenericTracerModel<Grid,GridView,DofMapper,Stencil,Scalar>& tracerModel,
+            EclGenericThresholdPressure<Grid,GridView,ElementMapper,Scalar>& thpres,
+            const bool read_temp,
+            const bool enableSolvent,
+            const bool vapparsActive,
+            const bool enableHysteresis,
+            const bool enableSwatinit)
+{
+    std::vector<RestartKey> solutionKeys{
+        {"PRESSURE", UnitSystem::measure::pressure},
+        {"SWAT", UnitSystem::measure::identity, static_cast<bool>(FluidSystem::phaseIsActive(FluidSystem::waterPhaseIdx))},
+        {"SGAS", UnitSystem::measure::identity, static_cast<bool>(FluidSystem::phaseIsActive(FluidSystem::gasPhaseIdx))},
+        {"TEMP" , UnitSystem::measure::temperature, read_temp},
+        {"SSOLVENT" , UnitSystem::measure::identity, enableSolvent},
+        {"RS", UnitSystem::measure::gas_oil_ratio, FluidSystem::enableDissolvedGas()},
+        {"RV", UnitSystem::measure::oil_gas_ratio, FluidSystem::enableVaporizedOil()},
+        {"RVW", UnitSystem::measure::oil_gas_ratio, FluidSystem::enableVaporizedWater()},
+        {"SOMAX", UnitSystem::measure::identity, vapparsActive},
+        {"PCSWM_OW", UnitSystem::measure::identity, enableHysteresis},
+        {"KRNSW_OW", UnitSystem::measure::identity, enableHysteresis},
+        {"PCSWM_GO", UnitSystem::measure::identity, enableHysteresis},
+        {"KRNSW_GO", UnitSystem::measure::identity, enableHysteresis},
+        {"PPCW", UnitSystem::measure::pressure, enableSwatinit}
+    };
+
+    const auto& inputThpres = eclState_.getSimulationConfig().getThresholdPressure();
+    std::vector<RestartKey> extraKeys = {{"OPMEXTRA", UnitSystem::measure::identity, false},
+                                         {"THRESHPR", UnitSystem::measure::pressure, inputThpres.active()}};
+
+    {
+        const auto& tracers = eclState_.tracer();
+        for (const auto& tracer : tracers)
+            solutionKeys.emplace_back(tracer.fname(), UnitSystem::measure::identity, true);
+    }
+
+    const auto restartValues = loadParallelRestart(this->eclIO_.get(),
+                                                   actionState,
+                                                   summaryState,
+                                                   solutionKeys,
+                                                   extraKeys,
+                                                   gridView_.grid().comm());
+
+
+    unsigned numElements = gridView_.size(0);
+    for (unsigned elemIdx = 0; elemIdx < numElements; ++elemIdx) {
+        unsigned globalIdx = this->collectToIORank_.localIdxToGlobalIdx(elemIdx);
+        outputModule.setRestart(restartValues.solution, elemIdx, globalIdx);
+    }
+
+    for (int tracer_index = 0; tracer_index < tracerModel.numTracers(); tracer_index++) {
+        const auto& tracer_name = tracerModel.fname(tracer_index);
+        const auto& tracer_solution = restartValues.solution.data(tracer_name);
+        for (unsigned elemIdx = 0; elemIdx < numElements; ++elemIdx) {
+            unsigned globalIdx = this->collectToIORank_.localIdxToGlobalIdx(elemIdx);
+            tracerModel.setTracerConcentration(tracer_index, globalIdx, tracer_solution[globalIdx]);
+        }
+    }
+
+
+    if (inputThpres.active()) {
+        const auto& thpresValues = restartValues.getExtra("THRESHPR");
+        thpres.setFromRestart(thpresValues);
+    }
+    restartTimeStepSize_ = restartValues.getExtra("OPMEXTRA")[0];
+}
+
 #if HAVE_DUNE_FEM
 template class EclGenericWriter<Dune::CpGrid,
                                 Dune::CpGrid,
@@ -610,6 +690,33 @@ template class EclGenericWriter<Dune::CpGrid,
                                 Dune::GridView<Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>,
                                 Dune::MultipleCodimMultipleGeomTypeMapper<Dune::GridView<Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>>,
                                 double>;
+
+using FS = BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>;
+using OM = EclGenericOutputBlackoilModule<FS,double>;
+using TMCP = EclGenericTracerModel<Dune::CpGrid,
+                                   Dune::GridView<Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>,
+                                   Dune::MultipleCodimMultipleGeomTypeMapper<Dune::GridView<Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>>,
+                                   Opm::EcfvStencil<double,Dune::GridView<Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>>,
+                                   double>;
+using TPCP = EclGenericThresholdPressure<Dune::CpGrid,
+                                         Dune::GridView<Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>,
+                                         Dune::MultipleCodimMultipleGeomTypeMapper<Dune::GridView<Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>>,
+                                         double>;
+template void EclGenericWriter<Dune::CpGrid,
+                               Dune::CpGrid,
+                               Dune::GridView<Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>,
+                               Dune::MultipleCodimMultipleGeomTypeMapper<Dune::GridView<Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>>,
+                               double>::
+  loadRestart(SummaryState&,
+              Action::State&,
+              OM&,
+              TMCP&,
+              TPCP&,
+              const bool,
+              const bool,
+              const bool,
+              const bool,
+              const bool);
 #if HAVE_DUNE_ALUGRID
 #if HAVE_MPI
     using ALUGrid3CN = Dune::ALUGrid<3, 3, Dune::cube, Dune::nonconforming, Dune::ALUGridMPIComm>;

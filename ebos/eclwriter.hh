@@ -32,12 +32,13 @@
 #include <ebos/eclgenericwriter.hh>
 #include <ebos/ecloutputblackoilmodule.hh>
 
-#include <opm/simulators/utils/DeferredLoggingErrorHelpers.hpp>
-#include <opm/simulators/utils/ParallelRestart.hpp>
-
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
+#include <opm/output/data/Aquifer.hpp>
 #include <opm/output/eclipse/RestartValue.hpp>
+
+#include <opm/simulators/utils/DeferredLoggingErrorHelpers.hpp>
+#include <opm/simulators/utils/ParallelRestart.hpp>
 
 #include <dune/grid/common/partitionset.hh>
 
@@ -380,37 +381,7 @@ public:
         bool enableSwatinit = simulator_.vanguard().eclState().fieldProps().has_double("SWATINIT");
         bool opm_rst_file = EWOMS_GET_PARAM(TypeTag, bool, EnableOpmRstFile);
         bool read_temp = enableEnergy || (opm_rst_file && enableTemperature);
-        std::vector<RestartKey> solutionKeys{
-            {"PRESSURE", UnitSystem::measure::pressure},
-            {"SWAT", UnitSystem::measure::identity, static_cast<bool>(FluidSystem::phaseIsActive(FluidSystem::waterPhaseIdx))},
-            {"SGAS", UnitSystem::measure::identity, static_cast<bool>(FluidSystem::phaseIsActive(FluidSystem::gasPhaseIdx))},
-            {"TEMP" , UnitSystem::measure::temperature, read_temp},
-            {"SSOLVENT" , UnitSystem::measure::identity, enableSolvent},
-            {"RS", UnitSystem::measure::gas_oil_ratio, FluidSystem::enableDissolvedGas()},
-            {"RV", UnitSystem::measure::oil_gas_ratio, FluidSystem::enableVaporizedOil()},
-            {"RVW", UnitSystem::measure::oil_gas_ratio, FluidSystem::enableVaporizedWater()},
-            {"SOMAX", UnitSystem::measure::identity, simulator_.problem().vapparsActive(simulator_.episodeIndex())},
-            {"PCSWM_OW", UnitSystem::measure::identity, enableHysteresis},
-            {"KRNSW_OW", UnitSystem::measure::identity, enableHysteresis},
-            {"PCSWM_GO", UnitSystem::measure::identity, enableHysteresis},
-            {"KRNSW_GO", UnitSystem::measure::identity, enableHysteresis},
-            {"PPCW", UnitSystem::measure::pressure, enableSwatinit}
-        };
 
-        const auto& inputThpres = eclState().getSimulationConfig().getThresholdPressure();
-        std::vector<RestartKey> extraKeys = {{"OPMEXTRA", UnitSystem::measure::identity, false},
-                                             {"THRESHPR", UnitSystem::measure::pressure, inputThpres.active()}};
-
-        {
-            const auto& tracers = simulator_.vanguard().eclState().tracer();
-            for (const auto& tracer : tracers)
-                solutionKeys.emplace_back(tracer.fname(), UnitSystem::measure::identity, true);
-        }
-
-        // The episodeIndex is rewined one back before beginRestart is called
-        // and can not be used here.
-        // We just ask the initconfig directly to be sure that we use the correct
-        // index.
         const auto& initconfig = simulator_.vanguard().eclState().getInitConfig();
         int restartStepIdx = initconfig.getRestartStep();
 
@@ -418,40 +389,21 @@ public:
         unsigned numElements = gridView.size(/*codim=*/0);
         eclOutputModule_->allocBuffers(numElements, restartStepIdx, /*isSubStep=*/false, /*log=*/false, /*isRestart*/ true);
 
-        {
-            SummaryState& summaryState = simulator_.vanguard().summaryState();
-            Action::State& actionState = simulator_.vanguard().actionState();
-            auto restartValues = loadParallelRestart(this->eclIO_.get(), actionState, summaryState, solutionKeys, extraKeys,
-                                                     gridView.grid().comm());
-            for (unsigned elemIdx = 0; elemIdx < numElements; ++elemIdx) {
-                unsigned globalIdx = this->collectToIORank_.localIdxToGlobalIdx(elemIdx);
-                eclOutputModule_->setRestart(restartValues.solution, elemIdx, globalIdx);
-            }
+        this->loadRestart(simulator_.vanguard().summaryState(),
+                          simulator_.vanguard().actionState(),
+                          *eclOutputModule_,
+                          simulator_.problem().tracerModel(),
+                          simulator_.problem().thresholdPressure(),
+                          read_temp,
+                          enableSolvent,
+                          simulator_.problem().vapparsActive(simulator_.episodeIndex()),
+                          enableHysteresis,
+                          enableSwatinit);
 
-            auto& tracer_model = simulator_.problem().tracerModel();
-            for (int tracer_index = 0; tracer_index < tracer_model.numTracers(); tracer_index++) {
-                const auto& tracer_name = tracer_model.fname(tracer_index);
-                const auto& tracer_solution = restartValues.solution.data(tracer_name);
-                for (unsigned elemIdx = 0; elemIdx < numElements; ++elemIdx) {
-                    unsigned globalIdx = this->collectToIORank_.localIdxToGlobalIdx(elemIdx);
-                    tracer_model.setTracerConcentration(tracer_index, globalIdx, tracer_solution[globalIdx]);
-                }
-            }
+        // initialize the well model from restart values
+//            simulator_.problem().wellModel().initFromRestartFile(restartValues);
 
-            if (inputThpres.active()) {
-                Simulator& mutableSimulator = const_cast<Simulator&>(simulator_);
-                auto& thpres = mutableSimulator.problem().thresholdPressure();
-                const auto& thpresValues = restartValues.getExtra("THRESHPR");
-                thpres.setFromRestart(thpresValues);
-            }
-            restartTimeStepSize_ = restartValues.getExtra("OPMEXTRA")[0];
-
-            // initialize the well model from restart values
-            simulator_.problem().wellModel().initFromRestartFile(restartValues);
-
-            if (!restartValues.aquifer.empty())
-                simulator_.problem().mutableAquiferModel().initFromRestart(restartValues.aquifer);
-        }
+        //simulator_.problem().mutableAquiferModel().initFromRestart(restartValues.aquifer);
     }
 
     void endRestart()

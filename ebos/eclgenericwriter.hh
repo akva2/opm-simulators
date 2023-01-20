@@ -41,6 +41,7 @@
 
 namespace Opm {
 
+namespace data { struct AquiferData; }
 class EclipseIO;
 class EclipseState;
 class EclInterRegFlowMap;
@@ -58,6 +59,10 @@ class State;
 }} // namespace Opm::Action
 
 namespace Opm {
+
+template<class FluidSystem, class Scalar> class EclGenericOutputBlackoilModule;
+template<class Grid, class GridView, class DofMapper, class Stencil, class Scalar> class EclGenericTracerModel;
+template<class Grid, class GridView, class ElementMapper, class Scalar> class EclGenericThresholdPressure;
 
 template <class Grid, class EquilGrid, class GridView, class ElementMapper, class Scalar>
 class EclGenericWriter
@@ -109,7 +114,7 @@ protected:
                        data::Solution&&              localCellData,
                        data::Wells&&                 localWellData,
                        data::GroupAndNetworkValues&& localGroupAndNetworkData,
-                       data::Aquifers&&              localAquiferData,
+                       std::map<int,data::AquiferData>&& localAquiferData,
                        WellTestState&&               localWTestState,
                        const Action::State& actionState,
                        const UDQState& udqState,
@@ -133,6 +138,18 @@ protected:
                      const EclInterRegFlowMap& interRegionFlowMap,
                      SummaryState& summaryState,
                      UDQState& udqState);
+
+    template<class FluidSystem, class DofMapper, class Stencil>
+    void loadRestart(SummaryState& summaryState,
+                     Action::State& actionState,
+                     EclGenericOutputBlackoilModule<FluidSystem,Scalar>& outputModule,
+                     EclGenericTracerModel<Grid,GridView,DofMapper,Stencil,Scalar>& tracerModel,
+                     EclGenericThresholdPressure<Grid,GridView,ElementMapper,Scalar>& thpres,
+                     const bool read_temp,
+                     const bool enableSolvent,
+                     const bool vapparsActive,
+                     const bool enableHysteresis,
+                     const bool enableSwatinit);
 
     CollectDataToIORankType collectToIORank_;
     const Grid& grid_;

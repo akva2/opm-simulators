@@ -21,22 +21,25 @@
 #ifndef OPM_AQUIFERNUMERICAL_RESTART_HEADER_INCLUDED
 #define OPM_AQUIFERNUMERICAL_RESTART_HEADER_INCLUDED
 
+#include <opm/simulators/aquifers/AquiferInterfaceRestart.hpp>
+
 #include <cstddef>
 #include <map>
 #include <vector>
 
 namespace Opm {
 
-namespace data { class AquiferData; }
+namespace data { struct AquiferData; }
+class RestartValue;
 
 template<class Scalar>
-class AquiferNumericalRestart {
+class AquiferNumericalRestart : public AquiferInterfaceRestart {
 protected:
-    AquiferNumericalRestart(const std::size_t size);
+    AquiferNumericalRestart(const std::size_t size, const int aquiferID);
 
-    void initFromRestart_(const std::map<int,data::AquiferData>& aquiferSoln,
-                          const int aquiferID);
-    data::AquiferData aquiferData_(const int aquiferID) const;
+    data::AquiferData aquiferData() const override;
+
+    void initFromRestart_(const RestartValue& aquiferSoln);
 
     std::vector<Scalar> init_pressure_;
     bool solution_set_from_restart_ {false};
