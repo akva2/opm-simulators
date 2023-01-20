@@ -23,8 +23,6 @@
 
 #include <opm/input/eclipse/EclipseState/Aquifer/AquiferCT.hpp>
 
-#include <opm/output/data/Aquifer.hpp>
-
 #include <opm/simulators/aquifers/AquiferAnalytical.hpp>
 #include <opm/simulators/aquifers/AquiferCarterTracyGeneric.hpp>
 
@@ -34,6 +32,8 @@
 #include <utility>
 
 namespace Opm {
+
+namespace data { class AquiferData; }
 
 template <typename TypeTag>
 class AquiferCarterTracy : public AquiferAnalytical<TypeTag>
