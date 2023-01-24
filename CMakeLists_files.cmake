@@ -172,6 +172,12 @@ if(MPI_FOUND)
                                 opm/simulators/utils/ParallelSerialization.cpp
                                 opm/simulators/utils/SetupZoltanParams.cpp)
 endif()
+if(HDF5_FOUND)
+  list(APPEND MAIN_SOURCE_FILES
+    opm/simulators/utils/HDF5File.cpp
+    opm/simulators/utils/HDF5Packer.cpp
+  )
+endif()
 
 # originally generated with the command:
 # find tests -name '*.cpp' -a ! -wholename '*/not-unit/*' -printf '\t%p\n' | sort
@@ -218,6 +224,9 @@ endif()
 if(ROCALUTION_FOUND)
   list(APPEND TEST_SOURCE_FILES tests/test_rocalutionSolver.cpp)
 endif()
+if(HDF5_FOUND)
+    list(APPEND TEST_SOURCE_FILES tests/test_HDF5Restart.cpp)
+  endif()
 
 list (APPEND TEST_DATA_FILES
   tests/equil_base.DATA
@@ -278,6 +287,7 @@ list (APPEND TEST_DATA_FILES
 # find opm -name '*.h*' -a ! -name '*-pch.hpp' -printf '\t%p\n' | sort
 list (APPEND PUBLIC_HEADER_FILES
   ebos/eclinterregflows.hh
+  ebos/hdf5serializer.hh
   opm/simulators/flow/countGlobalCells.hpp
   opm/simulators/flow/BlackoilModelEbos.hpp
   opm/simulators/flow/BlackoilModelParametersEbos.hpp
@@ -429,6 +439,13 @@ list (APPEND PUBLIC_HEADER_FILES
   opm/simulators/wells/WellTest.hpp
   opm/simulators/wells/WGState.hpp
   )
+
+if(HDF5_FOUND)
+  list(APPEND PUBLIC_HEADER_FILES
+    opm/simulators/utils/HDF5File.hpp
+    opm/simulators/utils/HDF5Packer.hpp
+  )
+endif()
 
 list (APPEND EXAMPLE_SOURCE_FILES
   examples/printvfp.cpp

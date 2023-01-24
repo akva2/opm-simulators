@@ -159,6 +159,24 @@ public:
             throw std::logic_error("Internal size mismatch when distributing groupData");
     }
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(num_phases);
+        serializer(m_production_rates);
+        serializer(production_controls);
+        serializer(prod_red_rates);
+        serializer(inj_red_rates);
+        serializer(inj_surface_rates);
+        serializer(inj_resv_rates);
+        serializer(inj_rein_rates);
+        serializer(inj_vrep_rate);
+        serializer(m_grat_sales_target);
+        serializer(m_gpmaint_target);
+        serializer(injection_controls);
+        for (size_t i = 0; i < gpmaint_state.size(); ++i)
+            serializer(gpmaint_state[i]);
+    }
 
 private:
     std::size_t num_phases;

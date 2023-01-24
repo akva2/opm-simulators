@@ -23,6 +23,8 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <opm/simulators/aquifers/AquiferAnalytical.hpp>
 
+#include <opm/input/eclipse/EclipseState/Aquifer/Aquifetp.hpp>
+
 #include <opm/output/data/Aquifer.hpp>
 
 #include <exception>
@@ -87,6 +89,13 @@ public:
         aquFet->timeConstant = this->aqufetp_data_.timeConstant();
 
         return data;
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(static_cast<Base&>(*this));
+        serializer(aquifer_pressure_);
     }
 
 protected:

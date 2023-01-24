@@ -132,7 +132,14 @@ std::size_t ALQState::unpack_data(const double * data) {
     return index;
 }
 
-
+bool ALQState::operator==(const ALQState& rhs) const
+{
+    return this->current_alq_ == rhs.current_alq_ &&
+           this->default_alq_ == rhs.default_alq_ &&
+           this->alq_increase_count_ == rhs.alq_increase_count_ &&
+           this->alq_decrease_count_ == rhs.alq_decrease_count_ &&
+           this->debug_counter_ == rhs.debug_counter_;
+}
 
 }
 

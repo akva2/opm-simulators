@@ -194,7 +194,7 @@ namespace Opm {
             this->initializeWellState(timeStepIdx, summaryState);
 
             // handling MS well related
-            if (param_.use_multisegment_well_&& anyMSWellOpenLocal()) { // if we use MultisegmentWell model
+            if (param_.use_multisegment_well_ && anyMSWellOpenLocal()) { // if we use MultisegmentWell model
                 this->wellState().initWellStateMSWell(wells_ecl_, &this->prevWellState());
             }
 
@@ -1954,8 +1954,15 @@ namespace Opm {
         }
     }
 
-
-
-
+    template <typename TypeTag>
+    template<class Serializer>
+    void
+    BlackoilWellModel<TypeTag>::
+    serializeOp(Serializer& serializer)
+    {
+        serializer(static_cast<BlackoilWellModelGeneric&>(*this));
+        serializer(scaleAddRes_);
+        serializer(B_avg_);
+    }
 
 } // namespace Opm

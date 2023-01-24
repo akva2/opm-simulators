@@ -205,6 +205,13 @@ public:
     void deserialize(Restarter&)
     { /* not implemented */ }
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(static_cast<BaseType&>(*this));
+        serializer(tbatch);
+    }
+
 protected:
 
     // evaluate water storage volume(s) in a single cell
@@ -567,6 +574,13 @@ protected:
           concentration_.emplace_back(concentration);
           storageOfTimeIndex1_.emplace_back(numGridDof);
           residual_.emplace_back(numGridDof);
+      }
+
+      template<class Serializer>
+      void serializeOp(Serializer& serializer)
+      {
+          serializer(concentrationInitial_);
+          serializer(concentration_);
       }
     };
 

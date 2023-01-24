@@ -247,6 +247,8 @@ namespace Opm
                                     double* connII,
                                     DeferredLogger& deferred_logger) const;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer);
 
     protected:
         bool regularize_;

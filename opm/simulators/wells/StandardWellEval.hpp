@@ -68,6 +68,14 @@ public:
     const StandardWellEquations<Scalar,Indices::numEq>& linSys() const
     { return linSys_; }
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(F0_);
+        serializer(primary_variables_);
+        serializer(connections_);
+    }
+
 protected:
     StandardWellEval(const WellInterfaceIndices<FluidSystem,Indices,Scalar>& baseif);
 

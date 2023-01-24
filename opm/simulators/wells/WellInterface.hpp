@@ -289,6 +289,15 @@ public:
                            const GroupState& group_state,
                            DeferredLogger& deferred_logger);
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(connectionRates_);
+        serializer(B_avg_);
+        serializer(changed_to_stopped_this_step_);
+        serializer(static_cast<WellInterfaceGeneric&>(*this));
+    }
+
 protected:
 
     // simulation parameters

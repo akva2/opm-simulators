@@ -140,6 +140,13 @@ public:
     const EvalWell& eval(const int idx) const
     { return evaluation_[idx]; }
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(value_);
+        serializer(evaluation_);
+    }
+
 private:
     //! \brief Calculate a relaxation factor for producers.
     //! \details To avoid overshoot of the fractions which might result in negative rates.

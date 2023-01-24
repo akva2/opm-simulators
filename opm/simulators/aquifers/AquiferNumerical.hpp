@@ -25,6 +25,9 @@
 
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/SingleNumericalAquifer.hpp>
 
+#include <opm/material/common/MathToolbox.hpp>
+#include <opm/material/densead/Evaluation.hpp>
+
 #include <opm/simulators/aquifers/AquiferInterface.hpp>
 #include <opm/simulators/utils/DeferredLoggingErrorHelpers.hpp>
 
@@ -138,6 +141,15 @@ public:
         this->pressure_ = this->calculateAquiferPressure(this->init_pressure_);
         this->flux_rate_ = 0.;
         this->cumulative_flux_ = 0.;
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(flux_rate_);
+        serializer(cumulative_flux_);
+        serializer(init_pressure_);
+        serializer(pressure_);
     }
 
 private:

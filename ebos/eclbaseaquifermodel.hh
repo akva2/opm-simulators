@@ -29,6 +29,9 @@
 
 #include <opm/output/data/Aquifer.hpp>
 
+#include <opm/models/discretization/common/fvbaseproperties.hh>
+
+#include <opm/models/utils/basicproperties.hh>
 #include <opm/models/utils/propertysystem.hh>
 
 #include <exception>

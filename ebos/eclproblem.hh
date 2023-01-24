@@ -595,6 +595,9 @@ class EclProblem : public GetPropType<TypeTag, Properties::BaseProblem>
                                             GetPropType<TypeTag, Properties::FluidSystem>,
                                             GetPropType<TypeTag, Properties::Scalar>>
 {
+    using BaseType = EclGenericProblem<GetPropType<TypeTag, Properties::GridView>,
+                                       GetPropType<TypeTag, Properties::FluidSystem>,
+                                       GetPropType<TypeTag, Properties::Scalar>>;
     using ParentType = GetPropType<TypeTag, Properties::BaseProblem>;
     using Implementation = GetPropType<TypeTag, Properties::Problem>;
 
@@ -1197,6 +1200,11 @@ public:
         bool isSubStep = !EWOMS_GET_PARAM(TypeTag, bool, EnableWriteAllSolutions) && !this->simulator().episodeWillBeOver();
         if (enableEclOutput_)
             eclWriter_->writeOutput(isSubStep);
+    }
+
+    void writeBarrier()
+    {
+        eclWriter_->barrier();
     }
 
     void finalizeOutput() {
@@ -2048,6 +2056,51 @@ public:
         return eclWriter_;
     }
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(static_cast<BaseType&>(*this));
+        serializer(drift_);
+        serializer(wellModel_);
+        serializer(aquiferModel_);
+        serializer(tracerModel_);
+    }
+
+    bool operator==(const EclProblem& rhs) const
+    {
+        if (this->drift_.size() != rhs.drift_.size())
+            return false;
+        for (size_t i = 0; i< this->drift_.size(); ++i) {
+            if (this->drift_[i] != rhs.drift_[i])
+                return false;
+        }
+
+        return this->wellModel_ == rhs.wellModel_ &&
+               this->aquiferModel_ == rhs.aquiferModel_ &&
+               this->tracerModel_ == rhs.tracerModel_;
+    }
+
+    struct PffDofData_
+    {
+        ConditionalStorage<enableEnergy, Scalar> thermalHalfTransIn;
+        ConditionalStorage<enableEnergy, Scalar> thermalHalfTransOut;
+        ConditionalStorage<enableDiffusion, Scalar> diffusivity;
+        Scalar transmissibility;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            if constexpr (enableEnergy) {
+                serializer(*thermalHalfTransIn);
+                serializer(*thermalHalfTransOut);
+            }
+            if constexpr (enableDiffusion) {
+                serializer(*diffusivity);
+            }
+            serializer(transmissibility);
+        }
+    };
+
 private:
     template<class UpdateFunc>
     void updateProperty_(const std::string& failureMsg,
@@ -2689,14 +2742,6 @@ private:
                               });
     }
 
-    struct PffDofData_
-    {
-        ConditionalStorage<enableEnergy, Scalar> thermalHalfTransIn;
-        ConditionalStorage<enableEnergy, Scalar> thermalHalfTransOut;
-        ConditionalStorage<enableDiffusion, Scalar> diffusivity;
-        Scalar transmissibility;
-    };
-
     // update the prefetch friendly data object
     void updatePffDofData_()
     {
@@ -2949,6 +2994,12 @@ private:
         std::vector<T>& operator()(FaceDir::DirEnum dir)
         {
             return const_cast<std::vector<T>&>(std::as_const(*this)(dir));
+        }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(data);
         }
     };
 

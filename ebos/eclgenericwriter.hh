@@ -105,6 +105,11 @@ public:
         return outputNnc_;
     }
 
+    void barrier()
+    {
+        taskletRunner_->barrier();
+    }
+
 protected:
     const TransmissibilityType& globalTrans() const;
     unsigned int gridEquilIdxToGridIdx(unsigned int elemIndex) const;

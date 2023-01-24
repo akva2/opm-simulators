@@ -108,6 +108,20 @@ public:
         return perforation_depth_diffs_[perf];
     }
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(perforation_depth_diffs_);
+        serializer(depth_diffs_);
+        serializer(densities_);
+        serializer(mass_rates_);
+        serializer(viscosities_);
+        serializer(upwinding_segments_);
+        serializer(phase_densities_);
+        serializer(phase_fractions_);
+        serializer(phase_viscosities_);
+    }
+
 private:
     // TODO: trying to use the information from the Well opm-parser as much
     // as possible, it will possibly be re-implemented later for efficiency reason.

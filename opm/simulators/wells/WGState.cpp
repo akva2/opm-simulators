@@ -38,4 +38,11 @@ void WGState::wtest_state(WellTestState wtest_state)
     this->well_test_state = std::move(wtest_state);
 }
 
+bool WGState::operator==(const WGState& rhs) const
+{
+    return this->well_state == rhs.well_state &&
+           this->group_state == rhs.group_state &&
+           this->well_test_state == rhs.well_test_state;
+}
+
 }

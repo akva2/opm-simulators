@@ -37,6 +37,28 @@ public:
     bool empty() const;
     bool try_assign(const PerfData& other);
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(pressure_first_connection);
+        serializer(pressure);
+        serializer(rates);
+        serializer(phase_rates);
+        serializer(solvent_rates);
+        serializer(polymer_rates);
+        serializer(brine_rates);
+        serializer(prod_index);
+        serializer(micp_rates);
+        serializer(cell_index);
+        serializer(connection_transmissibility_factor);
+        serializer(satnum_id);
+        serializer(ecl_index);
+        serializer(water_throughput);
+        serializer(skin_pressure);
+        serializer(water_velocity);
+    }
+
+    bool operator==(const PerfData&) const;
 
     double pressure_first_connection;
     std::vector<double> pressure;

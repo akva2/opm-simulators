@@ -2020,4 +2020,17 @@ namespace Opm
         connII[phase_pos] = connIICalc(mt * fs.invB(this->flowPhaseToEbosPhaseIdx(phase_pos)).value());
     }
 
+
+    template<typename TypeTag>
+    template<class Serializer>
+    void
+    MultisegmentWell<TypeTag>::
+    serializeOp(Serializer& serializer)
+    {
+        serializer(static_cast<Base&>(*this));
+        serializer(static_cast<MSWEval&>(*this));
+        serializer(regularize_);
+        serializer(segment_fluid_initial_);
+    }
+
 } // namespace Opm

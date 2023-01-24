@@ -76,6 +76,13 @@ public:
     Scalar pressure_diff(const unsigned perf) const
     { return perf_pressure_diffs_[perf]; }
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(perf_densities_);
+        serializer(perf_pressure_diffs_);
+    }
+
 private:
     void computePressureDelta();
 

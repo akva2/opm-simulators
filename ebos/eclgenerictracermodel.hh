@@ -54,6 +54,7 @@ public:
     using TracerVector = Dune::BlockVector<Dune::FieldVector<Scalar,1>>;
     using CartesianIndexMapper = Dune::CartesianIndexMapper<Grid>;
     static constexpr int dimWorld = Grid::dimensionworld;
+
     /*!
      * \brief Return the number of tracers considered by the tracerModel.
      */
@@ -77,6 +78,14 @@ public:
     */
     const std::map<std::pair<std::string, std::string>, double>&
     getWellTracerRates() const {return wellTracerRate_;}
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(tracerConcentration_);
+        serializer(tracerResidual_);
+        serializer(wellTracerRate_);
+    }
 
 protected:
     EclGenericTracerModel(const GridView& gridView,

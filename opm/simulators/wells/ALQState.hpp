@@ -46,6 +46,18 @@ public:
     int  get_debug_counter();
     int  update_debug_counter();
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(current_alq_);
+        serializer(default_alq_);
+        serializer(alq_increase_count_);
+        serializer(alq_decrease_count_);
+        serializer(debug_counter_);
+    }
+
+    bool operator==(const ALQState&) const;
+
 private:
     std::map<std::string, double> current_alq_;
     std::map<std::string, double> default_alq_;

@@ -167,6 +167,25 @@ public:
         return wlist;
     }
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        for (auto& d : m_data) {
+            serializer(d);
+        }
+        serializer(index_map);
+    }
+
+    bool operator==(const WellContainer<T>& rhs) const
+    {
+        return this->m_data == rhs.m_data &&
+               this->index_map == rhs.index_map;
+    }
+
+    const std::unordered_map<std::string, std::size_t>& indexMap() const
+    {
+        return index_map;
+    }
 
 private:
     void update_if(std::size_t index, const std::string& name, const WellContainer<T>& other) {

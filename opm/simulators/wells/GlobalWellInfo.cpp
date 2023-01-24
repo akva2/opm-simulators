@@ -86,4 +86,13 @@ const std::string& GlobalWellInfo::well_name(std::size_t well_index) const {
     }
     throw std::logic_error("No well with index: " + std::to_string(well_index));
 }
+
+bool GlobalWellInfo::operator==(const GlobalWellInfo& rhs) const
+{
+    return this->local_map == rhs.local_map &&
+           this->name_map == rhs.name_map &&
+           this->m_in_injecting_group == rhs.m_in_injecting_group &&
+           this->m_in_producing_group == rhs.m_in_producing_group;
+}
+
 }

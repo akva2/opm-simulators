@@ -275,6 +275,17 @@ public:
         return this->wells_.has(well_name);
     }
 
+    bool operator==(const WellState&) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(wells_);
+        serializer(global_well_info);
+        serializer(alq_state);
+        serializer(well_rates);
+    }
+
 private:
     PhaseUsage phase_usage_;
 

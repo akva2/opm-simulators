@@ -40,6 +40,15 @@ struct WGState {
     GroupState group_state;
     WellTestState well_test_state;
 
+    bool operator==(const WGState&) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(well_state);
+        serializer(group_state);
+        serializer(well_test_state);
+    }
 };
 
 }

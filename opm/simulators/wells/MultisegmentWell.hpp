@@ -160,6 +160,9 @@ namespace Opm
                                         const double alq_value,
                                         DeferredLogger& deferred_logger) const override;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer);
+
     protected:
 
         // regularize msw equation

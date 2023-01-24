@@ -70,6 +70,15 @@ public:
     const Equations& linSys() const
     { return linSys_; }
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(primary_variables_);
+        serializer(segments_);
+        serializer(cell_perforation_depth_diffs_);
+        serializer(cell_perforation_pressure_diffs_);
+    }
+
 protected:
     MultisegmentWellEval(WellInterfaceIndices<FluidSystem,Indices,Scalar>& baseif);
 

@@ -20,22 +20,48 @@
   module for the precise wording of the license and the list of
   copyright holders.
 */
-
 #include <config.h>
 #include <ebos/eclgenericvanguard.hh>
+
+#include <ebos/hdf5serializer.hh>
 
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/utility/TimeService.hpp>
 #include <opm/input/eclipse/EclipseState/Aquifer/NumericalAquifer/NumericalAquiferCell.hpp>
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Parser/InputErrorAction.hpp>
+#include <opm/input/eclipse/Schedule/Action/Actions.hpp>
+#include <opm/input/eclipse/Schedule/Action/ASTNode.hpp>
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
+#include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
+#include <opm/input/eclipse/Schedule/Group/GConSale.hpp>
+#include <opm/input/eclipse/Schedule/Group/GConSump.hpp>
+#include <opm/input/eclipse/Schedule/Group/GuideRateConfig.hpp>
+#include <opm/input/eclipse/Schedule/Network/Balance.hpp>
+#include <opm/input/eclipse/Schedule/Network/ExtNetwork.hpp>
+#include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
+#include <opm/input/eclipse/Schedule/RFTConfig.hpp>
+#include <opm/input/eclipse/Schedule/RPTConfig.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/Schedule/Well/Well.hpp>
-#include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
 #include <opm/input/eclipse/Schedule/SummaryState.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQActive.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQASTNode.hpp>
+#include <opm/input/eclipse/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/input/eclipse/Schedule/UDQ/UDQState.hpp>
+#include <opm/input/eclipse/Schedule/Well/NameOrder.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellBrineProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellConnections.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellEconProductionLimits.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellFoamProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellMICPProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellPolymerProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestConfig.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
+#include <opm/input/eclipse/Schedule/Well/WellTracerProperties.hpp>
+#include <opm/input/eclipse/Schedule/Well/WListManager.hpp>
+#include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
 #include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/input/eclipse/Python/Python.hpp>
 #include <opm/simulators/utils/readDeck.hpp>
@@ -241,6 +267,37 @@ bool EclGenericVanguard::drsdtconEnabled() const
 std::unordered_map<size_t, const NumericalAquiferCell*> EclGenericVanguard::allAquiferCells() const
 {
   return this->eclState_->aquifer().numericalAquifers().allAquiferCells();
+}
+
+// specialized to avoid pulling schedule in header
+template<>
+void EclGenericVanguard::
+serializeOp<Serializer<Serialization::Packer>>(Serializer<Serialization::Packer>& serializer)
+{
+    serializer(*summaryState_);
+    serializer(*udqState_);
+    serializer(*actionState_);
+    serializer(*eclSchedule_);
+}
+
+bool EclGenericVanguard::operator==(const EclGenericVanguard& rhs) const
+{
+    auto cmp_ptr = [](const auto& a, const auto& b)
+    {
+        if (!a && !b) {
+            return true;
+        }
+
+        if (a && b) {
+            return *a == *b;
+        }
+
+        return false;
+    };
+    return cmp_ptr(this->summaryState_, rhs.summaryState_);
+           cmp_ptr(this->udqState_, rhs.udqState_) &&
+           cmp_ptr(this->actionState_, rhs.actionState_) &&
+           cmp_ptr(this->eclSchedule_, rhs.eclSchedule_);
 }
 
 } // namespace Opm

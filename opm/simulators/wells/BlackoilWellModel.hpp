@@ -217,7 +217,7 @@ namespace Opm {
                                          unsigned timeIdx) const;
 
 
-            using WellInterfacePtr = std::shared_ptr<WellInterface<TypeTag> >;
+            using WellInterfacePtr = std::shared_ptr<WellInterface<TypeTag>>;
 
             using BlackoilWellModelGeneric::initFromRestartFile;
             void initFromRestartFile(const RestartValue& restartValues)
@@ -311,6 +311,9 @@ namespace Opm {
             }
 
             int numLocalNonshutWells() const;
+
+            template<class Serializer>
+            void serializeOp(Serializer& serializer);
 
         protected:
             Simulator& ebosSimulator_;

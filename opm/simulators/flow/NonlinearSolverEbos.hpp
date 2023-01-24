@@ -379,6 +379,18 @@ class WellState;
         void setParameters(const SolverParameters& param)
         { param_ = param; }
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(linearizations_);
+            serializer(nonlinearIterations_);
+            serializer(linearIterations_);
+            serializer(wellIterations_);
+            serializer(nonlinearIterationsLast_);
+            serializer(linearIterationsLast_);
+            serializer(wellIterationsLast_);
+        }
+
     private:
         // ---------  Data members  ---------
         SimulatorReportSingle failureReport_;

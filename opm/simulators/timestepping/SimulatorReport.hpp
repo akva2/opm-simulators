@@ -56,6 +56,33 @@ namespace Opm
         double global_time;
         double timestep_length;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(pressure_time);
+            serializer(transport_time);
+            serializer(total_time);
+            serializer(solver_time);
+            serializer(assemble_time);
+            serializer(pre_post_time);
+            serializer(assemble_time_well);
+            serializer(linear_solve_setup_time);
+            serializer(linear_solve_time);
+            serializer(update_time);
+            serializer(output_write_time);
+            serializer(total_well_iterations);
+            serializer(total_linearizations);
+            serializer(total_newton_iterations);
+            serializer(total_linear_iterations);
+            serializer(min_linear_iterations);
+            serializer(max_linear_iterations);
+            serializer(converged);
+            serializer(well_group_control_changed);
+            serializer(exit_status);
+            serializer(global_time);
+            serializer(timestep_length);
+        }
+
         /// Default constructor initializing all times to 0.0.
         SimulatorReportSingle();
         /// Increment this report's times by those in sr.
@@ -71,6 +98,14 @@ namespace Opm
         SimulatorReportSingle success;
         SimulatorReportSingle failure;
         std::vector<SimulatorReportSingle> stepreports;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(success);
+            serializer(failure);
+            serializer(stepreports);
+        }
 
         void operator+=(const SimulatorReportSingle& sr);
         void operator+=(const SimulatorReport& sr);

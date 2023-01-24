@@ -1066,6 +1066,17 @@ namespace Opm {
             return std::move(this->convergence_reports_);
         }
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(well_model_);
+            serializer(residual_norms_history_);
+            serializer(current_relaxation_);
+            serializer(dx_old_);
+            serializer(convergence_reports_);
+            serializer(wasSwitched_);
+        }
+
     protected:
         // ---------  Data members  ---------
 

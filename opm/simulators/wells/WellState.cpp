@@ -945,6 +945,14 @@ void WellState::updateWellsDefaultALQ( const std::vector<Well>& wells_ecl )
     }
 }
 
+bool WellState::operator==(const WellState& rhs) const
+{
+    return this->wells_ == rhs.wells_ &&
+           *this->global_well_info == *rhs.global_well_info &&
+           this->alq_state == rhs.alq_state &&
+           this->well_rates == rhs.well_rates;
+}
+
 
 const ParallelWellInfo&
 WellState::parallelWellInfo(std::size_t well_index) const

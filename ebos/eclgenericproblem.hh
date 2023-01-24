@@ -74,6 +74,10 @@ public:
                       const Schedule& schedule,
                       const GridView& gridView);
 
+    static EclGenericProblem serializationTestObject(const EclipseState& eclState,
+                                                     const Schedule& schedule,
+                                                     const GridView& gridView);
+
     /*!
      * \copydoc FvBaseProblem::helpPreamble
      */
@@ -256,6 +260,53 @@ public:
     { return maxFails_; }
 
     bool vapparsActive(int episodeIdx) const;
+
+    bool operator==(const EclGenericProblem& rhs) const
+    {
+        return this->maxOilSaturation_ == rhs.maxOilSaturation_ &&
+               this->maxPolymerAdsorption_ == rhs.maxPolymerAdsorption_ &&
+               this->maxWaterSaturation_ == rhs.maxWaterSaturation_ &&
+               this->minOilPressure_ == rhs.minOilPressure_ &&
+               this->overburdenPressure_ == rhs.overburdenPressure_ &&
+               this->polymerConcentration_ == rhs.polymerConcentration_ &&
+               this->polymerMoleWeight_ == rhs.polymerMoleWeight_ &&
+               this->solventSaturation_ == rhs.solventSaturation_ &&
+               this->microbialConcentration_ == rhs.microbialConcentration_ &&
+               this->oxygenConcentration_ == rhs.oxygenConcentration_ &&
+               this->ureaConcentration_ == rhs.ureaConcentration_ &&
+               this->biofilmConcentration_ == rhs.biofilmConcentration_ &&
+               this->calciteConcentration_ == rhs.calciteConcentration_ &&
+               this->lastRv_ == rhs.lastRv_ &&
+               this->maxDRv_ == rhs.maxDRv_ &&
+               this->convectiveDrs_ == rhs.convectiveDrs_ &&
+               this->lastRs_ == rhs.lastRs_ &&
+               this->maxDRs_ == rhs.maxDRs_ &&
+               this->dRsDtOnlyFreeGas_ == rhs.dRsDtOnlyFreeGas_;
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(maxOilSaturation_);
+        serializer(maxPolymerAdsorption_);
+        serializer(maxWaterSaturation_);
+        serializer(minOilPressure_);
+        serializer(overburdenPressure_);
+        serializer(polymerConcentration_);
+        serializer(polymerMoleWeight_);
+        serializer(solventSaturation_);
+        serializer(microbialConcentration_);
+        serializer(oxygenConcentration_);
+        serializer(ureaConcentration_);
+        serializer(biofilmConcentration_);
+        serializer(calciteConcentration_);
+        serializer(lastRv_);
+        serializer(maxDRv_);
+        serializer(convectiveDrs_);
+        serializer(lastRs_);
+        serializer(maxDRs_);
+        serializer(dRsDtOnlyFreeGas_);
+    }
 
 protected:
     bool drsdtActive_(int episodeIdx) const;

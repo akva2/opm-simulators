@@ -66,7 +66,7 @@ public:
     }
 
 
-
+    GlobalWellInfo() = default;
     GlobalWellInfo(const Schedule& sched, std::size_t report_step, const std::vector<Well>& local_wells);
     bool in_producing_group(const std::string& wname) const;
     bool in_injecting_group(const std::string& wname) const;
@@ -75,6 +75,17 @@ public:
     void update_injector(std::size_t well_index, WellStatus well_status, WellInjectorCMode injection_cmode);
     void update_producer(std::size_t well_index, WellStatus well_status, WellProducerCMode production_cmode);
     void clear();
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(local_map);
+        serializer(name_map);
+        serializer(m_in_injecting_group);
+        serializer(m_in_producing_group);
+    }
+
+    bool operator==(const GlobalWellInfo&) const;
 
 private:
     std::vector<std::size_t> local_map;    // local_index -> global_index

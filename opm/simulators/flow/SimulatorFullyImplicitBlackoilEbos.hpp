@@ -22,6 +22,7 @@
 #ifndef OPM_SIMULATORFULLYIMPLICITBLACKOILEBOS_HEADER_INCLUDED
 #define OPM_SIMULATORFULLYIMPLICITBLACKOILEBOS_HEADER_INCLUDED
 
+#include "ebos/hdf5serializer.hh"
 #include <opm/simulators/flow/BlackoilModelEbos.hpp>
 #include <opm/simulators/flow/BlackoilModelParametersEbos.hpp>
 #include <opm/simulators/flow/ConvergenceOutputConfiguration.hpp>
@@ -37,6 +38,8 @@
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/common/ErrorMacros.hpp>
+
+#include <boost/date_time/gregorian/gregorian.hpp>
 
 #include <memory>
 #include <optional>
@@ -63,6 +66,12 @@ struct OutputExtraConvergenceInfo
     using type = UndefinedProperty;
 };
 
+template <class TypeTag, class MyTypeTag>
+struct RestartWrite
+{
+    using type = UndefinedProperty;
+};
+
 template<class TypeTag>
 struct EnableTerminalOutput<TypeTag, TTag::EclFlowProblem> {
     static constexpr bool value = true;
@@ -80,6 +89,12 @@ template <class TypeTag>
 struct OutputExtraConvergenceInfo<TypeTag, TTag::EclFlowProblem>
 {
     static constexpr auto* value = "none";
+};
+
+template <class TypeTag>
+struct RestartWrite<TypeTag, TTag::EclFlowProblem>
+{
+    static constexpr int value = 0;
 };
 
 } // namespace Opm::Properties
@@ -167,6 +182,8 @@ public:
         SolverParameters::registerParameters();
         TimeStepper::registerParameters();
 
+        EWOMS_REGISTER_PARAM(TypeTag, int, RestartWrite,
+                             "Write restart data");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableTerminalOutput,
                              "Print high-level information about the simulation's progress to the terminal");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableAdaptiveTimeStepping,
@@ -246,6 +263,23 @@ public:
             return false;
         }
 
+        int restartWrite = EWOMS_GET_PARAM(TypeTag, int, RestartWrite);
+        bool restart_write = restartWrite > 0 ? true : false;
+        bool restart_read = restartWrite < 0 ? true : false;
+        int restart_step = -restartWrite;
+        if (restart_read && timer.currentStepNum() == 0) {
+            ebosSimulator_.problem().writeBarrier();
+            HDF5Serializer reader("hdf5_test_sim_blackoil.hdf5",
+                                     HDF5File::OpenMode::READ);
+
+            reader.read(timer,
+                        "/" + std::to_string(restart_step),
+                        "simulator_timer");
+            reader.read(adaptiveTimeStepping_,
+                        "/" + std::to_string(restart_step),
+                        "adaptive_time_stepping");
+        }
+
         // Report timestep.
         if (terminalOutput_) {
             std::ostringstream ss;
@@ -282,6 +316,20 @@ public:
             timer.currentStepLength());
         ebosSimulator_.setEpisodeIndex(timer.currentStepNum());
         solver->model().beginReportStep();
+
+        if (restart_read && timer.currentStepNum() == restart_step) {
+            ebosSimulator_.problem().writeBarrier();
+            HDF5Serializer reader("hdf5_test_sim_blackoil.hdf5",
+                                  HDF5File::OpenMode::READ);
+
+            reader.read(*this,
+                        "/" + std::to_string(restart_step),
+                        "simulator_data");
+        }
+
+        // Make cache up to date. No need for updating it in elementCtx.
+        ebosSimulator_.model().invalidateAndUpdateIntensiveQuantities(/*timeIdx=*/0);
+
         bool enableTUNING = EWOMS_GET_PARAM(TypeTag, bool, EnableTuning);
 
         // If sub stepping is enabled allow the solver to sub cycle
@@ -356,6 +404,47 @@ public:
             OpmLog::debug(msg);
         }
 
+        if (restart_write) {
+            if (timer.currentStepNum() == 1)
+                std::filesystem::remove("hdf5_test_sim_blackoil.hdf5");
+            HDF5Serializer writer("hdf5_test_sim_blackoil.hdf5",
+                                  HDF5File::OpenMode::APPEND);
+            writer.write(*this,
+                         "/" + std::to_string(timer.currentStepNum()),
+                         "simulator_data");
+            writer.write(adaptiveTimeStepping_,
+                         "/" + std::to_string(timer.currentStepNum()),
+                         "adaptive_time_stepping");
+            writer.write(timer,
+                         "/" + std::to_string(timer.currentStepNum()),
+                         "simulator_timer");
+        }
+//        else if (restartWrite == 1 && timer.currentStepNum() == 1) {
+//            int step = 2;//timer.currentStepNum();
+//            ebosSimulator_.problem().writeBarrier();
+//            SimulatorFullyImplicitBlackoilEbos<TypeTag> deserialized(ebosSimulator_);
+//            HDF5Serializer reader("hdf5_test_sim_blackoil.hdf5",
+//                                     HDF5File::OpenMode::READ);
+
+//            reader.read(*this,
+//                        "/" + std::to_string(step),
+//                        "blackoil_simulator_ebos");
+//            reader.read(timer,
+//                        "/" + std::to_string(step),
+//                        "simulator_timer");
+//            ebosSimulator_.hack(true);
+//            reader.read(deserialized,
+//                        "/" + std::to_string(timer.currentStepNum()),
+//                        "blackoil_simulator_ebos");
+
+//            if (!(*adaptiveTimeStepping_ == *deserialized.adaptiveTimeStepping_))
+//                throw std::runtime_error("yoyoyo1");
+
+//            if (!(ebosSimulator_ == deserialized.ebosSimulator_))
+//                throw std::runtime_error("yoyoyo2");
+//            ebosSimulator_.hack(false);*/
+//        }
+
         return true;
     }
 
@@ -380,6 +469,13 @@ public:
 
     const Grid& grid() const
     { return ebosSimulator_.vanguard().grid(); }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(ebosSimulator_);
+        serializer(report_);
+    }
 
 protected:
 

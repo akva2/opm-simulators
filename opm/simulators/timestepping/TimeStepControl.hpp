@@ -21,12 +21,20 @@
 #ifndef OPM_TIMESTEPCONTROL_HEADER_INCLUDED
 #define OPM_TIMESTEPCONTROL_HEADER_INCLUDED
 
-#include <vector>
-
 #include <opm/simulators/timestepping/TimeStepControlInterface.hpp>
+
+#include <string>
+#include <vector>
 
 namespace Opm
 {
+    enum class TimeStepControlType {
+      SimpleIterationCount,
+      PID,
+      PIDAndIterationCount,
+      HardCodedTimeStep
+    };
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///
     ///  A simple iteration count based adaptive time step control.
@@ -35,6 +43,8 @@ namespace Opm
     class SimpleIterationCountTimeStepControl : public TimeStepControlInterface
     {
     public:
+        SimpleIterationCountTimeStepControl() = default;
+
         /// \brief constructor
         /// \param target_iterations  number of desired iterations (e.g. Newton iterations) per time step in one time step
         //  \param decayrate          decayrate of time step when target iterations are not met (should be <= 1)
@@ -45,14 +55,27 @@ namespace Opm
                                              const double growthrate,
                                              const bool verbose = false);
 
+        static SimpleIterationCountTimeStepControl serializationTestObject();
+
         /// \brief \copydoc TimeStepControlInterface::computeTimeStepSize
         double computeTimeStepSize( const double dt, const int iterations, const RelativeChangeInterface& /* relativeChange */, const double /*simulationTimeElapsed */ ) const;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(target_iterations_);
+            serializer(decayrate_);
+            serializer(growthrate_);
+            serializer(verbose_);
+        }
+
+        bool operator==(const SimpleIterationCountTimeStepControl&) const;
+
     protected:
-        const int     target_iterations_;
-        const double  decayrate_;
-        const double  growthrate_;
-        const bool    verbose_;
+        const int     target_iterations_ = 0;
+        const double  decayrate_ = 0.0;
+        const double  growthrate_ = 0.0;
+        const bool    verbose_ = false;
     };
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -79,14 +102,26 @@ namespace Opm
         PIDTimeStepControl( const double tol = 1e-3,
                             const bool verbose = false );
 
+        static PIDTimeStepControl serializationTestObject();
+
         /// \brief \copydoc TimeStepControlInterface::computeTimeStepSize
         double computeTimeStepSize( const double dt, const int /* iterations */, const RelativeChangeInterface& relativeChange, const double /*simulationTimeElapsed */ ) const;
 
-    protected:
-        const double tol_;
-        mutable std::vector< double > errors_;
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(tol_);
+            serializer(errors_);
+            serializer(verbose_);
+        }
 
-        const bool verbose_;
+        bool operator==(const PIDTimeStepControl&) const;
+
+    protected:
+        const double tol_ = 1e-3;
+        mutable std::vector< double > errors_{};
+
+        const bool verbose_ = false;
     };
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -111,8 +146,22 @@ namespace Opm
                                              const double minTimeStepBasedOnIterations = 0.,
                                              const bool verbose = false);
 
+        static PIDAndIterationCountTimeStepControl serializationTestObject();
+
         /// \brief \copydoc TimeStepControlInterface::computeTimeStepSize
         double computeTimeStepSize( const double dt, const int iterations, const RelativeChangeInterface& relativeChange, const double /*simulationTimeElapsed */ ) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(static_cast<PIDTimeStepControl&>(*this));
+            serializer(target_iterations_);
+            serializer(decayDampingFactor_);
+            serializer(growthDampingFactor_);
+            serializer(minTimeStepBasedOnIterations_);
+        }
+
+        bool operator==(const PIDAndIterationCountTimeStepControl&) const;
 
     protected:
         const int     target_iterations_;
@@ -133,12 +182,24 @@ namespace Opm
     class HardcodedTimeStepControl : public TimeStepControlInterface
     {
     public:
+        HardcodedTimeStepControl() = default;
+
         /// \brief constructor
         /// \param filename   filename contaning the timesteps
         explicit HardcodedTimeStepControl( const std::string& filename);
 
+        static HardcodedTimeStepControl serializationTestObject();
+
         /// \brief \copydoc TimeStepControlInterface::computeTimeStepSize
         double computeTimeStepSize( const double dt, const int /* iterations */, const RelativeChangeInterface& /*relativeChange */, const double simulationTimeElapsed) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(subStepTime_);
+        }
+
+        bool operator==(const HardcodedTimeStepControl&) const;
 
     protected:
         // store the time (in days) of the substeps the simulator should use

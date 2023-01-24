@@ -23,6 +23,8 @@
 
 #include <opm/simulators/aquifers/AquiferAnalytical.hpp>
 
+#include <opm/input/eclipse/EclipseState/Aquifer/AquiferCT.hpp>
+
 #include <opm/output/data/Aquifer.hpp>
 
 #include <exception>
@@ -98,6 +100,15 @@ public:
         }
 
         return data;
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(static_cast<Base&>(*this));
+        serializer(fluxValue_);
+        serializer(dimensionless_time_);
+        serializer(dimensionless_pressure_);
     }
 
 protected:

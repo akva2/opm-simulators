@@ -105,6 +105,37 @@ EclGenericProblem(const EclipseState& eclState,
 }
 
 template<class GridView, class FluidSystem, class Scalar>
+EclGenericProblem<GridView,FluidSystem,Scalar>
+EclGenericProblem<GridView,FluidSystem,Scalar>::
+serializationTestObject(const EclipseState& eclState,
+                        const Schedule& schedule,
+                        const GridView& gridView)
+{
+    EclGenericProblem result(eclState, schedule, gridView);
+    result.maxOilSaturation_ = {1.0, 2.0};
+    result.maxPolymerAdsorption_ = {3.0, 4.0, 5.0};
+    result.maxWaterSaturation_ = {6.0};
+    result.minOilPressure_ = {7.0, 8.0, 9.0, 10.0};
+    result.overburdenPressure_ = {11.0};
+    result.polymerConcentration_ = {12.0};
+    result.polymerMoleWeight_ = {13.0, 14.0};
+    result.solventSaturation_ = {15.0};
+    result.microbialConcentration_ = {16.0};
+    result.oxygenConcentration_ = {17.0};
+    result.ureaConcentration_ = {18.0};
+    result.biofilmConcentration_ = {19.0};
+    result.calciteConcentration_ = {20.0};
+    result.lastRv_ = {21.0};
+    result.maxDRv_ = {22.0, 23.0};
+    result.convectiveDrs_ = {24.0, 25.0, 26.0};
+    result.lastRs_ = {27.0};
+    result.maxDRs_ = {28.0};
+    result.dRsDtOnlyFreeGas_ = {false, true};
+
+    return result;
+}
+
+template<class GridView, class FluidSystem, class Scalar>
 std::string
 EclGenericProblem<GridView,FluidSystem,Scalar>::
 helpPreamble(int,
@@ -457,7 +488,6 @@ beginEpisode_(bool enableExperiments,
     return false;
 }
 
-
 template<class GridView, class FluidSystem, class Scalar>
 void EclGenericProblem<GridView,FluidSystem,Scalar>::
 beginTimeStep_(bool enableExperiments,
@@ -551,9 +581,8 @@ readBlackoilExtentionsInitialConditions_(size_t numDof,
             calciteConcentration_ = eclState_.fieldProps().get_double("SCALC");
         else
             calciteConcentration_.resize(numDof, 0.0);
+    }
 }
-}
-
 
 template<class GridView, class FluidSystem, class Scalar>
 Scalar EclGenericProblem<GridView,FluidSystem,Scalar>::

@@ -20,6 +20,7 @@
 #ifndef OPM_BLACKOILMODELPARAMETERS_EBOS_HEADER_INCLUDED
 #define OPM_BLACKOILMODELPARAMETERS_EBOS_HEADER_INCLUDED
 
+#include <opm/models/utils/basicproperties.hh>
 #include <opm/models/utils/propertysystem.hh>
 #include <opm/models/utils/parametersystem.hh>
 
@@ -418,7 +419,7 @@ namespace Opm
         /// Whether to check well operability during iterations
         bool check_well_operability_iter_;
 
-        /// Maximum number of times a well can switch to the same controt
+        /// Maximum number of times a well can switch to the same control
         int max_number_of_well_switches_;
 
 

@@ -24,8 +24,15 @@
 
 #include <opm/simulators/aquifers/AquiferInterface.hpp>
 
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/common/utility/numeric/linearInterpolation.hpp>
+
 #include <opm/input/eclipse/EclipseState/Aquifer/Aquancon.hpp>
+
+#include <opm/models/blackoil/blackoilproperties.hh>
+#include <opm/models/common/multiphasebaseproperties.hh>
+#include <opm/models/discretization/common/fvbaseproperties.hh>
+#include <opm/models/utils/basicproperties.hh>
 
 #include <opm/output/data/Aquifer.hpp>
 
@@ -41,6 +48,7 @@
 #include <cstddef>
 #include <limits>
 #include <numeric>
+#include <optional>
 #include <unordered_map>
 #include <vector>
 
@@ -181,6 +189,16 @@ public:
     std::size_t size() const
     {
         return this->connections_.size();
+    }
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(pressure_previous_);
+        serializer(pressure_current_);
+        serializer(Qai_);
+        serializer(rhow_);
+        serializer(W_flux_);
     }
 
 protected:

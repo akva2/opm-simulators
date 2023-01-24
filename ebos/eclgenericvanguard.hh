@@ -28,8 +28,11 @@
 #define EWOMS_ECL_GENERIC_VANGUARD_HH
 
 #include <opm/grid/common/GridEnums.hpp>
+
 #include <opm/input/eclipse/Schedule/Well/WellTestState.hpp>
+
 #include <opm/simulators/utils/ParallelCommunication.hpp>
+
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 7)
 #include <dune/common/parallel/communication.hh>
 #else
@@ -85,11 +88,15 @@ public:
      */
     EclGenericVanguard();
 
+    EclGenericVanguard(EclGenericVanguard&& rhs);
+
     /*!
      * \brief Destructor.
      * \details Empty, but needs to be in compile unit.
      */
     ~EclGenericVanguard();
+
+    static EclGenericVanguard serializationTestObject();
 
     /*!
      * \brief Returns the canonical path to a deck file.
@@ -254,6 +261,12 @@ public:
         assert(comm_);
         return *comm_;
     }
+
+    // Private to avoid pulling schedule in header
+    template<class Serializer>
+    void serializeOp(Serializer& serializer);
+
+    bool operator==(const EclGenericVanguard& rhs) const;
 
 protected:
     void updateOutputDir_(std::string outputDir,

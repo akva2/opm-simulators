@@ -81,4 +81,24 @@ bool PerfData::try_assign(const PerfData& other) {
     return true;
 }
 
+bool PerfData::operator==(const PerfData& rhs) const
+{
+    return this->pressure_first_connection == rhs.pressure_first_connection &&
+           this->pressure == rhs.pressure &&
+           this->rates == rhs.rates &&
+           this->phase_rates == rhs.phase_rates &&
+           this->solvent_rates == rhs.solvent_rates &&
+           this->polymer_rates == rhs.polymer_rates &&
+           this->brine_rates == rhs.brine_rates &&
+           this->prod_index == rhs.prod_index &&
+           this->micp_rates == rhs.micp_rates &&
+           this->cell_index == rhs.cell_index &&
+           this->connection_transmissibility_factor == rhs.connection_transmissibility_factor &&
+           this->satnum_id == rhs.satnum_id &&
+           this->ecl_index == rhs.ecl_index &&
+           this->water_throughput == rhs.water_throughput &&
+           this->skin_pressure == rhs.skin_pressure &&
+           this->water_velocity == rhs.water_velocity;
+}
+
 }

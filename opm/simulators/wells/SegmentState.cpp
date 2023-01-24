@@ -96,4 +96,20 @@ const std::vector<int>& SegmentState::segment_number() const {
     return this->m_segment_number;
 }
 
+bool SegmentState::operator==(const SegmentState& rhs) const
+{
+    return this->rates == rhs.rates &&
+           this->dissolved_gas_rate == rhs.dissolved_gas_rate &&
+           this->vaporized_oil_rate == rhs.vaporized_oil_rate &&
+           this->phase_resv_rates == rhs.phase_resv_rates &&
+           this->phase_velocity == rhs.phase_velocity &&
+           this->phase_holdup == rhs.phase_holdup &&
+           this->phase_viscosity == rhs.phase_viscosity &&
+           this->pressure == rhs.pressure &&
+           this->pressure_drop_friction == rhs.pressure_drop_friction &&
+           this->pressure_drop_hydrostatic == rhs.pressure_drop_hydrostatic &&
+           this->pressure_drop_accel == rhs.pressure_drop_accel &&
+           this->m_segment_number == rhs.m_segment_number;
+}
+
 } // namespace Opm

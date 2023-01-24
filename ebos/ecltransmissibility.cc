@@ -1074,6 +1074,22 @@ applyNtg_(Scalar& trans,
     }
 }
 
+template<class Grid, class GridView, class ElementMapper, class CartesianIndexMapper, class Scalar>
+bool EclTransmissibility<Grid,GridView,ElementMapper,CartesianIndexMapper,Scalar>::
+operator==(const EclTransmissibility<Grid,GridView,ElementMapper,CartesianIndexMapper,Scalar>& rhs) const
+{
+    return this->permeability_ == rhs.permeability_ &&
+           this->porosity_ == rhs.porosity_ &&
+           this->trans_ == rhs.trans_ &&
+           this->transmissibilityThreshold_ == rhs.transmissibilityThreshold_ &&
+           this->transBoundary_ == rhs.transBoundary_ &&
+           this->thermalHalfTransBoundary_ == rhs.thermalHalfTransBoundary_ &&
+           this->enableEnergy_ == rhs.enableEnergy_ &&
+           this->enableDiffusivity_ == rhs.enableDiffusivity_ &&
+           this->thermalHalfTrans_ == rhs.thermalHalfTrans_ &&
+           this->diffusivity_ == rhs.diffusivity_;
+}
+
 #ifdef HAVE_DUNE_FEM
 template class EclTransmissibility<Dune::CpGrid,
                                    Dune::GridView<Dune::Fem::GridPart2GridViewTraits<Dune::Fem::AdaptiveLeafGridPart<Dune::CpGrid, Dune::PartitionIteratorType(4), false>>>,

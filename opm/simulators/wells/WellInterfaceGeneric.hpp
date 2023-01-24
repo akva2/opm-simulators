@@ -195,6 +195,21 @@ public:
 
     bool isPressureControlled(const WellState& well_state) const;
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(operability_status_);
+        serializer(current_step_);
+        serializer(ipr_a_);
+        serializer(ipr_b_);
+        serializer(wellStatus_);
+        serializer(wsolvent_);
+        serializer(dynamic_thp_limit_);
+        serializer(well_efficiency_factor_);
+        serializer(well_control_log_);
+        serializer(changed_to_open_this_step_);
+    }
+
 protected:
     bool getAllowCrossFlow() const;
 
@@ -232,6 +247,31 @@ protected:
             obey_thp_limit_under_bhp_limit = true;
             can_obtain_bhp_with_thp_limit = true;
             obey_bhp_limit_with_thp_limit = true;
+        }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(operable_under_only_bhp_limit);
+            serializer(obey_thp_limit_under_bhp_limit);
+            serializer(can_obtain_bhp_with_thp_limit);
+            serializer(obey_bhp_limit_with_thp_limit);
+            serializer(solvable);
+            serializer(has_negative_potentials);
+            serializer(thp_limit_violated_but_not_switched);
+            serializer(use_vfpexplicit);
+        }
+
+        bool operator==(const OperabilityStatus& rhs) const
+        {
+            return this->operable_under_only_bhp_limit == rhs.operable_under_only_bhp_limit &&
+                   this->obey_thp_limit_under_bhp_limit == rhs.obey_thp_limit_under_bhp_limit &&
+                   this->can_obtain_bhp_with_thp_limit == rhs.can_obtain_bhp_with_thp_limit &&
+                   this->obey_bhp_limit_with_thp_limit == rhs.obey_bhp_limit_with_thp_limit &&
+                   this->solvable == rhs.solvable &&
+                   this->has_negative_potentials == rhs.has_negative_potentials &&
+                   this->thp_limit_violated_but_not_switched == rhs.thp_limit_violated_but_not_switched &&
+                   this->use_vfpexplicit == rhs.use_vfpexplicit;
         }
 
         // whether the well can be operated under bhp limit

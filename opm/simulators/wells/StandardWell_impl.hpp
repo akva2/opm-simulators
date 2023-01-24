@@ -2581,4 +2581,15 @@ namespace Opm
         const auto mt     = std::accumulate(mobility.begin(), mobility.end(), zero);
         connII[phase_pos] = connIICalc(mt.value() * fs.invB(this->flowPhaseToEbosPhaseIdx(phase_pos)).value());
     }
+
+    template<typename TypeTag>
+    template<class Serializer>
+    void StandardWell<TypeTag>::
+    serializeOp(Serializer& serializer)
+    {
+        serializer(static_cast<Base&>(*this));
+        serializer(static_cast<StdWellEval&>(*this));
+        serializer(regularize_);
+    }
+
 } // namespace Opm
