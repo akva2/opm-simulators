@@ -110,6 +110,22 @@ EclTransmissibility(const EclipseState& eclState,
 }
 
 template<class Grid, class GridView, class ElementMapper, class CartesianIndexMapper, class Scalar>
+EclTransmissibility<Grid,GridView,ElementMapper,CartesianIndexMapper,Scalar>
+EclTransmissibility<Grid,GridView,ElementMapper,CartesianIndexMapper,Scalar>::
+serializationTestObject(const EclipseState& eclState,
+                        const GridView& gridView,
+                        const CartesianIndexMapper& cartMapper,
+                        const Grid& grid)
+{
+    EclTransmissibility result(eclState, gridView, cartMapper, grid, {}, true, true);
+    result.permeability_ = {DimMatrix{{1.0, 2.0, 3.0},
+                                      {4.0, 5.0, 6.0},
+                                      {7.0, 8.0, 9.0}}};
+
+    return result;
+}
+
+template<class Grid, class GridView, class ElementMapper, class CartesianIndexMapper, class Scalar>
 Scalar EclTransmissibility<Grid,GridView,ElementMapper,CartesianIndexMapper,Scalar>::
 transmissibility(unsigned elemIdx1, unsigned elemIdx2) const
 {
@@ -1072,6 +1088,22 @@ applyNtg_(Scalar& trans,
 
         // NTG does not apply to top and bottom faces
     }
+}
+
+template<class Grid, class GridView, class ElementMapper, class CartesianIndexMapper, class Scalar>
+bool EclTransmissibility<Grid,GridView,ElementMapper,CartesianIndexMapper,Scalar>::
+operator==(const EclTransmissibility<Grid,GridView,ElementMapper,CartesianIndexMapper,Scalar>& rhs) const
+{
+    return this->permeability_ == rhs.permeability_ &&
+           this->porosity_ == rhs.porosity_ &&
+           this->trans_ == rhs.trans_ &&
+           this->transmissibilityThreshold_ == rhs.transmissibilityThreshold_ &&
+           this->transBoundary_ == rhs.transBoundary_ &&
+           this->thermalHalfTransBoundary_ == rhs.thermalHalfTransBoundary_ &&
+           this->enableEnergy_ == rhs.enableEnergy_ &&
+           this->enableDiffusivity_ == rhs.enableDiffusivity_ &&
+           this->thermalHalfTrans_ == rhs.thermalHalfTrans_ &&
+           this->diffusivity_ == rhs.diffusivity_;
 }
 
 #ifdef HAVE_DUNE_FEM

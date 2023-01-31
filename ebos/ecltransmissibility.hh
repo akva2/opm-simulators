@@ -63,6 +63,11 @@ public:
                         bool enableEnergy,
                         bool enableDiffusivity);
 
+    EclTransmissibility serializationTestObject(const EclipseState& eclState,
+                                                const GridView& gridView,
+                                                const CartesianIndexMapper& cartMapper,
+                                                const Grid& grid);
+
     /*!
      * \brief Return the permeability for an element.
      */
@@ -126,6 +131,23 @@ public:
      * Also, this updates the "thermal half transmissibilities" if energy is enabled.
      */
     void update(bool global, const std::function<unsigned int(unsigned int)>& map = {});
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(permeability_);
+        serializer(porosity_);
+        serializer(trans_);
+        serializer(transmissibilityThreshold_);
+        serializer(transBoundary_);
+        serializer(thermalHalfTransBoundary_);
+        serializer(enableEnergy_);
+        serializer(enableDiffusivity_);
+        serializer(thermalHalfTrans_);
+        serializer(diffusivity_);
+    }
+
+    bool operator==(const EclTransmissibility<Grid,GridView,ElementMapper,CartesianIndexMapper,Scalar>& rhs) const;
 
 protected:
     void updateFromEclState_(bool global);

@@ -20,6 +20,7 @@
 #include <config.h>
 
 #include <ebos/ebos.hh>
+#include <ebos/ecltransmissibility.hh>
 
 #include <opm/common/utility/Serializer.hpp>
 
@@ -74,6 +75,32 @@ TEST_FOR_TYPE_NAMED_OBJ(ATE, AdaptiveTimeSteppingEbosHardcoded, serializationTes
 TEST_FOR_TYPE_NAMED_OBJ(ATE, AdaptiveTimeSteppingEbosPID, serializationTestObjectPID)
 TEST_FOR_TYPE_NAMED_OBJ(ATE, AdaptiveTimeSteppingEbosPIDIt, serializationTestObjectPIDIt)
 TEST_FOR_TYPE_NAMED_OBJ(ATE, AdaptiveTimeSteppingEbosSimple, serializationTestObjectSimple)
+
+BOOST_AUTO_TEST_CASE(EclTransmissibility)
+{
+    using Transmissibility = Opm::EclTransmissibility<Dune::CpGrid,
+                                                      Dune::GridView<Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>,
+                                                      Dune::MultipleCodimMultipleGeomTypeMapper<Dune::GridView<Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>>,
+                                                      Dune::CartesianIndexMapper<Dune::CpGrid>,
+                                                      double>;
+
+    auto eclState = Opm::EclipseState::serializationTestObject();
+    Dune::CpGrid grid;
+    auto gridView = grid.leafGridView();
+    auto cartesianIndexMapper = Dune::CartesianIndexMapper<Dune::CpGrid>(grid);
+
+    Transmissibility data_in = Transmissibility::serializationTestObject(eclState, gridView, cartesianIndexMapper, grid);
+    Transmissibility data_out(eclState, gridView, cartesianIndexMapper, grid, {}, true, true);
+
+    Opm::Serialization::MemPacker packer;
+    Opm::Serializer ser(packer);
+    ser.pack(data_in);
+    size_t pos1 = ser.position();
+    ser.unpack(data_out);
+    size_t pos2 = ser.position();
+    BOOST_CHECK_MESSAGE(pos1 == pos2, "Packed size differ from unpack size for EclTransmissibility");
+    BOOST_CHECK_MESSAGE(data_in == data_out, "Deserialized EclTransmissibility differ");
+}
 
 bool init_unit_test_func()
 {
