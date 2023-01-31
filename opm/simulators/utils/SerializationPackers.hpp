@@ -21,6 +21,8 @@
 
 #include <opm/common/utility/MemPacker.hpp>
 
+#include <dune/common/fmatrix.hh>
+
 namespace boost { namespace gregorian { class date; } }
 
 // Additional packers for serializers using the mempacker.
@@ -38,6 +40,19 @@ struct Packing<false,boost::gregorian::date>
                      std::vector<char>& buffer, int& position);
 
     static void unpack(boost::gregorian::date& data,
+                       std::vector<char>& buffer, int& position);
+};
+
+//! \brief Specialization for Dune::FieldMatrix
+template <class Scalar, int R, int C>
+struct Packing<false,Dune::FieldMatrix<Scalar,R,C>>
+{
+    static std::size_t packSize(const Dune::FieldMatrix<Scalar,R,C>& data);
+
+    static void pack(const Dune::FieldMatrix<Scalar,R,C>& data,
+                     std::vector<char>& buffer, int& position);
+
+    static void unpack(Dune::FieldMatrix<Scalar,R,C>& data,
                        std::vector<char>& buffer, int& position);
 };
 

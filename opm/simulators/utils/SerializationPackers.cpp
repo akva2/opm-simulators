@@ -48,6 +48,36 @@ unpack(boost::gregorian::date& data,
     data = boost::gregorian::from_simple_string(date);
 }
 
+template<class Scalar, int R, int C>
+std::size_t Packing<false,Dune::FieldMatrix<Scalar,R,C>>::
+packSize(const Dune::FieldMatrix<Scalar,R,C>& data)
+{
+    return R*C*Packing<true,Scalar>::packSize(data[0][0]);
+}
+
+template<class Scalar, int R, int C>
+void Packing<false,Dune::FieldMatrix<Scalar,R,C>>::
+pack(const Dune::FieldMatrix<Scalar,R,C>& data,
+     std::vector<char>& buffer, int& position)
+{
+    for (int r = 0; r < R; ++r)
+        for (int c = 0; c < C; ++c)
+            Packing<true,Scalar>::pack(data[r][c], buffer, position);
+}
+
+template<class Scalar, int R, int C>
+void Packing<false,Dune::FieldMatrix<Scalar,R,C>>::
+unpack(Dune::FieldMatrix<Scalar,R,C>& data,
+       std::vector<char>& buffer, int& position)
+{
+    for (int r = 0; r < R; ++r)
+        for (int c = 0; c < C; ++c) {
+            Packing<true,Scalar>::unpack(data[r][c], buffer, position);
+        }
+}
+
+template struct Packing<false,Dune::FieldMatrix<double,3,3>>;
+
 } // end namespace detail
 } // end namespace Serialization
 } // end namespace Opm
