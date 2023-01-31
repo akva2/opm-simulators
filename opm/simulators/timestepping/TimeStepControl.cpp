@@ -156,6 +156,15 @@ namespace Opm
         , verbose_( verbose )
     {}
 
+    PIDTimeStepControl
+    PIDTimeStepControl::serializationTestObject()
+    {
+        PIDTimeStepControl result(1.0, true);
+        result.errors_ = {2.0, 3.0};
+
+        return result;;
+    }
+
     double PIDTimeStepControl::
     computeTimeStepSize( const double dt, const int /* iterations */, const RelativeChangeInterface& relChange, const double /*simulationTimeElapsed */) const
     {
@@ -193,6 +202,13 @@ namespace Opm
                 std::cout << "Computed step size (pow): " << unit::convert::to( newDt, unit::day ) << " (days)" << std::endl;
             return newDt;
         }
+    }
+
+    bool PIDTimeStepControl::operator==(const PIDTimeStepControl& ctrl) const
+    {
+        return this->tol_ == ctrl.tol_ &&
+               this->errors_ == ctrl.errors_ &&
+               this->verbose_ == ctrl.verbose_;
     }
 
 
