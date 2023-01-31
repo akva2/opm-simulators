@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(EclTransmissibility)
                                                       Dune::CartesianIndexMapper<Dune::CpGrid>,
                                                       double>;
 
-    auto eclState = Opm::EclipseState::serializationTestObject();
+    auto eclState = Opm::EclipseState{};
     Dune::CpGrid grid;
     auto gridView = grid.leafGridView();
     auto cartesianIndexMapper = Dune::CartesianIndexMapper<Dune::CpGrid>(grid);
@@ -109,5 +109,6 @@ bool init_unit_test_func()
 
 int main(int argc, char** argv)
 {
+    Dune::MPIHelper::instance(argc, argv);
     return boost::unit_test::unit_test_main(&init_unit_test_func, argc, argv);
 }

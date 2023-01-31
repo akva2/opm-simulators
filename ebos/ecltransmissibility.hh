@@ -63,10 +63,10 @@ public:
                         bool enableEnergy,
                         bool enableDiffusivity);
 
-    EclTransmissibility serializationTestObject(const EclipseState& eclState,
-                                                const GridView& gridView,
-                                                const CartesianIndexMapper& cartMapper,
-                                                const Grid& grid);
+    static EclTransmissibility serializationTestObject(const EclipseState& eclState,
+                                                       const GridView& gridView,
+                                                       const CartesianIndexMapper& cartMapper,
+                                                       const Grid& grid);
 
     /*!
      * \brief Return the permeability for an element.

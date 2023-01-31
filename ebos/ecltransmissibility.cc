@@ -121,6 +121,13 @@ serializationTestObject(const EclipseState& eclState,
     result.permeability_ = {DimMatrix{{1.0, 2.0, 3.0},
                                       {4.0, 5.0, 6.0},
                                       {7.0, 8.0, 9.0}}};
+    result.porosity_ = {10.0, 11.0, 12.0};
+    result.trans_ = {{13ul, 14.0}};
+    result.transmissibilityThreshold_ = 15.0;
+    result.transBoundary_ = {{{16, 17}, 18.0}};
+    result.thermalHalfTransBoundary_ = {{{19, 20}, 21.0}};
+    result.thermalHalfTrans_ =  {{22, 23.0}};
+    result.diffusivity_ = {{24, 25.0}};
 
     return result;
 }
