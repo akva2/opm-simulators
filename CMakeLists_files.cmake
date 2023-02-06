@@ -449,4 +449,5 @@ endif()
 
 list (APPEND EXAMPLE_SOURCE_FILES
   examples/printvfp.cpp
+  examples/opmrst_inspect.cpp
   )

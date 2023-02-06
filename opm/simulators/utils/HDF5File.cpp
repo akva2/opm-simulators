@@ -107,4 +107,23 @@ bool HDF5File::groupExists(hid_t parent, const std::string& path)
   return false;
 }
 
+int HDF5File::lastGroup() const
+{
+    // Lambda function extracting the highest time level among the groups.
+    auto&& find_last_level = [] (hid_t, const char* name, void* data) -> herr_t
+    {
+        int ilevel = atoi(name);
+        int& level = *static_cast<int*>(data);
+        if (ilevel > level)
+            level = ilevel;
+        return 0;
+    };
+
+    int idx = 0;
+    int level = 0;
+    H5Giterate(m_file, "/", &idx, find_last_level, &level);
+
+    return level;
+}
+
 }

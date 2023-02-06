@@ -38,6 +38,7 @@
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/common/ErrorMacros.hpp>
+#include <opm/common/utility/String.hpp>
 
 #include <boost/date_time/gregorian/gregorian.hpp>
 
@@ -405,10 +406,27 @@ public:
         }
 
         if (restart_write) {
-            if (timer.currentStepNum() == 1)
+            if (timer.currentStepNum() == 1) {
                 std::filesystem::remove("hdf5_test_sim_blackoil.hdf5");
+            }
             HDF5Serializer writer("hdf5_test_sim_blackoil.hdf5",
                                   HDF5File::OpenMode::APPEND);
+            if (timer.currentStepNum() == 1) {
+                std::filesystem::path deck_filename(EWOMS_GET_PARAM(TypeTag, std::string, EclDeckFileName));
+                std::string basename;
+                // Strip extension "." and ".DATA"
+                std::string extension = uppercase(deck_filename.extension().string());
+                if ( extension == ".DATA" || extension == "." )
+                {
+                    basename = uppercase(deck_filename.stem().string());
+                }
+                else
+                {
+                    basename = uppercase(deck_filename.filename().string());
+                }
+                writer.writeHeader("OPM Flow", moduleVersion(),
+                                   compileTimestamp(), basename);
+            }
             writer.write(*this,
                          "/" + std::to_string(timer.currentStepNum()),
                          "simulator_data");

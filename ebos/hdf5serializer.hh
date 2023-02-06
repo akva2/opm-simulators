@@ -25,6 +25,7 @@
 
 #include <opm/simulators/utils/HDF5File.hpp>
 #include <opm/simulators/utils/HDF5Packer.hpp>
+#include <opm/simulators/utils/moduleVersion.hpp>
 
 namespace Opm {
 
@@ -62,6 +63,25 @@ public:
         m_h5file.write(group, dset, m_buffer);
     }
 
+    //! \brief Writes a header to the file.
+    //! \param simulator_name Name of simulator used
+    //! \param module_version Version of simulator used
+    //! \param time_stamp Built time-stap for simulator used
+    //! \param case_name Name of case file is associated with
+    void writeHeader(const std::string& simulator_name,
+                     const std::string& module_version,
+                     const std::string& time_stamp,
+                     const std::string& case_name)
+    {
+        try {
+            this->pack(simulator_name, module_version, time_stamp, case_name);
+        } catch (...) {
+            m_packSize = std::numeric_limits<size_t>::max();
+            throw;
+        }
+        m_h5file.write("/", "simulator_info", m_buffer);
+    }
+
     //! \brief read data and deserialize from restart file.
     //!
     //! \tparam T Type of class to read
@@ -75,7 +95,11 @@ public:
         this->unpack(data);
     }
 
-protected:
+    int lastGroup() const
+    {
+        return m_h5file.lastGroup();
+    }
+
 private:
     const Serialization::Packer m_packer; //!< Packer instance
     HDF5File m_h5file;

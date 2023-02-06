@@ -48,6 +48,8 @@ public:
               const std::string& dst,
               std::vector<char>& buffer);
 
+    int lastGroup() const;
+
 private:
     bool groupExists(hid_t parent, const std::string& path);
 
