@@ -379,6 +379,7 @@ class WellState;
         void setParameters(const SolverParameters& param)
         { param_ = param; }
 
+        // UNUSED
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {

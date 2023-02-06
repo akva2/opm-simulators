@@ -316,17 +316,20 @@ public:
                + schedule().seconds(timer.currentStepNum()),
             timer.currentStepLength());
         ebosSimulator_.setEpisodeIndex(timer.currentStepNum());
-        solver->model().beginReportStep();
 
         if (restart_read && timer.currentStepNum() == restart_step) {
             ebosSimulator_.problem().writeBarrier();
             HDF5Serializer reader("hdf5_test_sim_blackoil.hdf5",
                                   HDF5File::OpenMode::READ);
 
+            // needed to resize certain structures
+            solver->model().wellModel().beginReportStep(timer.currentStepNum() - 1);
             reader.read(*this,
                         "/" + std::to_string(restart_step),
                         "simulator_data");
         }
+
+        solver->model().beginReportStep();
 
         // Make cache up to date. No need for updating it in elementCtx.
         ebosSimulator_.model().invalidateAndUpdateIntensiveQuantities(/*timeIdx=*/0);

@@ -1066,6 +1066,7 @@ namespace Opm {
             return std::move(this->convergence_reports_);
         }
 
+        // UNUSED
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {
