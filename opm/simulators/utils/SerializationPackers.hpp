@@ -21,6 +21,8 @@
 
 #include <opm/common/utility/MemPacker.hpp>
 
+#include <dune/common/version.hh>
+
 #include <boost/date_time/gregorian/gregorian_types.hpp>
 
 // Additional packers for serializers using the mempacker.
@@ -40,6 +42,21 @@ struct Packing<false,boost::gregorian::date>
     static void unpack(boost::gregorian::date& data,
                        std::vector<char>& buffer, int& position);
 };
+
+#if DUNE_VERSION_LT(DUNE_COMMON, 2, 7)
+//! \brief Specialization for Dune:FieldVector:
+template <class Scalar, int Size>
+struct Packing<false,Dune::FieldVector<Scalar,Size>>
+{
+    static std::size_t packSize(const Dune::FieldVector<Scalar,Size>& data);
+
+    static void pack(const Dune::FieldVector<Scalar,Size>& data,
+                     std::vector<char>& buffer, int& position);
+
+    static void unpack(Dune::FieldVector<Scalar,Size>& data,
+                       std::vector<char>& buffer, int& position);
+};
+#endif
 
 }
 

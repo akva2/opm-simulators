@@ -48,6 +48,38 @@ unpack(boost::gregorian::date& data,
     data = boost::gregorian::from_simple_string(date);
 }
 
+#if DUNE_VERSION_LT(DUNE_COMMON, 2, 7)
+template<class Scalar, int Size>
+std::size_t Packing<false,Dune::FieldVector<Scalar,Size>>::
+packSize(const Dune::FieldVector<Scalar,Size>& data)
+{
+    return Size*Packing<true,Scalar>::packSize(data[0]);
+}
+
+template<class Scalar, int Size>
+void Packing<false,Dune::FieldVector<Scalar,Size>>::
+pack(const Dune::FieldVector<Scalar,Size>& data,
+     std::vector<char>& buffer, int& position)
+{
+    for (int i = 0; i < Size; ++i)
+        Packing<true,Scalar>::pack(data[i], buffer, position);
+}
+
+template<class Scalar, int Size>
+void Packing<false,Dune::FieldVector<Scalar,Size>>::
+unpack(Dune::FieldVector<Scalar,Size>& data,
+       std::vector<char>& buffer, int& position)
+{
+    for (int i = 0; i < Size; ++i) {
+        Packing<true,Scalar>::unpack(data[i], buffer, position);
+    }
+}
+
+template class Packing<false,Dune::FieldVector<double,1>>;
+template class Packing<false,Dune::FieldVector<double,3>>;
+
+#endif
+
 } // end namespace detail
 } // end namespace Serialization
 } // end namespace Opm
