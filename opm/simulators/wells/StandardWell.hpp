@@ -479,6 +479,12 @@ namespace Opm
                                    const Value& rv,
                                    const Value& rs,
                                    const Value& rvw) const;
+
+        template<class Value>
+        void computeGasWaterPerfRate(std::vector<Value>& cq_s,
+                                     PerforationRates& perf_rates,
+                                     const Value& rvw,
+                                     const Value& rsw) const;
     };
 
 }
