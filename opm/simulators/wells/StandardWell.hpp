@@ -496,6 +496,12 @@ namespace Opm
                                      const Value& rsw) const;
 
         template<class Value>
+        void computeGasWaterPerfRateCrossflow(const std::vector<Value>& cq_s,
+                                              PerforationRates& perf_rates,
+                                              const Value& rvw,
+                                              const Value& rsw) const;
+
+        template<class Value>
         Value volumeRatioVapDisWat(const Value& rvw,
                                    const Value& rsw,
                                    const Value& pressure,
