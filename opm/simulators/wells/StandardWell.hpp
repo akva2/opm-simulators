@@ -472,6 +472,13 @@ namespace Opm
                                                       const SummaryState& summary_state,
                                                       DeferredLogger& deferred_logger) const;
 
+    private:
+        template<class Value>
+        void computeGasOilPerfRate(std::vector<Value>& cq_s,
+                                   PerforationRates& perf_rates,
+                                   const Value& rv,
+                                   const Value& rs,
+                                   const Value& rvw) const;
     };
 
 }
