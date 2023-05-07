@@ -61,6 +61,11 @@ public:
                       const Value& rvw,
                       const Value& rsw) const;
 
+    //! \brief Compute crossflow rate for a system with gas and water.
+    void gasWaterRateCrossflow(const std::vector<Value>& cq_s,
+                               PerforationRates& perf_rates,
+                               const Value& rvw,
+                               const Value& rsw) const;
 
 private:
     const WellIfIndices& well_; //!< Reference to well interface
