@@ -76,6 +76,13 @@ public:
                                   const std::vector<Value>& b_perfcells_dense,
                                   DeferredLogger& deferred_logger) const;
 
+    //! \brief Compute volume ratio for a system with gas and oil.
+    Value volumeRatioGasOil(const Value& rv,
+                            const Value& rs,
+                            const Value& pressure,
+                            const std::vector<Value>& cmix_s,
+                            const std::vector<Value>& b_perfcells_dense,
+                            DeferredLogger& deferred_logger) const;
 
 private:
     const WellIfIndices& well_; //!< Reference to well interface
