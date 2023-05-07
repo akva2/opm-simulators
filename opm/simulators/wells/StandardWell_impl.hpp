@@ -301,7 +301,8 @@ namespace Opm
                 WellPerforations<FluidSystem,Indices,Scalar,Value>(*this).
                     gasOilRate(cq_s, perf_rates, rv, rs, rvw);
             } else if (FluidSystem::phaseIsActive(FluidSystem::waterPhaseIdx) && FluidSystem::phaseIsActive(FluidSystem::gasPhaseIdx)) {
-                computeGasWaterPerfRate(cq_s, perf_rates, rvw, rsw);
+                WellPerforations<FluidSystem,Indices,Scalar,Value>(*this).
+                    gasWaterRate(cq_s, perf_rates, rvw, rsw);
             }
         } else {
             // Do nothing if crossflow is not allowed
@@ -2550,30 +2551,6 @@ namespace Opm
         const auto zero   = EvalWell{this->primary_variables_.numWellEq() + Indices::numEq, 0.0};
         const auto mt     = std::accumulate(mobility.begin(), mobility.end(), zero);
         connII[phase_pos] = connIICalc(mt.value() * fs.invB(this->flowPhaseToEbosPhaseIdx(phase_pos)).value());
-    }
-
-
-    template <typename TypeTag>
-    template<class Value>
-    void
-    StandardWell<TypeTag>::
-    computeGasWaterPerfRate(std::vector<Value>& cq_s,
-                            PerforationRates& perf_rates,
-                            const Value& rvw,
-                            const Value& rsw) const
-    {
-        const unsigned waterCompIdx = Indices::canonicalToActiveComponentIndex(FluidSystem::waterCompIdx);
-        const unsigned gasCompIdx = Indices::canonicalToActiveComponentIndex(FluidSystem::gasCompIdx);
-        const Value cq_sWat = cq_s[waterCompIdx];
-        const Value cq_sGas = cq_s[gasCompIdx];
-        const Value vap_wat = rvw * cq_sGas;
-        const Value dis_gas_wat = rsw * cq_sWat;
-        cq_s[waterCompIdx] += vap_wat;
-        cq_s[gasCompIdx]   += dis_gas_wat;
-        if (this->isProducer()) {
-            perf_rates.vap_wat = getValue(vap_wat);
-            perf_rates.dis_gas_in_water = getValue(dis_gas_wat);
-        }
     }
 
 

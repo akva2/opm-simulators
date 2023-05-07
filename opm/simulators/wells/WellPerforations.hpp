@@ -55,6 +55,13 @@ public:
                              const Value& rvw,
                              DeferredLogger& deferred_logger) const;
 
+    //! \brief Compute rate for a system with gas and water.
+    void gasWaterRate(std::vector<Value>& cq_s,
+                      PerforationRates& perf_rates,
+                      const Value& rvw,
+                      const Value& rsw) const;
+
+
 private:
     const WellIfIndices& well_; //!< Reference to well interface
 };
