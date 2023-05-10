@@ -21,6 +21,8 @@
 #ifndef ECL_MPI_SERIALIZER_HH
 #define ECL_MPI_SERIALIZER_HH
 
+#include <opm/common/TimingMacros.hpp>
+
 #include <opm/common/utility/Serializer.hpp>
 #include <opm/simulators/utils/MPIPacker.hpp>
 #include <opm/simulators/utils/ParallelCommunication.hpp>
@@ -50,9 +52,13 @@ public:
 
         if (m_comm.rank() == root) {
             try {
-                this->pack(data);
-                m_comm.broadcast(&m_packSize, 1, root);
-                m_comm.broadcast(m_buffer.data(), m_packSize, root);
+                {
+                    this->pack(data);
+                }
+                {
+                    m_comm.broadcast(&m_packSize, 1, root);
+                    m_comm.broadcast(m_buffer.data(), m_packSize, root);
+                }
             } catch (...) {
                 m_packSize = std::numeric_limits<size_t>::max();
                 m_comm.broadcast(&m_packSize, 1, root);
@@ -66,7 +72,9 @@ public:
 
             m_buffer.resize(m_packSize);
             m_comm.broadcast(m_buffer.data(), m_packSize, root);
-            this->unpack(data);
+            {
+                this->unpack(data);
+            }
         }
     }
 
@@ -78,9 +86,15 @@ public:
 
         if (m_comm.rank() == root) {
             try {
-                this->pack(std::forward<Args>(args)...);
-                m_comm.broadcast(&m_packSize, 1, root);
-                m_comm.broadcast(m_buffer.data(), m_packSize, root);
+                {
+                    OPM_TIMEBLOCK(serializePack);
+                    this->pack(std::forward<Args>(args)...);
+                }
+                {
+                    OPM_TIMEBLOCK(serializeBcast);
+                    m_comm.broadcast(&m_packSize, 1, root);
+                    m_comm.broadcast(m_buffer.data(), m_packSize, root);
+                }
             } catch (...) {
                 m_packSize = std::numeric_limits<size_t>::max();
                 m_comm.broadcast(&m_packSize, 1, root);
@@ -93,7 +107,10 @@ public:
             }
             m_buffer.resize(m_packSize);
             m_comm.broadcast(m_buffer.data(), m_packSize, root);
-            this->unpack(std::forward<Args>(args)...);
+            {
+                OPM_TIMEBLOCK(serializeUnpack);
+                this->unpack(std::forward<Args>(args)...);
+            }
         }
     }
 

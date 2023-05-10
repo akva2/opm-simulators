@@ -54,8 +54,10 @@ set (opm-simulators_DEPS
   "opm-models REQUIRED"
   "Damaris 1.7"
   "HDF5"
+  "Tracy"
   )
 
+set(__extra_libs__ Tracy::TracyClient)
 find_package_deps(opm-simulators)
 
 if(NOT HAVE_ECL_INPUT OR NOT HAVE_ECL_OUTPUT)

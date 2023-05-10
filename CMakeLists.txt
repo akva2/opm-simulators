@@ -440,7 +440,7 @@ foreach(OBJ ${COMMON_MODELS} ${FLOW_MODELS} ${FLOW_VARIANT_MODELS})
   add_library(flow_lib${OBJ} OBJECT flow/flow_ebos_${OBJ}.cpp)
   list(APPEND FLOW_TGTS $<TARGET_OBJECTS:flow_lib${OBJ}>)
   if(TARGET fmt::fmt)
-    target_link_libraries(flow_lib${OBJ} fmt::fmt)
+    target_link_libraries(flow_lib${OBJ} fmt::fmt Tracy::TracyClient)
   endif()
   opm_add_test(flow_${OBJ}
                ONLY_COMPILE
