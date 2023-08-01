@@ -328,7 +328,7 @@ public:
     void initial(PrimaryVariables& values, const Context& context, unsigned spaceIdx, unsigned timeIdx) const
     {
         const unsigned globalDofIdx = context.globalSpaceIndex(spaceIdx, timeIdx);
-        const auto& initial_fs = initialFluidStates_[globalDofIdx];
+        const auto& initial_fs = this->ic_.initialFluidState(globalDofIdx);
         Opm::CompositionalFluidState<Scalar, FluidSystem> fs;
         for (unsigned p = 0; p < numPhases; ++p) { // TODO: assuming the phaseidx continuous
             // pressure
@@ -399,15 +399,6 @@ public:
     {
         // we do nothing for now
     }
-
-    const InitialFluidState& initialFluidState(unsigned globalDofIdx) const
-    { return initialFluidStates_[globalDofIdx]; }
-
-    std::vector<InitialFluidState>& initialFluidStates()
-    { return initialFluidStates_; }
-
-    const std::vector<InitialFluidState>& initialFluidStates() const
-    { return initialFluidStates_; }
 
     const FlowThresholdPressure<TypeTag>& thresholdPressure() const
     {
@@ -487,7 +478,7 @@ protected:
 
         std::size_t numDof = this->model().numGridDof();
 
-        initialFluidStates_.resize(numDof);
+        this->ic_.initialFluidStates_.resize(numDof);
 
         std::vector<double> waterSaturationData;
         std::vector<double> gasSaturationData;
@@ -518,7 +509,7 @@ protected:
             gasSaturationData.resize(numDof);
 
         for (std::size_t dofIdx = 0; dofIdx < numDof; ++dofIdx) {
-            auto& dofFluidState = initialFluidStates_[dofIdx];
+            auto& dofFluidState = this->ic_.initialFluidStates_[dofIdx];
             // dofFluidState.setPvtRegionIndex(pvtRegionIndex(dofIdx));
 
             Scalar temperatureLoc = tempiData[dofIdx];
@@ -622,8 +613,6 @@ private:
     }
 
     FlowThresholdPressure<TypeTag> thresholdPressures_;
-
-    std::vector<InitialFluidState> initialFluidStates_;
 
     bool zmf_initialization_ {false};
 

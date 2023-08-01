@@ -59,6 +59,7 @@
 #include <opm/simulators/flow/FlowGenericProblem.hpp>
 // TODO: maybe we can name it FlowProblemProperties.hpp
 #include <opm/simulators/flow/FlowBaseProblemProperties.hpp>
+#include <opm/simulators/flow/FlowProblemIC.hpp>
 #include <opm/simulators/flow/FlowUtils.hpp>
 #include <opm/simulators/flow/TracerModel.hpp>
 #include <opm/simulators/flow/TemperatureModel.hpp>
@@ -164,6 +165,7 @@ protected:
     using Toolbox = MathToolbox<Evaluation>;
     using DimMatrix = Dune::FieldMatrix<Scalar, dimWorld, dimWorld>;
 
+    using InitialFluidState = typename IntensiveQuantities::ScalarFluidState;
     using TemperatureModel = GetPropType<TypeTag, Properties::TemperatureModel>;
     using TracerModel = GetPropType<TypeTag, Properties::TracerModel>;
     using DirectionalMobilityPtr = Utility::CopyablePtr<DirectionalMobility<TypeTag>>;
@@ -491,6 +493,17 @@ public:
         this->simulator().startNextEpisode(schedule.stepLength(episodeIdx + 1));
     }
 
+    // temporary solution to facilitate output of initial state from flow
+    const InitialFluidState& initialFluidState(unsigned globalDofIdx) const
+    { return this->ic_.initialFluidState(globalDofIdx); }
+
+    std::vector<InitialFluidState>& initialFluidStates()
+    { return this->ic_.initialFluidStates_; }
+
+    const std::vector<InitialFluidState>& initialFluidStates() const
+    { return this->ic_.initialFluidStates_; }
+
+
     /*!
      * \brief Write the requested quantities of the current solution into the output
      *        files.
@@ -765,7 +778,7 @@ public:
     {
         const auto& rock_config = this->simulator().vanguard().eclState().getSimulationConfig().rock_config();
         if (rock_config.store()) {
-            return asImp_().initialFluidState(globalSpaceIdx).pressure(refPressurePhaseIdx_());
+            return this->ic_.initialFluidState(globalSpaceIdx).pressure(refPressurePhaseIdx_());
         }
         else {
             if (this->rockParams_.empty())
@@ -929,7 +942,8 @@ public:
         if constexpr (energyModuleType == EnergyModules::SequentialImplicitThermal)
             return temperatureModel_.temperature(globalDofIdx);
 
-        return asImp_().initialFluidState(globalDofIdx).temperature(/*phaseIdx=*/0);
+
+        return ic_.initialFluidState(globalDofIdx).temperature(/*phaseIdx=*/0);
     }
 
 
@@ -940,7 +954,7 @@ public:
         if constexpr (energyModuleType == EnergyModules::SequentialImplicitThermal)
             return temperatureModel_.temperature(globalDofIdx);
 
-        return asImp_().initialFluidState(globalDofIdx).temperature(/*phaseIdx=*/0);
+        return ic_.initialFluidState(globalDofIdx).temperature(/*phaseIdx=*/0);
     }
 
     const SolidEnergyLawParams&
@@ -1138,7 +1152,7 @@ public:
             effectivePressure -= this->overburdenPressure_[elementIdx];
 
         if (rock_config.store()) {
-            effectivePressure -= asImp_().initialFluidState(elementIdx).pressure(refPressurePhaseIdx_());
+            effectivePressure -= ic_.initialFluidState(elementIdx).pressure(refPressurePhaseIdx_());
         }
 
         if (!this->rockCompPoroMult_.empty()) {
@@ -1148,7 +1162,7 @@ public:
         // water compaction
         assert(!this->rockCompPoroMultWc_.empty());
         LhsEval SwMax = max(decay<LhsEval>(fs.saturation(waterPhaseIdx)), this->maxWaterSaturation_[elementIdx]);
-        LhsEval SwDeltaMax = SwMax - asImp_().initialFluidStates()[elementIdx].saturation(waterPhaseIdx);
+        LhsEval SwDeltaMax = SwMax - ic_.initialFluidState(elementIdx).saturation(waterPhaseIdx);
 
         return this->rockCompPoroMultWc_[tableIdx].eval(effectivePressure, SwDeltaMax, /*extrapolation=*/true);
     }
@@ -1542,7 +1556,7 @@ protected:
         //initialize min/max values
         std::size_t numElems = this->model().numGridDof();
         for (std::size_t elemIdx = 0; elemIdx < numElems; ++elemIdx) {
-            const auto& fs = asImp_().initialFluidStates()[elemIdx];
+            const auto& fs = ic_.initialFluidState(elemIdx);
             if (!this->maxWaterSaturation_.empty() && waterPhaseIdx > -1)
                 this->maxWaterSaturation_[elemIdx] = std::max(this->maxWaterSaturation_[elemIdx], fs.saturation(waterPhaseIdx));
             if (!this->maxOilSaturation_.empty() && oilPhaseIdx > -1)
@@ -1787,7 +1801,7 @@ protected:
             effectivePressure -= this->overburdenPressure_[elementIdx];
 
         if (rock_config.store()) {
-            effectivePressure -= asImp_().initialFluidState(elementIdx).pressure(refPressurePhaseIdx_());
+            effectivePressure -= ic_.initialFluidState(elementIdx).pressure(refPressurePhaseIdx_());
         }
 
         if (!this->rockCompTransMult_.empty())
@@ -1796,7 +1810,7 @@ protected:
         // water compaction
         assert(!this->rockCompTransMultWc_.empty());
         LhsEval SwMax = max(obtain(fs.saturation(waterPhaseIdx)), this->maxWaterSaturation_[elementIdx]);
-        LhsEval SwDeltaMax = SwMax - asImp_().initialFluidStates()[elementIdx].saturation(waterPhaseIdx);
+        LhsEval SwDeltaMax = SwMax - ic_.initialFluidState(elementIdx).saturation(waterPhaseIdx);
 
         return this->rockCompTransMultWc_[tableIdx].eval(effectivePressure, SwDeltaMax, /*extrapolation=*/true);
     }
@@ -1856,6 +1870,8 @@ protected:
 
     BCData<int> bcindex_;
     bool nonTrivialBoundaryConditions_ = false;
+
+    FlowProblemIC<TypeTag> ic_;
     bool first_step_ = true;
 
     /// Whether or not the current episode will end at the end of the
