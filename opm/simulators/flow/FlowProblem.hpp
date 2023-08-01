@@ -55,7 +55,6 @@
 #include <opm/simulators/flow/CpGridVanguard.hpp>
 #include <opm/simulators/flow/DummyGradientCalculator.hpp>
 #include <opm/simulators/flow/EclWriter.hpp>
-#include <opm/simulators/flow/EquilInitializer.hpp>
 #include <opm/simulators/flow/FlowGenericProblem.hpp>
 // TODO: maybe we can name it FlowProblemProperties.hpp
 #include <opm/simulators/flow/FlowBaseProblemProperties.hpp>

@@ -1294,17 +1294,9 @@ protected:
 
     void readEquilInitialCondition_() override
     {
-        const auto& simulator = this->simulator();
-
-        // initial condition corresponds to hydrostatic conditions.
-        EquilInitializer<TypeTag> equilInitializer(simulator, *(this->materialLawManager_));
-
-        std::size_t numElems = this->model().numGridDof();
-        this->ic_.initialFluidStates_.resize(numElems);
-        for (std::size_t elemIdx = 0; elemIdx < numElems; ++elemIdx) {
-            auto& elemFluidState = this->ic_.initialFluidStates_[elemIdx];
-            elemFluidState.assign(equilInitializer.initialFluidState(elemIdx));
-        }
+        this->ic_.equilInitialCondition_(*this->materialLawManager_,
+                                         this->simulator(),
+                                         this->model().numGridDof());
     }
 
     void readExplicitInitialCondition_() override

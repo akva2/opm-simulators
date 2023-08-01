@@ -43,13 +43,32 @@ template <class TypeTag>
 class FlowProblemIC
 {
 public:
+    using EclMaterialLawManager = typename GetProp<TypeTag, Properties::MaterialLaw>::EclMaterialLawManager;
     using InitialFluidState = typename EquilInitializer<TypeTag>::ScalarFluidState;
+    using Simulator = GetPropType<TypeTag, Properties::Simulator>;
 
     //! \brief Returns a const reference to initial fluid state for an element.
     const InitialFluidState& initialFluidState(const unsigned idx) const
     { return initialFluidStates_[idx]; }
 
+    //! \brief Sets up equilibrium initial conditions.
+    void equilInitialCondition_(EclMaterialLawManager& materialLawManager,
+                                const Simulator& simulator,
+                                const std::size_t numElems)
+    {
+        // initial condition corresponds to hydrostatic conditions.
+        using EquilInitializer = EquilInitializer<TypeTag>;
+        EquilInitializer equilInitializer(simulator, materialLawManager);
+
+        initialFluidStates_.resize(numElems);
+        for (std::size_t elemIdx = 0; elemIdx < numElems; ++elemIdx) {
+            auto& elemFluidState = initialFluidStates_[elemIdx];
+            elemFluidState.assign(equilInitializer.initialFluidState(elemIdx));
+        }
+    }
+
     std::vector<InitialFluidState> initialFluidStates_; //!< Vector of initial fluid states
+
 };
 
 } // namespace Opm
