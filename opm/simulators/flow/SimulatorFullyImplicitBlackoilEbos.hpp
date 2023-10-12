@@ -86,6 +86,12 @@ struct LoadStep
 };
 
 template <class TypeTag, class MyTypeTag>
+struct FinalStep
+{
+    using type = UndefinedProperty;
+};
+
+template <class TypeTag, class MyTypeTag>
 struct SaveFile
 {
     using type = UndefinedProperty;
@@ -138,6 +144,12 @@ struct LoadFile<TypeTag, TTag::EclFlowProblem>
 
 template <class TypeTag>
 struct LoadStep<TypeTag, TTag::EclFlowProblem>
+{
+    static constexpr int value = -1;
+};
+
+template <class TypeTag>
+struct FinalStep<TypeTag, TTag::EclFlowProblem>
 {
     static constexpr int value = -1;
 };
@@ -228,6 +240,7 @@ public:
         }
 
         loadStep_ = EWOMS_GET_PARAM(TypeTag, int, LoadStep);
+        finalStep_ = EWOMS_GET_PARAM(TypeTag, int, FinalStep);
 
         saveFile_ = EWOMS_GET_PARAM(TypeTag, std::string, SaveFile);
         loadFile_ = EWOMS_GET_PARAM(TypeTag, std::string, LoadFile);
@@ -285,6 +298,8 @@ public:
                              "Load serialized state from .OPMRST file. "
                              "Either a specific report step, or 0 to load last "
                              "stored report step.");
+        EWOMS_REGISTER_PARAM(TypeTag, int, FinalStep,
+                             "Step to stop executing at.");
         EWOMS_REGISTER_PARAM(TypeTag, std::string, SaveFile,
                              "FileName for .OPMRST file used for saving serialized state. "
                              "If empty, CASENAME.OPMRST is used.");
@@ -310,6 +325,7 @@ public:
         while (!timer.done()) {
             bool continue_looping = runStep(timer);
             if (!continue_looping) break;
+            if (timer.currentStepNum() == finalStep_) break;
         }
         return finalize();
     }
@@ -765,6 +781,7 @@ protected:
     int saveStride_ = 0; //!< Stride to save serialized state at, negative to only keep last
     int saveStep_ = -1; //!< Specific step to save serialized state at
     int loadStep_ = -1; //!< Step to load serialized state from
+    int finalStep_ = -1; //!< Final step to execute
     std::string saveFile_; //!< File to save serialized state to
     std::string loadFile_; //!< File to load serialized state from
 };
