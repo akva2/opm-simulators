@@ -248,9 +248,11 @@ public:
         std::map<std::string, std::vector<double>> regionData;
         Inplace inplace;
         {
-        OPM_TIMEBLOCK(outputFipLogAndFipresvLog);
-        inplace = eclOutputModule_->outputFipLog(miscSummaryData, regionData, isSubStep, simulator_.gridView().comm());
-        eclOutputModule_->outputFipresvLog(miscSummaryData, regionData, isSubStep, simulator_.gridView().comm());
+            OPM_TIMEBLOCK(outputFipLogAndFipresvLog);
+            inplace = eclOutputModule_->outputFipLog(miscSummaryData, regionData, reportStepNum,
+                                                     isSubStep, simulator_.gridView().comm());
+            eclOutputModule_->outputFipresvLog(miscSummaryData, regionData, reportStepNum,
+                                               isSubStep, simulator_.gridView().comm());
         }
         bool forceDisableProdOutput = false;
         bool forceDisableInjOutput = false;
@@ -314,6 +316,36 @@ public:
         eclOutputModule_->outputProdLog(reportStepNum, isSubStep, forceDisableProdOutput);
         eclOutputModule_->outputInjLog(reportStepNum, isSubStep, forceDisableInjOutput);
         eclOutputModule_->outputCumLog(reportStepNum, isSubStep, forceDisableCumOutput);
+        }
+    }
+
+    void writeInitialFIPLogs()
+    {
+        const auto& gridView = simulator_.vanguard().gridView();
+        const int numElements = gridView.size(/*codim=*/0);
+
+        this->eclOutputModule_->
+            allocBuffers(numElements, 0, false, false, /*isRestart*/ false);
+
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+        for (int dofIdx = 0; dofIdx < numElements; ++dofIdx) {
+            const auto& intQuants = *simulator_.model().cachedIntensiveQuantities(dofIdx, /*timeIdx=*/0);
+            const auto totVolume = simulator_.model().dofTotalVolume(dofIdx);
+
+            this->eclOutputModule_->updateFluidInPlace(dofIdx, intQuants, totVolume);
+        }
+
+        std::map<std::string, double> miscSummaryData;
+        std::map<std::string, std::vector<double>> regionData;
+        Inplace inplace;
+        {
+            OPM_TIMEBLOCK(outputFipLogAndFipresvLog);
+            inplace = eclOutputModule_->outputFipLog(miscSummaryData, regionData, 0,
+                                                     false, simulator_.gridView().comm());
+            eclOutputModule_->outputFipresvLog(miscSummaryData, regionData, 0,
+                                               false, simulator_.gridView().comm());
         }
     }
 

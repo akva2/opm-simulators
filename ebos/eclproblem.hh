@@ -516,6 +516,7 @@ public:
         OPM_TIMEBLOCK(beginEpisode);
         // Proceed to the next report step
         auto& simulator = this->simulator();
+        this->simulator().setTimeStepIndex(-1);
         int episodeIdx = simulator.episodeIndex();
         auto& eclState = simulator.vanguard().eclState();
         const auto& schedule = simulator.vanguard().schedule();
@@ -586,6 +587,7 @@ public:
     {
         OPM_TIMEBLOCK(beginTimeStep);
         int episodeIdx = this->episodeIndex();
+        this->simulator().setTimeStepIndex(this->simulator().timeStepIndex()+1);
 
         this->beginTimeStep_(enableExperiments,
                              episodeIdx,
@@ -754,8 +756,12 @@ public:
         if (enableEclOutput_){
             eclWriter_->writeOutput(std::move(localCellData), isSubStep);
         }
-        
 
+        static bool firstCall = true;
+        if (firstCall && this->simulator().episodeIndex() == 0) {
+            eclWriter_->writeInitialFIPLogs();
+            firstCall = false;
+        }
     }
 
     void finalizeOutput() {
