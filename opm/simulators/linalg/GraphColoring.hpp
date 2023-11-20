@@ -19,6 +19,10 @@
 #ifndef OPM_GRAPHCOLORING_HEADER_INCLUDED
 #define OPM_GRAPHCOLORING_HEADER_INCLUDED
 
+#include <opm/common/TimingMacros.hpp>
+
+#include <opm/grid/utility/SparseTable.hpp>
+
 #include <vector>
 #include <deque>
 #include <tuple>
