@@ -247,41 +247,43 @@ reorderVerticesSpheres(const std::vector<int>& colors, int noColors,
     return indices;
 }
 
-// enum class to specify coloring type
-/*
-    The coloring types have been implemented initially to parallelize DILU preconditioner and parallel sparse triangular
-    solves. Symmetric coloring will create a dependency from row i to j if both element A_ij and A_ji exists. Lower
-    coloring creates a dependency from row i to j (where i<j) if A_ij is nonzero. Upper coloring creates a dependecy
-    from row i to j (where i>j) if A_ij is nonzero
-*/
+/// \brief Specify coloring type.
+/// \details The coloring types have been implemented initially to parallelize DILU
+///          preconditioner and parallel sparse triangular solves.
+///          Symmetric coloring will create a dependency from row i to j if
+///          both element A_ij and A_ji exists.
+///          Lower coloring creates a dependency from row i to j (where i < j) if
+///          A_ij is nonzero.
+///          Upper coloring creates a dependecy from row i to j (where i > j) if A_ij is nonzero.
 enum class ColoringType { SYMMETRIC, LOWER, UPPER };
 
 /// This coloring algorithm interprets the sparsity structure of a matrix as a graph. Each row is given a color
 /// or level where all the rows in the same level only have dependencies from lower levels. The level computation
 /// is done with dynamic programming, and to improve caching the rows in the same level stay in matrix order.
-/// \brief Given a matrix and dependecy type, returns a SparseTable grouping the rows by which can be executed in
-/// parallel without breaking dependencies
-/// \param matrix A dune sparse matrix \param coloringType The coloringtype
-/// determines what constitutes a dependency, see ColoringType definition above
-/// \return SparseTable with rows of the
-/// matrix grouped into least number of groups while dependencies only come from groups with lower index
+/// \brief Given a matrix and dependecy type, returns a SparseTable grouping the rows by which
+///        can be executed in parallel without breaking dependencies
+/// \param matrix A dune sparse matrix
+/// \param coloringType The coloringtype determines what constitutes a dependency,
+///        see ColoringType definition above
+/// \return SparseTable with rows of the matrix grouped into least number of groups
+///         while dependencies only come from groups with lower index
 template <class M>
-Opm::SparseTable<size_t>
-getMatrixRowColoring(const M matrix, ColoringType coloringType)
+Opm::SparseTable<std::size_t>
+getMatrixRowColoring(const M& matrix, ColoringType coloringType)
 {
     OPM_TIMEBLOCK(createMatrix);
 
-    std::vector<size_t> color(matrix.N(), 0);
-    std::vector<size_t> rowIndices(matrix.N(), 0);
+    std::vector<std::size_t> color(matrix.N(), 0);
+    std::vector<std::size_t> rowIndices(matrix.N(), 0);
 
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (size_t i = 0; i < matrix.N(); i++) {
+    for (std::size_t i = 0; i < matrix.N(); i++) {
         rowIndices[i] = i;
     }
 
-    std::vector<size_t> colorCnt;
+    std::vector<std::size_t> colorCnt;
     // These dynamic programming computations only rely on the following observation:
     // level[row_i] = 1 + max{level[row_j]} for all j which i depend on
     // This minimizes the level of each row, and every rows dependencies belong to a lower level set.
@@ -323,12 +325,15 @@ getMatrixRowColoring(const M matrix, ColoringType coloringType)
         }
     }
 
-    std::stable_sort(
-        rowIndices.begin(), rowIndices.end(), [&color](const size_t a, const size_t b) { return color[a] < color[b]; });
+    std::stable_sort(rowIndices.begin(),
+                     rowIndices.end(),
+                     [&color](const std::size_t a, const std::size_t b)
+                     { return color[a] < color[b]; });
 
-    return Opm::SparseTable<size_t>(
-        rowIndices.data(), rowIndices.data() + rowIndices.size(), colorCnt.data(), colorCnt.data() + colorCnt.size());
+    return {rowIndices.data(), rowIndices.data() + rowIndices.size(),
+            colorCnt.data(), colorCnt.data() + colorCnt.size()};
 }
 
 } // end namespace Opm
+
 #endif

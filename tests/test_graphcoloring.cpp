@@ -102,13 +102,11 @@ BOOST_AUTO_TEST_CASE(TestWelschPowell)
     checkAllIndices(newOrder);
 }
 
-#include <iostream>
-#include <vector>
-
 // The following tests verify the graph coloring in the context of revealing which rows
 // can be operated on at the same time in the DILU preconditioner
 // TODO: write a class and perform calls to it instead of simply copying the code of the coloring here
-BOOST_AUTO_TEST_CASE(TestColoredDiluParallelisms3x3Matrix){
+BOOST_AUTO_TEST_CASE(TestColoredDiluParallelisms3x3Matrix)
+{
      /*
     Matrix on this form:
     |x  |
@@ -139,18 +137,19 @@ BOOST_AUTO_TEST_CASE(TestColoredDiluParallelisms3x3Matrix){
         }
     }
 
-    testMatrix[0][0][0][0]=3.0;
-    testMatrix[1][1][0][0]=1.0;
-    testMatrix[1][2][0][0]=1.0;
-    testMatrix[2][1][0][0]=1.0;
-    testMatrix[2][2][0][0]=1.0;
+    testMatrix[0][0][0][0] = 3.0;
+    testMatrix[1][1][0][0] = 1.0;
+    testMatrix[1][2][0][0] = 1.0;
+    testMatrix[2][1][0][0] = 1.0;
+    testMatrix[2][2][0][0] = 1.0;
 
-    Opm::SparseTable<size_t> coloring = Opm::getMatrixRowColoring(testMatrix, Opm::ColoringType::SYMMETRIC);
+    Opm::SparseTable<std::size_t> coloring = Opm::getMatrixRowColoring(testMatrix,
+                                                                       Opm::ColoringType::SYMMETRIC);
 
-    std::vector<std::vector<size_t>> correctColor = {{0, 1}, {2}};
+    std::vector<std::vector<std::size_t>> correctColor = {{0, 1}, {2}};
 
-    for (size_t i = 0; i < correctColor.size(); ++i){
-        for (size_t j = 0; j < correctColor[i].size(); ++j){
+    for (std::size_t i = 0; i < correctColor.size(); ++i) {
+        for (std::size_t j = 0; j < correctColor[i].size(); ++j) {
             BOOST_CHECK(coloring[i][j] == correctColor[i][j]);
         }
     }
@@ -158,22 +157,23 @@ BOOST_AUTO_TEST_CASE(TestColoredDiluParallelisms3x3Matrix){
     coloring = Opm::getMatrixRowColoring(testMatrix, Opm::ColoringType::UPPER);
     correctColor = {{0, 2}, {1}};
 
-    for (size_t i = 0; i < correctColor.size(); ++i){
-        for (size_t j = 0; j < correctColor[i].size(); ++j){
+    for (std::size_t i = 0; i < correctColor.size(); ++i) {
+        for (std::size_t j = 0; j < correctColor[i].size(); ++j) {
             BOOST_CHECK(coloring[i][j] == correctColor[i][j]);
         }
     }
     coloring = Opm::getMatrixRowColoring(testMatrix, Opm::ColoringType::LOWER);
     correctColor = {{0, 1}, {2}};
 
-    for (size_t i = 0; i < correctColor.size(); ++i){
-        for (size_t j = 0; j < correctColor[i].size(); ++j){
+    for (std::size_t i = 0; i < correctColor.size(); ++i) {
+        for (std::size_t j = 0; j < correctColor[i].size(); ++j) {
             BOOST_CHECK(coloring[i][j] == correctColor[i][j]);
         }
     }
 }
 
-BOOST_AUTO_TEST_CASE(TestColoredDiluParallelisms5x5Simple){
+BOOST_AUTO_TEST_CASE(TestColoredDiluParallelisms5x5Simple)
+{
      /*
     Test matrix:
     |xxx  |
@@ -214,24 +214,25 @@ BOOST_AUTO_TEST_CASE(TestColoredDiluParallelisms5x5Simple){
         }
     }
 
-    testMatrix[0][0][0][0]=1.0;
-    testMatrix[0][1][0][0]=1.0;
-    testMatrix[0][2][0][0]=1.0;
-    testMatrix[1][0][0][0]=1.0;
-    testMatrix[1][1][0][0]=1.0;
-    testMatrix[2][0][0][0]=1.0;
-    testMatrix[2][2][0][0]=1.0;
-    testMatrix[2][3][0][0]=1.0;
-    testMatrix[3][3][0][0]=1.0;
-    testMatrix[4][3][0][0]=1.0;
-    testMatrix[4][4][0][0]=1.0;
+    testMatrix[0][0][0][0] = 1.0;
+    testMatrix[0][1][0][0] = 1.0;
+    testMatrix[0][2][0][0] = 1.0;
+    testMatrix[1][0][0][0] = 1.0;
+    testMatrix[1][1][0][0] = 1.0;
+    testMatrix[2][0][0][0] = 1.0;
+    testMatrix[2][2][0][0] = 1.0;
+    testMatrix[2][3][0][0] = 1.0;
+    testMatrix[3][3][0][0] = 1.0;
+    testMatrix[4][3][0][0] = 1.0;
+    testMatrix[4][4][0][0] = 1.0;
 
-    Opm::SparseTable<size_t> coloring = Opm::getMatrixRowColoring(testMatrix, Opm::ColoringType::SYMMETRIC);
+    Opm::SparseTable<std::size_t> coloring = Opm::getMatrixRowColoring(testMatrix,
+                                                                       Opm::ColoringType::SYMMETRIC);
 
-    std::vector<std::vector<size_t>> correctColor = {{0, 3, 4}, {1, 2}};
+    std::vector<std::vector<std::size_t>> correctColor = {{0, 3, 4}, {1, 2}};
 
-    for (size_t i = 0; i < correctColor.size(); ++i){
-        for (size_t j = 0; j < correctColor[i].size(); ++j){
+    for (std::size_t i = 0; i < correctColor.size(); ++i) {
+        for (std::size_t j = 0; j < correctColor[i].size(); ++j) {
             BOOST_CHECK(coloring[i][j] == correctColor[i][j]);
         }
     }
@@ -239,8 +240,8 @@ BOOST_AUTO_TEST_CASE(TestColoredDiluParallelisms5x5Simple){
     coloring = Opm::getMatrixRowColoring(testMatrix, Opm::ColoringType::UPPER);
     correctColor = {{1, 3, 4}, {2}, {0}};
 
-    for (size_t i = 0; i < correctColor.size(); ++i){
-        for (size_t j = 0; j < correctColor[i].size(); ++j){
+    for (std::size_t i = 0; i < correctColor.size(); ++i) {
+        for (std::size_t j = 0; j < correctColor[i].size(); ++j) {
             BOOST_CHECK(coloring[i][j] == correctColor[i][j]);
         }
     }
@@ -248,14 +249,15 @@ BOOST_AUTO_TEST_CASE(TestColoredDiluParallelisms5x5Simple){
     coloring = Opm::getMatrixRowColoring(testMatrix, Opm::ColoringType::LOWER);
     correctColor = {{0, 3}, {1, 2, 4}};
 
-    for (size_t i = 0; i < correctColor.size(); ++i){
-        for (size_t j = 0; j < correctColor[i].size(); ++j){
+    for (std::size_t i = 0; i < correctColor.size(); ++i) {
+        for (std::size_t j = 0; j < correctColor[i].size(); ++j) {
             BOOST_CHECK(coloring[i][j] == correctColor[i][j]);
         }
     }
 }
 
-BOOST_AUTO_TEST_CASE(TestColoredDiluParallelisms5x5Tridiagonal){
+BOOST_AUTO_TEST_CASE(TestColoredDiluParallelisms5x5Tridiagonal)
+{
      /*
     Test matrix:
     |xx   |
@@ -289,34 +291,35 @@ BOOST_AUTO_TEST_CASE(TestColoredDiluParallelisms5x5Tridiagonal){
         }
     }
 
-    testMatrix[0][0][0][0]=1.0;
-    testMatrix[0][1][0][0]=1.0;
-    testMatrix[1][0][0][0]=1.0;
-    testMatrix[1][1][0][0]=1.0;
-    testMatrix[1][2][0][0]=1.0;
-    testMatrix[2][1][0][0]=1.0;
-    testMatrix[2][2][0][0]=1.0;
-    testMatrix[2][3][0][0]=1.0;
-    testMatrix[3][2][0][0]=1.0;
-    testMatrix[3][3][0][0]=1.0;
-    testMatrix[3][4][0][0]=1.0;
-    testMatrix[4][3][0][0]=1.0;
-    testMatrix[4][4][0][0]=1.0;
+    testMatrix[0][0][0][0] = 1.0;
+    testMatrix[0][1][0][0] = 1.0;
+    testMatrix[1][0][0][0] = 1.0;
+    testMatrix[1][1][0][0] = 1.0;
+    testMatrix[1][2][0][0] = 1.0;
+    testMatrix[2][1][0][0] = 1.0;
+    testMatrix[2][2][0][0] = 1.0;
+    testMatrix[2][3][0][0] = 1.0;
+    testMatrix[3][2][0][0] = 1.0;
+    testMatrix[3][3][0][0] = 1.0;
+    testMatrix[3][4][0][0] = 1.0;
+    testMatrix[4][3][0][0] = 1.0;
+    testMatrix[4][4][0][0] = 1.0;
 
-    Opm::SparseTable<size_t> coloring = Opm::getMatrixRowColoring(testMatrix, Opm::ColoringType::SYMMETRIC);
+    Opm::SparseTable<std::size_t> coloring = Opm::getMatrixRowColoring(testMatrix,
+                                                                       Opm::ColoringType::SYMMETRIC);
 
-    std::vector<std::vector<size_t>> correctColor = {{0}, {1}, {2}, {3}, {4}};
+    std::vector<std::vector<std::size_t>> correctColor = {{0}, {1}, {2}, {3}, {4}};
 
-    for (size_t i = 0; i < correctColor.size(); ++i){
-        for (size_t j = 0; j < correctColor[i].size(); ++j){
+    for (std::size_t i = 0; i < correctColor.size(); ++i) {
+        for (std::size_t j = 0; j < correctColor[i].size(); ++j) {
             BOOST_CHECK(coloring[i][j] == correctColor[i][j]);
         }
     }
 
     coloring = Opm::getMatrixRowColoring(testMatrix, Opm::ColoringType::LOWER);
 
-    for (size_t i = 0; i < correctColor.size(); ++i){
-        for (size_t j = 0; j < correctColor[i].size(); ++j){
+    for (std::size_t i = 0; i < correctColor.size(); ++i) {
+        for (std::size_t j = 0; j < correctColor[i].size(); ++j) {
             BOOST_CHECK(coloring[i][j] == correctColor[i][j]);
         }
     }
@@ -325,14 +328,15 @@ BOOST_AUTO_TEST_CASE(TestColoredDiluParallelisms5x5Tridiagonal){
     coloring = Opm::getMatrixRowColoring(testMatrix, Opm::ColoringType::UPPER);
     correctColor = {{4}, {3}, {2}, {1}, {0}};
 
-    for (size_t i = 0; i < correctColor.size(); ++i){
-        for (size_t j = 0; j < correctColor[i].size(); ++j){
+    for (std::size_t i = 0; i < correctColor.size(); ++i) {
+        for (std::size_t j = 0; j < correctColor[i].size(); ++j) {
             BOOST_CHECK(coloring[i][j] == correctColor[i][j]);
         }
     }
 }
 
-BOOST_AUTO_TEST_CASE(TestColoredDiluParallelisms5x5Complex){
+BOOST_AUTO_TEST_CASE(TestColoredDiluParallelisms5x5Complex)
+{
      /*
     Test matrix:
     |xxx x|
@@ -361,13 +365,11 @@ BOOST_AUTO_TEST_CASE(TestColoredDiluParallelisms5x5Complex){
             row.insert(row.index());
             row.insert(row.index() + 2);
         }
-
         else if (row.index() == 2) {
             row.insert(row.index() - 2);
             row.insert(row.index());
             row.insert(row.index() + 2);
         }
-
         else if (row.index() == 3) {
             row.insert(row.index() - 2);
             row.insert(row.index());
@@ -379,36 +381,37 @@ BOOST_AUTO_TEST_CASE(TestColoredDiluParallelisms5x5Complex){
         }
     }
 
-    testMatrix[0][0][0][0]=1.0;
-    testMatrix[0][1][0][0]=1.0;
-    testMatrix[0][2][0][0]=1.0;
-    testMatrix[0][4][0][0]=1.0;
-    testMatrix[1][0][0][0]=1.0;
-    testMatrix[1][1][0][0]=1.0;
-    testMatrix[1][3][0][0]=1.0;
-    testMatrix[2][0][0][0]=1.0;
-    testMatrix[2][2][0][0]=1.0;
-    testMatrix[2][4][0][0]=1.0;
-    testMatrix[3][1][0][0]=1.0;
-    testMatrix[3][3][0][0]=1.0;
-    testMatrix[4][0][0][0]=1.0;
-    testMatrix[4][2][0][0]=1.0;
-    testMatrix[4][4][0][0]=1.0;
+    testMatrix[0][0][0][0] = 1.0;
+    testMatrix[0][1][0][0] = 1.0;
+    testMatrix[0][2][0][0] = 1.0;
+    testMatrix[0][4][0][0] = 1.0;
+    testMatrix[1][0][0][0] = 1.0;
+    testMatrix[1][1][0][0] = 1.0;
+    testMatrix[1][3][0][0] = 1.0;
+    testMatrix[2][0][0][0] = 1.0;
+    testMatrix[2][2][0][0] = 1.0;
+    testMatrix[2][4][0][0] = 1.0;
+    testMatrix[3][1][0][0] = 1.0;
+    testMatrix[3][3][0][0] = 1.0;
+    testMatrix[4][0][0][0] = 1.0;
+    testMatrix[4][2][0][0] = 1.0;
+    testMatrix[4][4][0][0] = 1.0;
 
-    Opm::SparseTable<size_t> coloring = Opm::getMatrixRowColoring(testMatrix, Opm::ColoringType::SYMMETRIC);
+    Opm::SparseTable<std::size_t> coloring = Opm::getMatrixRowColoring(testMatrix,
+                                                                       Opm::ColoringType::SYMMETRIC);
 
-    std::vector<std::vector<size_t>> correctColor = {{0}, {1, 2}, {3, 4}};
+    std::vector<std::vector<std::size_t>> correctColor = {{0}, {1, 2}, {3, 4}};
 
-    for (size_t i = 0; i < correctColor.size(); ++i){
-        for (size_t j = 0; j < correctColor[i].size(); ++j){
+    for (std::size_t i = 0; i < correctColor.size(); ++i) {
+        for (std::size_t j = 0; j < correctColor[i].size(); ++j) {
             BOOST_CHECK(coloring[i][j] == correctColor[i][j]);
         }
     }
 
     coloring = Opm::getMatrixRowColoring(testMatrix, Opm::ColoringType::LOWER);
 
-    for (size_t i = 0; i < correctColor.size(); ++i){
-        for (size_t j = 0; j < correctColor[i].size(); ++j){
+    for (std::size_t i = 0; i < correctColor.size(); ++i) {
+        for (std::size_t j = 0; j < correctColor[i].size(); ++j) {
             BOOST_CHECK(coloring[i][j] == correctColor[i][j]);
         }
     }
@@ -417,8 +420,8 @@ BOOST_AUTO_TEST_CASE(TestColoredDiluParallelisms5x5Complex){
     correctColor = {{3, 4}, {1, 2}, {0}};
     coloring.print(std::cout);
 
-    for (size_t i = 0; i < correctColor.size(); ++i){
-        for (size_t j = 0; j < correctColor[i].size(); ++j){
+    for (std::size_t i = 0; i < correctColor.size(); ++i) {
+        for (std::size_t j = 0; j < correctColor[i].size(); ++j) {
             BOOST_CHECK(coloring[i][j] == correctColor[i][j]);
         }
     }
