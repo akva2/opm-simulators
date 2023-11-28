@@ -71,6 +71,9 @@ public:
 
 protected:
     StandardWellEval(const WellInterfaceIndices<FluidSystem,Indices,Scalar>& baseif);
+    StandardWellEval(const WellInterfaceIndices<FluidSystem,Indices,Scalar>& baseif,
+                     const StandardWellEval& eval);
+    StandardWellEval(const StandardWellEval&) = delete;
 
     const WellInterfaceIndices<FluidSystem,Indices,Scalar>& baseif_;
 

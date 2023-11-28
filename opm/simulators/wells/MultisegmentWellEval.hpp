@@ -72,6 +72,9 @@ public:
 
 protected:
     MultisegmentWellEval(WellInterfaceIndices<FluidSystem,Indices,Scalar>& baseif);
+    MultisegmentWellEval(const MultisegmentWellEval&) = delete;
+    MultisegmentWellEval(WellInterfaceIndices<FluidSystem,Indices,Scalar>& baseif,
+                         const MultisegmentWellEval& eval);
 
     void initMatrixAndVectors(const int num_cells);
 
