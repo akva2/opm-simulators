@@ -20,21 +20,23 @@
 #ifndef OPM_GROUP_ECONOMIC_LIMITS_CHECKER_HEADER_INCLUDED
 #define OPM_GROUP_ECONOMIC_LIMITS_CHECKER_HEADER_INCLUDED
 
-#include <opm/simulators/wells/BlackoilWellModelGeneric.hpp>
-#include <opm/simulators/utils/DeferredLogger.hpp>
-#include <opm/simulators/wells/WellGroupHelpers.hpp>
-#include <opm/simulators/wells/WellState.hpp>
 #include <opm/core/props/BlackoilPhases.hpp>
-#include <opm/input/eclipse/Schedule/Group/Group.hpp>
 #include <opm/input/eclipse/Schedule/Group/GroupEconProductionLimits.hpp>
-#include <opm/input/eclipse/Schedule/Schedule.hpp>
-#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
-#include <ctime>
+#include <array>
+#include <string>
 
 namespace Opm
 {
+
+class BlackoilWellModelGeneric;
+class DeferredLogger;
+class Group;
+class Schedule;
+class WellState;
+class WellTestState;
+
     class GroupEconomicLimitsChecker
     {
     public:
@@ -77,7 +79,7 @@ namespace Opm
         const Schedule &schedule_;
         GroupEconProductionLimits::GEconGroupProp gecon_props_;
         bool debug_ = true;
-        double production_rates_[NUM_PHASES];
+        std::array<double,NUM_PHASES> production_rates_;
         std::map<int, BlackoilPhases::PhaseIndex> phase_idx_map_ = {
             {0, BlackoilPhases::Liquid},
             {1, BlackoilPhases::Vapour},
