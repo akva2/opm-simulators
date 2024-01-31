@@ -21,8 +21,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef OPM_BLACKOILMODELEBOS_HEADER_INCLUDED
-#define OPM_BLACKOILMODELEBOS_HEADER_INCLUDED
+#ifndef OPM_BLACKOILMODEL_HEADER_INCLUDED
+#define OPM_BLACKOILMODEL_HEADER_INCLUDED
 
 #include <fmt/format.h>
 
@@ -161,7 +161,7 @@ namespace Opm {
     /// uses an industry-standard TPFA discretization with per-phase
     /// upwind weighting of mobilities.
     template <class TypeTag>
-    class BlackoilModelEbos
+    class BlackoilModel
     {
     public:
         // ---------  Types and enums  ---------
@@ -225,10 +225,10 @@ namespace Opm {
         /// \param[in] linsolver        linear solver
         /// \param[in] eclState         eclipse state
         /// \param[in] terminal_output  request output to cout/cerr
-        BlackoilModelEbos(Simulator& ebosSimulator,
-                          const ModelParameters& param,
-                          BlackoilWellModel<TypeTag>& well_model,
-                          const bool terminal_output)
+        BlackoilModel(Simulator& ebosSimulator,
+                      const ModelParameters& param,
+                      BlackoilWellModel<TypeTag>& well_model,
+                      const bool terminal_output)
         : ebosSimulator_(ebosSimulator)
         , grid_(ebosSimulator_.vanguard().grid())
         , phaseUsage_(phaseUsageFromDeck(eclState()))
@@ -1285,4 +1285,4 @@ namespace Opm {
     };
 } // namespace Opm
 
-#endif // OPM_BLACKOILMODELBASE_IMPL_HEADER_INCLUDED
+#endif // OPM_BLACKOILMODEL_HEADER_INCLUDED
