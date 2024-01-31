@@ -45,7 +45,7 @@ list (APPEND MAIN_SOURCE_FILES
   opm/simulators/flow/EclActionHandler.cpp
   opm/simulators/flow/EclInterRegFlows.cpp
   opm/simulators/flow/ExtraConvergenceOutputThread.cpp
-  opm/simulators/flow/FlowMainEbos.cpp
+  opm/simulators/flow/FlowMain.cpp
   opm/simulators/flow/KeywordValidation.cpp
   opm/simulators/flow/LogOutputHelper.cpp
   opm/simulators/flow/Main.cpp
@@ -445,7 +445,7 @@ list (APPEND PUBLIC_HEADER_FILES
   opm/simulators/flow/EclActionHandler.hpp
   opm/simulators/flow/EclInterRegFlows.hpp
   opm/simulators/flow/ExtraConvergenceOutputThread.hpp
-  opm/simulators/flow/FlowMainEbos.hpp
+  opm/simulators/flow/FlowMain.hpp
   opm/simulators/flow/Main.hpp
   opm/simulators/flow/NonlinearSolverEbos.hpp
   opm/simulators/flow/RSTConv.hpp
