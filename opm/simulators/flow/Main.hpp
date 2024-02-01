@@ -569,7 +569,7 @@ private:
             return EXIT_FAILURE;
         }
 
-        return flowEbosWaterOnlyMain(argc_, argv_, outputCout_, outputFiles_);
+        return flowWaterOnlyMain(argc_, argv_, outputCout_, outputFiles_);
     }
 
     int runWaterOnlyEnergy(const Phases& phases)
