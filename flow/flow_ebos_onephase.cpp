@@ -70,7 +70,7 @@ public:
 } // namespace Opm::Properties
 
 // ----------------- Main program -----------------
-int flowEbosWaterOnlyMain(int argc, char** argv, bool outputCout, bool outputFiles)
+int flowWaterOnlyMain(int argc, char** argv, bool outputCout, bool outputFiles)
 {
     // we always want to use the default locale, and thus spare us the trouble
     // with incorrect locale settings.
@@ -81,7 +81,7 @@ int flowEbosWaterOnlyMain(int argc, char** argv, bool outputCout, bool outputFil
     return mainfunc.execute();
 }
 
-int flowEbosWaterOnlyMainStandalone(int argc, char** argv)
+int flowWaterOnlyMainStandalone(int argc, char** argv)
 {
     using TypeTag = Opm::Properties::TTag::EclFlowProblemWaterOnly;
     auto mainObject = std::make_unique<Opm::Main>(argc, argv);
