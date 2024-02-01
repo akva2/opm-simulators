@@ -543,7 +543,7 @@ private:
         if (phases.active(Phase::POLYMW)) {
             // only oil water two phase for now
             assert (phases.size() == 4);
-            return flowEbosOilWaterPolymerInjectivityMain(argc_, argv_, outputCout_, outputFiles_);
+            return flowOilWaterPolymerInjectivityMain(argc_, argv_, outputCout_, outputFiles_);
         }
 
         if (phases.size() == 3) { // oil water polymer case
