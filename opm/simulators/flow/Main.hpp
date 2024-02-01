@@ -486,7 +486,7 @@ private:
         // oil-gas
         if (phases.active( Phase::OIL ) && phases.active( Phase::GAS )) {
             if (diffusive) {
-                return flowEbosGasOilDiffuseMain(argc_, argv_, outputCout_, outputFiles_);
+                return flowGasOilDiffuseMain(argc_, argv_, outputCout_, outputFiles_);
             } else {
                 return flowGasOilMain(argc_, argv_, outputCout_, outputFiles_);
             }
