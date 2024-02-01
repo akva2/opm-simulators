@@ -548,7 +548,7 @@ private:
         }
 
         if (phases.size() == 3) { // oil water polymer case
-            return flowEbosOilWaterPolymerMain(argc_, argv_, outputCout_, outputFiles_);
+            return flowOilWaterPolymerMain(argc_, argv_, outputCout_, outputFiles_);
         }
         else {
             return flowEbosPolymerMain(argc_, argv_, outputCout_, outputFiles_);
