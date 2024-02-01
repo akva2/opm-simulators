@@ -621,7 +621,7 @@ private:
             }
         }
         else {
-            return flowEbosBrineMain(argc_, argv_, outputCout_, outputFiles_);
+            return flowBrineMain(argc_, argv_, outputCout_, outputFiles_);
         }
 
         return EXIT_FAILURE;
