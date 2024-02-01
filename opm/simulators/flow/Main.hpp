@@ -556,7 +556,7 @@ private:
 
     int runFoam()
     {
-        return flowEbosFoamMain(argc_, argv_, outputCout_, outputFiles_);
+        return flowFoamMain(argc_, argv_, outputCout_, outputFiles_);
     }
 
     int runWaterOnly(const Phases& phases)
