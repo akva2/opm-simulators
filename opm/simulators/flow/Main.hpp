@@ -617,7 +617,7 @@ private:
                     return flowBrinePrecsaltVapwatMain(argc_, argv_, outputCout_, outputFiles_);
             }
             else {
-                return flowEbosBrineSaltPrecipitationMain(argc_, argv_, outputCout_, outputFiles_);
+                return flowBrineSaltPrecipitationMain(argc_, argv_, outputCout_, outputFiles_);
             }
         }
         else {
