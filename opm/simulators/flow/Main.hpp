@@ -517,7 +517,7 @@ private:
                 return EXIT_FAILURE;
             }
 
-            return flowEbosGasWaterMain(argc_, argv_, outputCout_, outputFiles_);
+            return flowGasWaterMain(argc_, argv_, outputCout_, outputFiles_);
         }
         else {
             if (outputCout_) {
