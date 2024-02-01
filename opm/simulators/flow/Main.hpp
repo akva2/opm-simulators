@@ -652,7 +652,7 @@ private:
 
     int runExtendedBlackOil()
     {
-        return flowEbosExtboMain(argc_, argv_, outputCout_, outputFiles_);
+        return flowExtboMain(argc_, argv_, outputCout_, outputFiles_);
     }
 
     int runThermal(const Phases& phases)
