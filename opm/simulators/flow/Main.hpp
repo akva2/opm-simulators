@@ -506,7 +506,7 @@ private:
         else if ( phases.active( Phase::GAS ) && phases.active( Phase::WATER ) ) {
             if (disgasw || vapwat) {
                 if (diffusive) {
-                    return flowEbosGasWaterDissolutionDiffuseMain(argc_, argv_, outputCout_, outputFiles_);
+                    return flowGasWaterDissolutionDiffuseMain(argc_, argv_, outputCout_, outputFiles_);
                 }
                 return flowGasWaterDissolutionMain(argc_, argv_, outputCout_, outputFiles_);
             }
