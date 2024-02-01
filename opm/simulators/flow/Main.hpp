@@ -639,7 +639,7 @@ private:
 
         // solvent + gas + water + oil
         if (phases.active( Phase::OIL ) && phases.active( Phase::WATER ) && phases.active( Phase::GAS )) {
-            return flowEbosSolventMain(argc_, argv_, outputCout_, outputFiles_);
+            return flowSolventMain(argc_, argv_, outputCout_, outputFiles_);
         }
 
         if (outputCout_)
