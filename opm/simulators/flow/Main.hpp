@@ -658,7 +658,7 @@ private:
     {
         // oil-gas-thermal
         if (!phases.active( Phase::WATER ) && phases.active( Phase::OIL ) && phases.active( Phase::GAS )) {
-            return flowEbosGasOilEnergyMain(argc_, argv_, outputCout_, outputFiles_);
+            return flowGasOilEnergyMain(argc_, argv_, outputCout_, outputFiles_);
         }
 
         // water-gas-thermal
