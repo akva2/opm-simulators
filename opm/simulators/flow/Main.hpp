@@ -470,10 +470,10 @@ private:
             return EXIT_FAILURE;
         }
 
-        return flowEbosMICPMain(this->argc_,
-                                this->argv_,
-                                this->outputCout_,
-                                this->outputFiles_);
+        return flowMICPMain(this->argc_,
+                            this->argv_,
+                            this->outputCout_,
+                            this->outputFiles_);
     }
 
     int runTwoPhase(const Phases& phases)
