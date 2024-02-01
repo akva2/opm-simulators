@@ -509,7 +509,7 @@ private:
                 if (diffusive) {
                     return flowEbosGasWaterDissolutionDiffuseMain(argc_, argv_, outputCout_, outputFiles_);
                 }
-                return flowEbosGasWaterDissolutionMain(argc_, argv_, outputCout_, outputFiles_);
+                return flowGasWaterDissolutionMain(argc_, argv_, outputCout_, outputFiles_);
             }
             if (diffusive) {
                 if (outputCout_) {
