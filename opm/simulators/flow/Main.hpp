@@ -680,7 +680,7 @@ private:
         if (diffusive) {
             // Use the traditional linearizer, as the TpfaLinearizer does not
             // support the diffusion module yet.
-            return flowEbosBlackoilMain(argc_, argv_, outputCout_, outputFiles_);
+            return flowBlackoilMain(argc_, argv_, outputCout_, outputFiles_);
         } else {
             return flowBlackoilTpfaMain(argc_, argv_, outputCout_, outputFiles_);
         }
