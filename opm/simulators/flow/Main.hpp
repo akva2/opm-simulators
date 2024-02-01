@@ -182,7 +182,7 @@ public:
             // TODO: check that this deck really represents a blackoil
             // case. E.g. check that number of phases == 3
             this->setupVanguard();
-            return flowEbosBlackoilTpfaMainInit(
+            return flowBlackoilTpfaMainInit(
                 argc_, argv_, outputCout_, outputFiles_);
         } else {
             //NOTE: exitCode was set by initialize_() above;
@@ -681,7 +681,7 @@ private:
             // support the diffusion module yet.
             return flowEbosBlackoilMain(argc_, argv_, outputCout_, outputFiles_);
         } else {
-            return flowEbosBlackoilTpfaMain(argc_, argv_, outputCout_, outputFiles_);
+            return flowBlackoilTpfaMain(argc_, argv_, outputCout_, outputFiles_);
         }
     }
 
