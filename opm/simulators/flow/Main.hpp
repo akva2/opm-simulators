@@ -615,7 +615,7 @@ private:
         else if (eclipseState_->getSimulationConfig().hasPRECSALT()) {
             if (eclipseState_->getSimulationConfig().hasVAPWAT()) {
                     //case with water vaporization into gas phase and salt precipitation
-                    return flowEbosBrinePrecsaltVapwatMain(argc_, argv_, outputCout_, outputFiles_);
+                    return flowBrinePrecsaltVapwatMain(argc_, argv_, outputCout_, outputFiles_);
             }
             else {
                 return flowEbosBrineSaltPrecipitationMain(argc_, argv_, outputCout_, outputFiles_);
