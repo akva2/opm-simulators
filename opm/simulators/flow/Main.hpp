@@ -499,7 +499,7 @@ private:
                 }
                 return EXIT_FAILURE;
             }
-            return flowEbosOilWaterMain(argc_, argv_, outputCout_, outputFiles_);
+            return flowOilWaterMain(argc_, argv_, outputCout_, outputFiles_);
         }
 
         // gas-water
