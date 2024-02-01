@@ -607,7 +607,7 @@ private:
                     return flowEbosGasWaterSaltprecVapwatMain(argc_, argv_, outputCout_, outputFiles_);
                 }
                 else {
-                    return flowEbosGasWaterBrineMain(argc_, argv_, outputCout_, outputFiles_);
+                    return flowGasWaterBrineMain(argc_, argv_, outputCout_, outputFiles_);
                 }
             }
         }
