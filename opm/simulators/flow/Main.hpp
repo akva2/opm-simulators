@@ -583,7 +583,7 @@ private:
             return EXIT_FAILURE;
         }
 
-        return flowEbosWaterOnlyEnergyMain(argc_, argv_, outputCout_, outputFiles_);
+        return flowWaterOnlyEnergyMain(argc_, argv_, outputCout_, outputFiles_);
     }
 
     int runBrine(const Phases& phases)
