@@ -670,7 +670,7 @@ private:
             return flowEbosGasWaterEnergyMain(argc_, argv_, outputCout_, outputFiles_);
         }
 
-        return flowEbosEnergyMain(argc_, argv_, outputCout_, outputFiles_);
+        return flowEnergyMain(argc_, argv_, outputCout_, outputFiles_);
     }
 
     int runBlackOil()
