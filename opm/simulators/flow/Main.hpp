@@ -631,7 +631,7 @@ private:
     int runSolvent(const Phases& phases)
     {
         if (phases.active(Phase::FOAM)) {
-            return flowEbosSolventFoamMain(argc_, argv_, outputCout_, outputFiles_);
+            return flowSolventFoamMain(argc_, argv_, outputCout_, outputFiles_);
         }
         // solvent + gas + water
         if (!phases.active( Phase::OIL ) && phases.active( Phase::WATER ) && phases.active( Phase::GAS )) {
