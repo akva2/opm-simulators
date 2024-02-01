@@ -635,7 +635,7 @@ private:
         }
         // solvent + gas + water
         if (!phases.active( Phase::OIL ) && phases.active( Phase::WATER ) && phases.active( Phase::GAS )) {
-            return flowEbosGasWaterSolventMain(argc_, argv_, outputCout_, outputFiles_);
+            return flowGasWaterSolventMain(argc_, argv_, outputCout_, outputFiles_);
         }
 
         // solvent + gas + water + oil
