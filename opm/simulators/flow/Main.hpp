@@ -598,7 +598,7 @@ private:
         if (phases.size() == 3) {
 
             if (phases.active(Phase::OIL)){ // oil water brine case
-                return flowEbosOilWaterBrineMain(argc_, argv_, outputCout_, outputFiles_);
+                return flowOilWaterBrineMain(argc_, argv_, outputCout_, outputFiles_);
             }
             if (phases.active(Phase::GAS)){ // gas water brine case
                 if (eclipseState_->getSimulationConfig().hasPRECSALT() &&
