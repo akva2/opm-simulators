@@ -550,7 +550,7 @@ private:
             return flowOilWaterPolymerMain(argc_, argv_, outputCout_, outputFiles_);
         }
         else {
-            return flowEbosPolymerMain(argc_, argv_, outputCout_, outputFiles_);
+            return flowPolymerMain(argc_, argv_, outputCout_, outputFiles_);
         }
     }
 
