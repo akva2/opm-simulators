@@ -667,7 +667,7 @@ private:
             if (phases.active(Phase::BRINE)){
                 return flowEbosGasWaterSaltprecEnergyMain(argc_, argv_, outputCout_, outputFiles_);
             }
-            return flowEbosGasWaterEnergyMain(argc_, argv_, outputCout_, outputFiles_);
+            return flowGasWaterEnergyMain(argc_, argv_, outputCout_, outputFiles_);
         }
 
         return flowEnergyMain(argc_, argv_, outputCout_, outputFiles_);
