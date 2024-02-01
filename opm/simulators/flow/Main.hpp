@@ -487,7 +487,7 @@ private:
             if (diffusive) {
                 return flowEbosGasOilDiffuseMain(argc_, argv_, outputCout_, outputFiles_);
             } else {
-                return flowEbosGasOilMain(argc_, argv_, outputCout_, outputFiles_);
+                return flowGasOilMain(argc_, argv_, outputCout_, outputFiles_);
             }
         }
 
