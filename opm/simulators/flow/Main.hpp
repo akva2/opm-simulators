@@ -665,7 +665,7 @@ private:
         if (!phases.active( Phase::OIL ) && phases.active( Phase::WATER ) && phases.active( Phase::GAS )) {
 
             if (phases.active(Phase::BRINE)){
-                return flowEbosGasWaterSaltprecEnergyMain(argc_, argv_, outputCout_, outputFiles_);
+                return flowGasWaterSaltprecEnergyMain(argc_, argv_, outputCout_, outputFiles_);
             }
             return flowGasWaterEnergyMain(argc_, argv_, outputCout_, outputFiles_);
         }
