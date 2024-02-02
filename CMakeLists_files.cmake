@@ -23,7 +23,6 @@
 # originally generated with the command:
 # find opm -name '*.c*' -printf '\t%p\n' | sort
 list (APPEND MAIN_SOURCE_FILES
-  ebos/eclsolutioncontainers.cc
   ebos/ecltransmissibility.cc
   opm/core/props/BlackoilPhases.cpp
   opm/core/props/phaseUsageFromDeck.cpp
@@ -51,6 +50,7 @@ list (APPEND MAIN_SOURCE_FILES
   opm/simulators/flow/RSTConv.cpp
   opm/simulators/flow/SimulatorReportBanners.cpp
   opm/simulators/flow/SimulatorSerializer.cpp
+  opm/simulators/flow/SolutionContainers.cpp
   opm/simulators/flow/ValidationFunctions.cpp
   opm/simulators/flow/partitionCells.cpp
   opm/simulators/flow/equil/EquilibrationHelpers.cpp
@@ -404,7 +404,6 @@ list (APPEND TEST_DATA_FILES
 list (APPEND PUBLIC_HEADER_FILES
   ebos/eclproblem.hh
   ebos/eclproblem_properties.hh
-  ebos/eclsolutioncontainers.hh
   ebos/ecltimesteppingparams.hh
   ebos/eclthresholdpressure.hh
   ebos/ecltracermodel.hh
@@ -457,6 +456,7 @@ list (APPEND PUBLIC_HEADER_FILES
   opm/simulators/flow/SimulatorFullyImplicitBlackoil.hpp
   opm/simulators/flow/SimulatorReportBanners.hpp
   opm/simulators/flow/SimulatorSerializer.hpp
+  opm/simulators/flow/SolutionContainers.hpp
   opm/simulators/flow/SubDomain.hpp
   opm/simulators/flow/ValidationFunctions.hpp
   opm/simulators/flow/equil/EquilibrationHelpers.hpp
