@@ -412,7 +412,6 @@ list (APPEND PUBLIC_HEADER_FILES
   ebos/alucartesianindexmapper.hh
   ebos/collecttoiorank.hh
   ebos/collecttoiorank_impl.hh
-  ebos/ebos.hh
   ebos/eclalugridvanguard.hh
   ebos/eclbaseaquifermodel.hh
   ebos/eclbasevanguard.hh
