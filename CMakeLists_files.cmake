@@ -409,7 +409,6 @@ list (APPEND TEST_DATA_FILES
 # originally generated with the command:
 # find opm -name '*.h*' -a ! -name '*-pch.hpp' -printf '\t%p\n' | sort
 list (APPEND PUBLIC_HEADER_FILES
-  ebos/eclalugridvanguard.hh
   ebos/eclbaseaquifermodel.hh
   ebos/eclbasevanguard.hh
   ebos/eclcpgridvanguard.hh
@@ -452,6 +451,7 @@ list (APPEND PUBLIC_HEADER_FILES
   opm/simulators/flow/countGlobalCells.hpp
   opm/simulators/flow/DummyGradientCalculator.hpp
   opm/simulators/flow/ExtraConvergenceOutputThread.hpp
+  opm/simulators/flow/FlowAluGridVanguard.hpp
   opm/simulators/flow/FlowMain.hpp
   opm/simulators/flow/FlowsData.hpp
   opm/simulators/flow/InterRegFlows.hpp
