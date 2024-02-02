@@ -22,29 +22,28 @@
 */
 
 #include <config.h>
+#include <opm/simulators/flow/FlowGenericCpGridVanguard.hpp>
 
-#include <ebos/eclgenericcpgridvanguard.hh>
+#include <dune/grid/common/mcmgmapper.hh>
+#include <dune/grid/common/partitionset.hh>
+#include <dune/common/version.hh>
 
-#if HAVE_MPI
-#include <opm/simulators/utils/MPISerializer.hpp>
-#endif
-
-#include <opm/simulators/utils/ParallelEclipseState.hpp>
-#include <opm/simulators/utils/ParallelSerialization.hpp>
-#include <opm/simulators/utils/PropsDataHandle.hpp>
-#include <opm/simulators/utils/SetupZoltanParams.hpp>
+#include <opm/common/TimingMacros.hpp>
+#include <opm/common/utility/ActiveGridCells.hpp>
 
 #include <opm/grid/cpgrid/GridHelpers.hpp>
 
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 #include <opm/input/eclipse/Schedule/Well/Well.hpp>
 
-#include <opm/common/TimingMacros.hpp>
-#include <opm/common/utility/ActiveGridCells.hpp>
+#include <opm/simulators/utils/ParallelEclipseState.hpp>
+#include <opm/simulators/utils/ParallelSerialization.hpp>
+#include <opm/simulators/utils/PropsDataHandle.hpp>
+#include <opm/simulators/utils/SetupZoltanParams.hpp>
 
-#include <dune/grid/common/mcmgmapper.hh>
-#include <dune/grid/common/partitionset.hh>
-#include <dune/common/version.hh>
+#if HAVE_MPI
+#include <opm/simulators/utils/MPISerializer.hpp>
+#endif
 
 #if HAVE_DUNE_FEM
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
@@ -52,14 +51,11 @@
 #include <ebos/femcpgridcompat.hh>
 #endif //HAVE_DUNE_FEM
 
-#include <algorithm>
 #include <cassert>
 #include <numeric>
 #include <optional>
-#include <sstream>
 #include <stdexcept>
 #include <string>
-#include <tuple>
 #include <vector>
 
 #include <fmt/format.h>
@@ -69,7 +65,7 @@ namespace Opm {
 std::optional<std::function<std::vector<int> (const Dune::CpGrid&)>> externalLoadBalancer;
 
 template<class ElementMapper, class GridView, class Scalar>
-EclGenericCpGridVanguard<ElementMapper,GridView,Scalar>::EclGenericCpGridVanguard()
+FlowGenericCpGridVanguard<ElementMapper,GridView,Scalar>::FlowGenericCpGridVanguard()
 {
     this->mpiRank = 0;
 
@@ -79,7 +75,7 @@ EclGenericCpGridVanguard<ElementMapper,GridView,Scalar>::EclGenericCpGridVanguar
 }
 
 template<class ElementMapper, class GridView, class Scalar>
-void EclGenericCpGridVanguard<ElementMapper,GridView,Scalar>::releaseEquilGrid()
+void FlowGenericCpGridVanguard<ElementMapper,GridView,Scalar>::releaseEquilGrid()
 {
     this->equilGrid_.reset();
     this->equilCartesianIndexMapper_.reset();
@@ -87,7 +83,7 @@ void EclGenericCpGridVanguard<ElementMapper,GridView,Scalar>::releaseEquilGrid()
 
 #if HAVE_MPI
 template<class ElementMapper, class GridView, class Scalar>
-void EclGenericCpGridVanguard<ElementMapper, GridView, Scalar>::
+void FlowGenericCpGridVanguard<ElementMapper, GridView, Scalar>::
 doLoadBalance_(const Dune::EdgeWeightMethod            edgeWeightsMethod,
                const bool                              ownersFirst,
                const bool                              serialPartitioning,
@@ -165,7 +161,8 @@ doLoadBalance_(const Dune::EdgeWeightMethod            edgeWeightsMethod,
 }
 
 template<class ElementMapper, class GridView, class Scalar>
-void EclGenericCpGridVanguard<ElementMapper,GridView,Scalar>::distributeFieldProps_(EclipseState& eclState1)
+void FlowGenericCpGridVanguard<ElementMapper,GridView,Scalar>::
+distributeFieldProps_(EclipseState& eclState1)
 {
     OPM_TIMEBLOCK(distributeFProps);
     const auto mpiSize = this->grid_->comm().size();
@@ -196,7 +193,7 @@ void EclGenericCpGridVanguard<ElementMapper,GridView,Scalar>::distributeFieldPro
 
 template <class ElementMapper, class GridView, class Scalar>
 std::vector<double>
-EclGenericCpGridVanguard<ElementMapper, GridView, Scalar>::
+FlowGenericCpGridVanguard<ElementMapper, GridView, Scalar>::
 extractFaceTrans(const GridView& gridView) const
 {
     auto faceTrans = std::vector<double>(this->grid_->numFaces(), 0.0);
@@ -221,7 +218,7 @@ extractFaceTrans(const GridView& gridView) const
 
 template <class ElementMapper, class GridView, class Scalar>
 void
-EclGenericCpGridVanguard<ElementMapper, GridView, Scalar>::
+FlowGenericCpGridVanguard<ElementMapper, GridView, Scalar>::
 distributeGrid(const Dune::EdgeWeightMethod            edgeWeightsMethod,
                const bool                              ownersFirst,
                const bool                              serialPartitioning,
@@ -257,7 +254,7 @@ distributeGrid(const Dune::EdgeWeightMethod            edgeWeightsMethod,
 
 template <class ElementMapper, class GridView, class Scalar>
 void
-EclGenericCpGridVanguard<ElementMapper, GridView, Scalar>::
+FlowGenericCpGridVanguard<ElementMapper, GridView, Scalar>::
 distributeGrid(const Dune::EdgeWeightMethod            edgeWeightsMethod,
                const bool                              ownersFirst,
                const bool                              serialPartitioning,
@@ -304,7 +301,7 @@ distributeGrid(const Dune::EdgeWeightMethod            edgeWeightsMethod,
 #endif  // HAVE_MPI
 
 template<class ElementMapper, class GridView, class Scalar>
-void EclGenericCpGridVanguard<ElementMapper,GridView,Scalar>::doCreateGrids_(EclipseState& eclState)
+void FlowGenericCpGridVanguard<ElementMapper,GridView,Scalar>::doCreateGrids_(EclipseState& eclState)
 {
     const EclipseGrid* input_grid = nullptr;
     std::vector<double> global_porv;
@@ -408,7 +405,8 @@ void EclGenericCpGridVanguard<ElementMapper,GridView,Scalar>::doCreateGrids_(Ecl
 }
 
 template<class ElementMapper, class GridView, class Scalar>
-void EclGenericCpGridVanguard<ElementMapper,GridView,Scalar>::doFilterConnections_(Schedule& schedule)
+void FlowGenericCpGridVanguard<ElementMapper,GridView,Scalar>::
+doFilterConnections_(Schedule& schedule)
 {
     // We only filter if we hold the global grid. Otherwise the filtering
     // is done after load balancing as in the future the other processes
@@ -439,7 +437,7 @@ void EclGenericCpGridVanguard<ElementMapper,GridView,Scalar>::doFilterConnection
 
 template<class ElementMapper, class GridView, class Scalar>
 const Dune::CpGrid&
-EclGenericCpGridVanguard<ElementMapper,GridView,Scalar>::equilGrid() const
+FlowGenericCpGridVanguard<ElementMapper,GridView,Scalar>::equilGrid() const
 {
     assert(mpiRank == 0);
     return *equilGrid_;
@@ -447,14 +445,14 @@ EclGenericCpGridVanguard<ElementMapper,GridView,Scalar>::equilGrid() const
 
 template<class ElementMapper, class GridView, class Scalar>
 const Dune::CartesianIndexMapper<Dune::CpGrid>&
-EclGenericCpGridVanguard<ElementMapper,GridView,Scalar>::cartesianIndexMapper() const
+FlowGenericCpGridVanguard<ElementMapper,GridView,Scalar>::cartesianIndexMapper() const
 {
     return *cartesianIndexMapper_;
 }
 
 template<class ElementMapper, class GridView, class Scalar>
 const Dune::CartesianIndexMapper<Dune::CpGrid>&
-EclGenericCpGridVanguard<ElementMapper,GridView,Scalar>::equilCartesianIndexMapper() const
+FlowGenericCpGridVanguard<ElementMapper,GridView,Scalar>::equilCartesianIndexMapper() const
 {
     assert(mpiRank == 0);
     assert(equilCartesianIndexMapper_);
@@ -463,7 +461,7 @@ EclGenericCpGridVanguard<ElementMapper,GridView,Scalar>::equilCartesianIndexMapp
 
 template<class ElementMapper, class GridView, class Scalar>
 Scalar
-EclGenericCpGridVanguard<ElementMapper,GridView,Scalar>::
+FlowGenericCpGridVanguard<ElementMapper,GridView,Scalar>::
 computeCellThickness(const typename GridView::template Codim<0>::Entity& element) const
 {
     typedef typename Element::Geometry Geometry;
@@ -486,7 +484,7 @@ computeCellThickness(const typename GridView::template Codim<0>::Entity& element
     zz2 /=4;
     return zz2-zz1;
 }
-template class EclGenericCpGridVanguard<
+template class FlowGenericCpGridVanguard<
     Dune::MultipleCodimMultipleGeomTypeMapper<
         Dune::GridView<
             Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>>,
@@ -495,7 +493,7 @@ template class EclGenericCpGridVanguard<
     double>;
 
 #if HAVE_DUNE_FEM
-template class EclGenericCpGridVanguard<
+template class FlowGenericCpGridVanguard<
     Dune::MultipleCodimMultipleGeomTypeMapper<
         Dune::GridView<
             Dune::Fem::GridPart2GridViewTraits<
@@ -511,7 +509,7 @@ template class EclGenericCpGridVanguard<
                 false>>>,
     double>;
 
-template class EclGenericCpGridVanguard<
+template class FlowGenericCpGridVanguard<
     Dune::MultipleCodimMultipleGeomTypeMapper<
         Dune::Fem::GridPart2GridViewImpl<
             Dune::Fem::AdaptiveLeafGridPart<

@@ -23,7 +23,6 @@
 # originally generated with the command:
 # find opm -name '*.c*' -printf '\t%p\n' | sort
 list (APPEND MAIN_SOURCE_FILES
-  ebos/eclgenericcpgridvanguard.cc
   ebos/eclgenericoutputblackoilmodule.cc
   ebos/eclgenericproblem.cc
   ebos/eclgenericthresholdpressure.cc
@@ -42,6 +41,7 @@ list (APPEND MAIN_SOURCE_FILES
   opm/simulators/flow/CollectDataToIORank.cpp
   opm/simulators/flow/ConvergenceOutputConfiguration.cpp
   opm/simulators/flow/ExtraConvergenceOutputThread.cpp
+  opm/simulators/flow/FlowGenericCpGridVanguard.cpp
   opm/simulators/flow/FlowMain.cpp
   opm/simulators/flow/InterRegFlows.cpp
   opm/simulators/flow/KeywordValidation.cpp
@@ -402,7 +402,6 @@ list (APPEND TEST_DATA_FILES
 # originally generated with the command:
 # find opm -name '*.h*' -a ! -name '*-pch.hpp' -printf '\t%p\n' | sort
 list (APPEND PUBLIC_HEADER_FILES
-  ebos/eclgenericcpgridvanguard.hh
   ebos/eclgenericoutputblackoilmodule.hh
   ebos/eclgenericproblem.hh
   ebos/eclgenericproblem_impl.hh
@@ -445,6 +444,7 @@ list (APPEND PUBLIC_HEADER_FILES
   opm/simulators/flow/FlowAluGridVanguard.hpp
   opm/simulators/flow/FlowBaseVanguard.hpp
   opm/simulators/flow/FlowCpGridVanguard.hpp
+  opm/simulators/flow/FlowGenericCpGridVanguard.hpp
   opm/simulators/flow/FlowMain.hpp
   opm/simulators/flow/InterRegFlows.hpp
   opm/simulators/flow/KeywordValidation.hpp
