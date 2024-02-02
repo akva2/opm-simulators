@@ -27,9 +27,9 @@
 #include <opm/grid/cpgrid/GridHelpers.hpp>
 
 // these are not explicitly instanced in library
-#include <ebos/eclgenericwriter_impl.hh>
 #include <ebos/ecltransmissibility_impl.hh>
 #include <opm/simulators/flow/CollectDataToIORank_impl.hpp>
+#include <opm/simulators/flow/EclGenericWriter_impl.hpp>
 #include <opm/simulators/flow/FlowAluGridVanguard.hpp>
 #include <opm/simulators/flow/FlowGenericProblem_impl.hpp>
 #include <opm/simulators/flow/GenericThresholdPressure_impl.hpp>
