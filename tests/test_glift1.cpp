@@ -21,13 +21,13 @@
   copyright holders.
 */
 #include "config.h"
+#include "TestTypeTag.hpp"
 
 #define BOOST_TEST_MODULE Glift1
 
 #include <opm/models/utils/propertysystem.hh>
 #include <opm/models/utils/parametersystem.hh>
 #include <ebos/eclproblem.hh>
-#include <ebos/ebos.hh>
 #include <opm/models/utils/start.hh>
 
 #include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
@@ -49,8 +49,6 @@
 #include <dune/common/parallel/mpihelper.hh>
 #endif
 
-#include <exception>
-#include <iostream>
 #include <memory>
 #include <optional>
 #include <string>
@@ -67,7 +65,7 @@
 namespace Opm::Properties {
     namespace TTag {
         struct TestGliftTypeTag {
-            using InheritsFrom = std::tuple<EbosTypeTag>;
+            using InheritsFrom = std::tuple<TestTypeTag>;
         };
     }
 }
