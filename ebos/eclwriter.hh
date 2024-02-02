@@ -30,7 +30,6 @@
 
 #include <dune/grid/common/partitionset.hh>
 
-#include <ebos/eclbasevanguard.hh>
 #include <ebos/eclgenericwriter.hh>
 #include <ebos/ecloutputblackoilmodule.hh>
 
@@ -42,6 +41,7 @@
 
 #include <opm/simulators/flow/CollectDataToIORank.hpp>
 #include <opm/simulators/flow/countGlobalCells.hpp>
+#include <opm/simulators/flow/FlowBaseVanguard.hpp>
 #include <opm/simulators/timestepping/SimulatorTimer.hpp>
 #include <opm/simulators/utils/DeferredLoggingErrorHelpers.hpp>
 #include <opm/simulators/utils/ParallelRestart.hpp>
