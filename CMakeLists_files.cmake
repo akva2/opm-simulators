@@ -405,7 +405,6 @@ list (APPEND PUBLIC_HEADER_FILES
   ebos/alucartesianindexmapper.hh
   ebos/collecttoiorank.hh
   ebos/collecttoiorank_impl.hh
-  ebos/ebos.hh
   ebos/eclalugridvanguard.hh
   ebos/eclbaseaquifermodel.hh
   ebos/eclbasevanguard.hh
@@ -440,27 +439,27 @@ list (APPEND PUBLIC_HEADER_FILES
   ebos/femcpgridcompat.hh
   ebos/vtkecltracermodule.hh
   opm/simulators/flow/ActionHandler.hpp
-  opm/simulators/flow/countGlobalCells.hpp
-  opm/simulators/flow/priVarsPacking.hpp
   opm/simulators/flow/BlackoilModel.hpp
   opm/simulators/flow/BlackoilModelNldd.hpp
   opm/simulators/flow/BlackoilModelParameters.hpp
+  opm/simulators/flow/countGlobalCells.hpp
   opm/simulators/flow/Banners.hpp
   opm/simulators/flow/ConvergenceOutputConfiguration.hpp
   opm/simulators/flow/ExtraConvergenceOutputThread.hpp
   opm/simulators/flow/FlowMain.hpp
   opm/simulators/flow/InterRegFlows.hpp
+  opm/simulators/flow/KeywordValidation.hpp
+  opm/simulators/flow/LogOutputHelper.hpp
   opm/simulators/flow/Main.hpp
   opm/simulators/flow/NonlinearSolver.hpp
+  opm/simulators/flow/partitionCells.hpp
+  opm/simulators/flow/priVarsPacking.hpp
   opm/simulators/flow/RSTConv.hpp
   opm/simulators/flow/SimulatorFullyImplicitBlackoil.hpp
   opm/simulators/flow/SimulatorReportBanners.hpp
   opm/simulators/flow/SimulatorSerializer.hpp
-  opm/simulators/flow/KeywordValidation.hpp
-  opm/simulators/flow/LogOutputHelper.hpp
-  opm/simulators/flow/ValidationFunctions.hpp
-  opm/simulators/flow/partitionCells.hpp
   opm/simulators/flow/SubDomain.hpp
+  opm/simulators/flow/ValidationFunctions.hpp
   opm/core/props/BlackoilPhases.hpp
   opm/core/props/phaseUsageFromDeck.hpp
   opm/core/props/satfunc/RelpermDiagnostics.hpp
