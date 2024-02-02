@@ -28,7 +28,6 @@
 #ifndef ECL_PROBLEM_PROPERTIES_HH
 #define ECL_PROBLEM_PROPERTIES_HH
 
-#include <ebos/ecldummygradientcalculator.hh>
 #include <ebos/eclfluxmodule.hh>
 #include <ebos/eclnewtonmethod.hh>
 #include <ebos/ecloutputblackoilmodule.hh>
@@ -45,6 +44,7 @@
 #include <opm/models/utils/propertysystem.hh>
 
 #include <opm/simulators/flow/BaseAquiferModel.hpp>
+#include <opm/simulators/flow/DummyGradientCalculator.hpp>
 #include <opm/simulators/flow/FlowCpGridVanguard.hpp>
 
 #if HAVE_DAMARIS
@@ -518,7 +518,7 @@ struct FluxModule<TypeTag, TTag::EclBaseProblem> {
 // Use the dummy gradient calculator in order not to do unnecessary work.
 template<class TypeTag>
 struct GradientCalculator<TypeTag, TTag::EclBaseProblem> {
-    using type = EclDummyGradientCalculator<TypeTag>;
+    using type = DummyGradientCalculator<TypeTag>;
 };
 
 // Use a custom Newton-Raphson method class for ebos in order to attain more
