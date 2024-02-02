@@ -25,8 +25,6 @@
 
 #include <dune/common/parametertree.hh>
 
-#include <ebos/eclsolutioncontainers.hh>
-
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/OverburdTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/RockwnodTable.hpp>
@@ -34,6 +32,7 @@
 #include <opm/input/eclipse/Units/Units.hpp>
 
 #include <opm/simulators/flow/FlowGenericProblem.hpp>
+#include <opm/simulators/flow/SolutionContainers.hpp>
 
 #include <boost/date_time.hpp>
 
