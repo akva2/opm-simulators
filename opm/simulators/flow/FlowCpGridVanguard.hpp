@@ -22,10 +22,10 @@
 */
 /*!
  * \file
- * \copydoc Opm::EclCpGridVanguard
+ * \copydoc Opm::FlowCpGridVanguard
  */
-#ifndef EWOMS_ECL_CP_GRID_VANGUARD_HH
-#define EWOMS_ECL_CP_GRID_VANGUARD_HH
+#ifndef OPM_FLOW_CP_GRID_VANGUARD_HPP
+#define OPM_FLOW_CP_GRID_VANGUARD_HPP
 
 #include <ebos/eclgenericcpgridvanguard.hh>
 #include <ebos/ecltransmissibility.hh>
@@ -47,28 +47,28 @@
 
 namespace Opm {
 template <class TypeTag>
-class EclCpGridVanguard;
+class FlowCpGridVanguard;
 }
 
 namespace Opm::Properties {
 
 namespace TTag {
-struct EclCpGridVanguard {
+struct FlowCpGridVanguard {
     using InheritsFrom = std::tuple<FlowBaseVanguard>;
 };
 }
 
 // declare the properties
 template<class TypeTag>
-struct Vanguard<TypeTag, TTag::EclCpGridVanguard> {
-    using type = EclCpGridVanguard<TypeTag>;
+struct Vanguard<TypeTag, TTag::FlowCpGridVanguard> {
+    using type = FlowCpGridVanguard<TypeTag>;
 };
 template<class TypeTag>
-struct Grid<TypeTag, TTag::EclCpGridVanguard> {
+struct Grid<TypeTag, TTag::FlowCpGridVanguard> {
     using type = Dune::CpGrid;
 };
 template<class TypeTag>
-struct EquilGrid<TypeTag, TTag::EclCpGridVanguard> {
+struct EquilGrid<TypeTag, TTag::FlowCpGridVanguard> {
     using type = GetPropType<TypeTag, Properties::Grid>;
 };
 
@@ -77,17 +77,17 @@ struct EquilGrid<TypeTag, TTag::EclCpGridVanguard> {
 namespace Opm {
 
 /*!
- * \ingroup EclBlackOilSimulator
+ * \ingroup BlackOilSimulator
  *
  * \brief Helper class for grid instantiation of ECL file-format using problems.
  *
  * This class uses Dune::CpGrid as the simulation grid.
  */
 template <class TypeTag>
-class EclCpGridVanguard : public FlowBaseVanguard<TypeTag>
-                        , public EclGenericCpGridVanguard<GetPropType<TypeTag, Properties::ElementMapper>,
-                                                          GetPropType<TypeTag, Properties::GridView>,
-                                                          GetPropType<TypeTag, Properties::Scalar>>
+class FlowCpGridVanguard : public FlowBaseVanguard<TypeTag>
+                         , public EclGenericCpGridVanguard<GetPropType<TypeTag, Properties::ElementMapper>,
+                                                           GetPropType<TypeTag, Properties::GridView>,
+                                                           GetPropType<TypeTag, Properties::Scalar>>
 {
     friend class FlowBaseVanguard<TypeTag>;
     using ParentType = FlowBaseVanguard<TypeTag>;
@@ -111,7 +111,7 @@ private:
     using Element = typename GridView::template Codim<0>::Entity;
 
 public:
-    EclCpGridVanguard(Simulator& simulator)
+    FlowCpGridVanguard(Simulator& simulator)
         : FlowBaseVanguard<TypeTag>(simulator)
     {
         this->checkConsistency();
@@ -317,4 +317,4 @@ protected:
 
 } // namespace Opm
 
-#endif
+#endif // OPM_FLOW_CP_GRID_VANGUARD_HPP
