@@ -25,8 +25,8 @@
  *
  * \copydoc Opm::AluCartesianIndexMapper
  */
-#ifndef EWOMS_ALU_CARTESIAN_INDEX_MAPPER_HH
-#define EWOMS_ALU_CARTESIAN_INDEX_MAPPER_HH
+#ifndef OPM_ALU_CARTESIAN_INDEX_MAPPER_HPP
+#define OPM_ALU_CARTESIAN_INDEX_MAPPER_HPP
 
 #include <dune/alugrid/grid.hh>
 #include <dune/alugrid/3d/gridview.hh>
@@ -275,4 +275,4 @@ protected:
 
 } // end namespace Dune
 
-#endif
+#endif // OPM_ALU_CARTESIAN_INDEX_MAPPER_HPP
