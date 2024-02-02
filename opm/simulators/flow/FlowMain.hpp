@@ -354,7 +354,7 @@ void handleExtraConvergenceOutput(SimulatorReport& report,
             try {
                 // deal with some administrative boilerplate
 
-                int status = setupParameters_(this->argc_, this->argv_, EclGenericVanguard::comm());
+                int status = setupParameters_(this->argc_, this->argv_, FlowGenericVanguard::comm());
                 if (status)
                     return status;
 
@@ -392,7 +392,7 @@ void handleExtraConvergenceOutput(SimulatorReport& report,
             // determine the rank of the current process and the number of processes
             // involved in the simulation. MPI must have already been initialized
             // here. (yes, the name of this method is misleading.)
-            auto comm = EclGenericVanguard::comm();
+            auto comm = FlowGenericVanguard::comm();
             mpi_rank_ = comm.rank();
             mpi_size_ = comm.size();
 
@@ -433,7 +433,7 @@ void handleExtraConvergenceOutput(SimulatorReport& report,
 
         void setupModelSimulator()
         {
-            modelSimulator_ = std::make_unique<ModelSimulator>(EclGenericVanguard::comm(), /*verbose=*/false);
+            modelSimulator_ = std::make_unique<ModelSimulator>(FlowGenericVanguard::comm(), /*verbose=*/false);
             modelSimulator_->executionTimer().start();
             modelSimulator_->model().applyInitialSolution();
 

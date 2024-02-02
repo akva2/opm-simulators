@@ -80,7 +80,7 @@ void handleExtraConvergenceOutput(SimulatorReport& report,
 void checkAllMPIProcesses()
 {
 #if HAVE_MPI
-    const auto& comm = EclGenericVanguard::comm();
+    const auto& comm = FlowGenericVanguard::comm();
     if (comm.size() > 1)
     {
         // we try to prevent the abort here.

@@ -23,7 +23,6 @@
 # originally generated with the command:
 # find opm -name '*.c*' -printf '\t%p\n' | sort
 list (APPEND MAIN_SOURCE_FILES
-  ebos/eclgenericvanguard.cc
   ebos/eclgenericwriter.cc
   ebos/eclmixingratecontrols.cc
   ebos/eclsolutioncontainers.cc
@@ -39,6 +38,7 @@ list (APPEND MAIN_SOURCE_FILES
   opm/simulators/flow/ExtraConvergenceOutputThread.cpp
   opm/simulators/flow/FlowGenericCpGridVanguard.cpp
   opm/simulators/flow/FlowGenericProblem.cpp
+  opm/simulators/flow/FlowGenericVanguard.cpp
   opm/simulators/flow/FlowMain.cpp
   opm/simulators/flow/GenericOutputBlackoilModule.cpp
   opm/simulators/flow/GenericThresholdPressure.cpp
@@ -402,7 +402,6 @@ list (APPEND TEST_DATA_FILES
 # originally generated with the command:
 # find opm -name '*.h*' -a ! -name '*-pch.hpp' -printf '\t%p\n' | sort
 list (APPEND PUBLIC_HEADER_FILES
-  ebos/eclgenericvanguard.hh
   ebos/eclgenericwriter.hh
   ebos/eclgenericwriter_impl.hh
   ebos/eclmixingratecontrols.hh
@@ -440,6 +439,7 @@ list (APPEND PUBLIC_HEADER_FILES
   opm/simulators/flow/FlowGenericCpGridVanguard.hpp
   opm/simulators/flow/FlowGenericProblem.hpp
   opm/simulators/flow/FlowGenericProblem_impl.hpp
+  opm/simulators/flow/FlowGenericVanguard.hpp
   opm/simulators/flow/FlowMain.hpp
   opm/simulators/flow/GenericOutputBlackoilModule.hpp
   opm/simulators/flow/GenericThresholdPressure.hpp
