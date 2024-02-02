@@ -23,7 +23,6 @@
 # originally generated with the command:
 # find opm -name '*.c*' -printf '\t%p\n' | sort
 list (APPEND MAIN_SOURCE_FILES
-  ebos/eclmixingratecontrols.cc
   ebos/eclsolutioncontainers.cc
   ebos/ecltransmissibility.cc
   opm/core/props/BlackoilPhases.cpp
@@ -47,6 +46,7 @@ list (APPEND MAIN_SOURCE_FILES
   opm/simulators/flow/KeywordValidation.cpp
   opm/simulators/flow/LogOutputHelper.cpp
   opm/simulators/flow/Main.cpp
+  opm/simulators/flow/MixingRateControls.cpp
   opm/simulators/flow/NonlinearSolver.cpp
   opm/simulators/flow/RSTConv.cpp
   opm/simulators/flow/RegionPhasePVAverage.cpp
@@ -409,7 +409,6 @@ list (APPEND TEST_DATA_FILES
 # originally generated with the command:
 # find opm -name '*.h*' -a ! -name '*-pch.hpp' -printf '\t%p\n' | sort
 list (APPEND PUBLIC_HEADER_FILES
-  ebos/eclmixingratecontrols.hh
   ebos/eclnewtonmethod.hh
   ebos/ecloutputblackoilmodule.hh
   ebos/eclpolyhedralgridvanguard.hh
@@ -457,6 +456,7 @@ list (APPEND PUBLIC_HEADER_FILES
   opm/simulators/flow/KeywordValidation.hpp
   opm/simulators/flow/LogOutputHelper.hpp
   opm/simulators/flow/Main.hpp
+  opm/simulators/flow/MixingRateControls.hpp
   opm/simulators/flow/NonlinearSolver.hpp
   opm/simulators/flow/NewTranFluxModule.hpp
   opm/simulators/flow/partitionCells.hpp
