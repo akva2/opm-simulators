@@ -29,13 +29,14 @@
 
 #include <dune/common/fvector.hh>
 
-#include <ebos/eclbasevanguard.hh>
 #include <ebos/eclgenericoutputblackoilmodule.hh>
 #include <opm/simulators/utils/moduleVersion.hpp>
 
 #include <opm/common/Exceptions.hpp>
 #include <opm/common/TimingMacros.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
+
+#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/fluidmatrixinteractions/EclEpsScalingPoints.hpp>
@@ -51,7 +52,7 @@
 #include <opm/output/eclipse/EclipseIO.hpp>
 #include <opm/output/eclipse/Inplace.hpp>
 
-#include <opm/input/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+#include <opm/simulators/flow/FlowBaseVanguard.hpp>
 
 #include <algorithm>
 #include <array>
