@@ -23,7 +23,6 @@
 # originally generated with the command:
 # find opm -name '*.c*' -printf '\t%p\n' | sort
 list (APPEND MAIN_SOURCE_FILES
-  ebos/eclgenericthresholdpressure.cc
   ebos/eclgenerictracermodel.cc
   ebos/eclgenericvanguard.cc
   ebos/eclgenericwriter.cc
@@ -43,6 +42,7 @@ list (APPEND MAIN_SOURCE_FILES
   opm/simulators/flow/FlowGenericProblem.cpp
   opm/simulators/flow/FlowMain.cpp
   opm/simulators/flow/GenericOutputBlackoilModule.cpp
+  opm/simulators/flow/GenericThresholdPressure.cpp
   opm/simulators/flow/InterRegFlows.cpp
   opm/simulators/flow/KeywordValidation.cpp
   opm/simulators/flow/LogOutputHelper.cpp
@@ -409,8 +409,6 @@ list (APPEND TEST_DATA_FILES
 # originally generated with the command:
 # find opm -name '*.h*' -a ! -name '*-pch.hpp' -printf '\t%p\n' | sort
 list (APPEND PUBLIC_HEADER_FILES
-  ebos/eclgenericthresholdpressure.hh
-  ebos/eclgenericthresholdpressure_impl.hh
   ebos/eclgenerictracermodel.hh
   ebos/eclgenerictracermodel_impl.hh
   ebos/eclgenericvanguard.hh
@@ -453,6 +451,8 @@ list (APPEND PUBLIC_HEADER_FILES
   opm/simulators/flow/FlowMain.hpp
   opm/simulators/flow/FlowsData.hpp
   opm/simulators/flow/GenericOutputBlackoilModule.hpp
+  opm/simulators/flow/GenericThresholdPressure.hpp
+  opm/simulators/flow/GenericThresholdPressure_impl.hpp
   opm/simulators/flow/InterRegFlows.hpp
   opm/simulators/flow/KeywordValidation.hpp
   opm/simulators/flow/LogOutputHelper.hpp
