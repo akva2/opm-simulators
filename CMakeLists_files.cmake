@@ -623,11 +623,11 @@ if (Damaris_FOUND AND MPI_FOUND)
   list (APPEND PUBLIC_HEADER_FILES opm/simulators/utils/DamarisOutputModule.hpp)
   list (APPEND PUBLIC_HEADER_FILES opm/simulators/utils/DamarisKeywords.hpp)
   list (APPEND PUBLIC_HEADER_FILES opm/simulators/flow/DamarisProperties.hpp)
-  list (APPEND PUBLIC_HEADER_FILES ebos/damariswriter.hh)
+  list (APPEND PUBLIC_HEADER_FILES opm/simulators/flow/DamarisWriter.hpp)
   list (APPEND PUBLIC_HEADER_FILES opm/simulators/utils/DamarisVar.hpp)
   list (APPEND PUBLIC_HEADER_FILES opm/simulators/utils/GridDataOutput.hpp
                                    opm/simulators/utils/GridDataOutput_impl.hpp)
-  list(APPEND MAIN_SOURCE_FILES ebos/damariswriter.cc
+  list(APPEND MAIN_SOURCE_FILES opm/simulators/flow/DamarisWriter.cpp
                                 opm/simulators/utils/DamarisVar.cpp
                                 opm/simulators/utils/GridDataOutput.cpp)
 endif()
