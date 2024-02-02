@@ -30,29 +30,25 @@
 
 #include <dune/grid/common/partitionset.hh>
 
-#include <ebos/collecttoiorank.hh>
 #include <ebos/eclbasevanguard.hh>
 #include <ebos/eclgenericwriter.hh>
 #include <ebos/ecloutputblackoilmodule.hh>
+
+#include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/output/eclipse/RestartValue.hpp>
 
-#include <opm/simulators/utils/DeferredLoggingErrorHelpers.hpp>
-#include <opm/simulators/utils/ParallelRestart.hpp>
+#include <opm/simulators/flow/CollectDataToIORank.hpp>
 #include <opm/simulators/flow/countGlobalCells.hpp>
 #include <opm/simulators/timestepping/SimulatorTimer.hpp>
-
-#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/simulators/utils/DeferredLoggingErrorHelpers.hpp>
+#include <opm/simulators/utils/ParallelRestart.hpp>
 
 #include <limits>
 #include <stdexcept>
 #include <string>
-
-
-// #include <opm/simulators/utils/GridDataOutput.hpp>
-
 
 namespace Opm::Properties {
 

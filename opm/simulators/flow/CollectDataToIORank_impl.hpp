@@ -21,10 +21,8 @@
   copyright holders.
 */
 
-#ifndef EWOMS_COLLECT_TO_IO_RANK_IMPL_HH
-#define EWOMS_COLLECT_TO_IO_RANK_IMPL_HH
-
-#include <ebos/collecttoiorank.hh>
+#ifndef OPM_COLLECT_TO_IO_RANK_IMPL_HPP
+#define OPM_COLLECT_TO_IO_RANK_IMPL_HPP
 
 #include <opm/grid/common/CartesianIndexMapper.hpp>
 
@@ -33,6 +31,7 @@
 #include <dune/grid/common/mcmgmapper.hh>
 #include <dune/grid/common/partitionset.hh>
 
+#include <opm/simulators/flow/CollectDataToIORank.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -1127,4 +1126,5 @@ isCartIdxOnThisRank(int cartIdx) const
 }
 
 } // end namespace Opm
-#endif
+
+#endif // OPM_COLLECT_TO_IO_RANK_IMPL_HPP
