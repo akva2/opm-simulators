@@ -28,7 +28,6 @@
 #ifndef ECL_PROBLEM_PROPERTIES_HH
 #define ECL_PROBLEM_PROPERTIES_HH
 
-#include <ebos/eclbaseaquifermodel.hh>
 #include <ebos/eclcpgridvanguard.hh>
 #include <ebos/ecldummygradientcalculator.hh>
 #include <ebos/eclfluxmodule.hh>
@@ -45,6 +44,8 @@
 
 #include <opm/models/discretization/ecfv/ecfvdiscretization.hh>
 #include <opm/models/utils/propertysystem.hh>
+
+#include <opm/simulators/flow/BaseAquiferModel.hpp>
 
 #if HAVE_DAMARIS
 #include <opm/simulators/flow/DamarisWriter.hpp>
@@ -254,7 +255,7 @@ public:
 // by default use the dummy aquifer "model"
 template<class TypeTag>
 struct EclAquiferModel<TypeTag, TTag::EclBaseProblem> {
-    using type = EclBaseAquiferModel<TypeTag>;
+    using type = BaseAquiferModel<TypeTag>;
 };
 
 // Enable aquifers by default in experimental mode
