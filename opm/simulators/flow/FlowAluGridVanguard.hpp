@@ -22,10 +22,10 @@
 */
 /*!
  * \file
- * \copydoc Opm::EclAluGridVanguard
+ * \copydoc Opm::FlowAluGridVanguard
  */
-#ifndef EWOMS_ECL_ALU_GRID_VANGUARD_HH
-#define EWOMS_ECL_ALU_GRID_VANGUARD_HH
+#ifndef OPM_FLOW_ALU_GRID_VANGUARD_HPP
+#define OPM_FLOW_ALU_GRID_VANGUARD_HPP
 
 #include <dune/alugrid/common/fromtogridfactory.hh>
 #include <dune/alugrid/dgf.hh>
@@ -51,25 +51,25 @@
 
 namespace Opm {
 template <class TypeTag>
-class EclAluGridVanguard;
+class FlowAluGridVanguard;
 
 } // namespace Opm
 
 namespace Opm::Properties {
 
 namespace TTag {
-struct EclAluGridVanguard {
+struct FlowAluGridVanguard {
     using InheritsFrom = std::tuple<EclBaseVanguard>;
 };
 }
 
 // declare the properties
 template<class TypeTag>
-struct Vanguard<TypeTag, TTag::EclAluGridVanguard> {
-    using type = Opm::EclAluGridVanguard<TypeTag>;
+struct Vanguard<TypeTag, TTag::FlowAluGridVanguard> {
+    using type = Opm::FlowAluGridVanguard<TypeTag>;
 };
 template<class TypeTag>
-struct Grid<TypeTag, TTag::EclAluGridVanguard> {
+struct Grid<TypeTag, TTag::FlowAluGridVanguard> {
 #if HAVE_MPI
     using type = Dune::ALUGrid<3, 3, Dune::cube, Dune::nonconforming, Dune::ALUGridMPIComm>; 
 #else    
@@ -77,7 +77,7 @@ struct Grid<TypeTag, TTag::EclAluGridVanguard> {
 #endif //HAVE_MPI     
 };
 template<class TypeTag>
-struct EquilGrid<TypeTag, TTag::EclAluGridVanguard> {
+struct EquilGrid<TypeTag, TTag::FlowAluGridVanguard> {
     using type = Dune::CpGrid;
 };
 
@@ -93,7 +93,7 @@ namespace Opm {
  * This class uses Dune::ALUGrid as the simulation grid.
  */
 template <class TypeTag>
-class EclAluGridVanguard : public EclBaseVanguard<TypeTag>
+class FlowAluGridVanguard : public EclBaseVanguard<TypeTag>
 {
     friend class EclBaseVanguard<TypeTag>;
     using ParentType = EclBaseVanguard<TypeTag>;
@@ -114,14 +114,14 @@ public:
     static constexpr int dimension = Grid::dimension;
     static constexpr int dimensionworld = Grid::dimensionworld;
 
-    EclAluGridVanguard(Simulator& simulator)
+    FlowAluGridVanguard(Simulator& simulator)
         : EclBaseVanguard<TypeTag>(simulator)
     { 
       this->mpiRank = EclGenericVanguard::comm().rank();
       this->callImplementationInit();
     }
 
-    ~EclAluGridVanguard() = default;
+    ~FlowAluGridVanguard() = default;
 
     /*!
      * \brief Return a reference to the simulation grid.
@@ -365,4 +365,4 @@ protected:
 
 } // namespace Opm
 
-#endif
+#endif // OPM_FLOW_ALU_GRID_VANGUARD_HPP

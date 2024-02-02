@@ -19,7 +19,6 @@
 #include <config.h>
 
 #include <dune/alugrid/grid.hh>
-#include <ebos/eclalugridvanguard.hh>
 #include <opm/simulators/flow/Main.hpp>
 
 // for equilgrid in writer
@@ -35,6 +34,7 @@
 #include <ebos/ecltransmissibility_impl.hh>
 #include <ebos/equil/initstateequil_impl.hh>
 #include <opm/simulators/flow/CollectDataToIORank_impl.hpp>
+#include <opm/simulators/flow/FlowAluGridVanguard.hpp>
 #include <opm/simulators/utils/GridDataOutput_impl.hpp>
 
 namespace Opm {
@@ -61,7 +61,7 @@ struct EquilGrid<TypeTag, TTag::EclFlowProblemAlugrid> {
 };
 template<class TypeTag>
 struct Vanguard<TypeTag, TTag::EclFlowProblemAlugrid> {
-    using type = Opm::EclAluGridVanguard<TypeTag>;
+    using type = Opm::FlowAluGridVanguard<TypeTag>;
 };
 template<class TypeTag>
 struct EclEnableAquifers<TypeTag, TTag::EclFlowProblemAlugrid> {
