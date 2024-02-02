@@ -28,14 +28,13 @@
 #ifndef EWOMS_ECL_GENERIC_WRITER_HH
 #define EWOMS_ECL_GENERIC_WRITER_HH
 
-#include <ebos/collecttoiorank.hh>
 #include <ebos/ecltransmissibility.hh>
 
 #include <opm/models/parallel/tasklets.hh>
 
+#include <opm/simulators/flow/CollectDataToIORank.hpp>
 #include <opm/simulators/timestepping/SimulatorReport.hpp>
 
-#include <cstddef>
 #include <map>
 #include <memory>
 #include <string>

@@ -22,8 +22,8 @@
 */
 
 #include <config.h>
-#include <ebos/collecttoiorank.hh>
-#include <ebos/collecttoiorank_impl.hh>
+#include <opm/simulators/flow/CollectDataToIORank.hpp>
+#include <opm/simulators/flow/CollectDataToIORank_impl.hpp>
 
 #include <opm/grid/CpGrid.hpp>
 

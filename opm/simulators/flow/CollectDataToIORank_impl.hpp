@@ -21,10 +21,10 @@
   copyright holders.
 */
 
-#ifndef EWOMS_COLLECT_TO_IO_RANK_IMPL_HH
-#define EWOMS_COLLECT_TO_IO_RANK_IMPL_HH
+#ifndef OPM_COLLECT_TO_IO_RANK_IMPL_HPP
+#define OPM_COLLECT_TO_IO_RANK_IMPL_HPP
 
-#include <ebos/collecttoiorank.hh>
+#include <opm/simulators/flow/CollectDataToIORank.hpp>
 
 #include <opm/grid/common/CartesianIndexMapper.hpp>
 
@@ -1124,4 +1124,5 @@ isCartIdxOnThisRank(int cartIdx) const
 }
 
 } // end namespace Opm
-#endif
+
+#endif // OPM_COLLECT_TO_IO_RANK_IMPL_HPP
