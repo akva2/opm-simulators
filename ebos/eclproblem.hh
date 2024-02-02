@@ -34,7 +34,6 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-#include <ebos/eclequilinitializer.hh>
 #include <ebos/eclgenericproblem.hh>
 #include <ebos/eclnewtonmethod.hh>
 #include <ebos/ecloutputblackoilmodule.hh>
@@ -78,6 +77,7 @@
 #include <opm/simulators/flow/ActionHandler.hpp>
 #include <opm/simulators/flow/BaseAquiferModel.hpp>
 #include <opm/simulators/flow/DummyGradientCalculator.hpp>
+#include <opm/simulators/flow/EquilInitializer.hpp>
 #include <opm/simulators/flow/FlowCpGridVanguard.hpp>
 #include <opm/simulators/flow/NewTranFluxModule.hpp>
 #include <opm/simulators/timestepping/AdaptiveTimeStepping.hpp>
@@ -185,7 +185,7 @@ class EclProblem : public GetPropType<TypeTag, Properties::BaseProblem>
     using DispersionModule = BlackOilDispersionModule<TypeTag, enableDispersion>;
     using DiffusionModule = BlackOilDiffusionModule<TypeTag, enableDiffusion>;
 
-    using InitialFluidState = typename EclEquilInitializer<TypeTag>::ScalarFluidState;
+    using InitialFluidState = typename EquilInitializer<TypeTag>::ScalarFluidState;
 
     using Toolbox = MathToolbox<Evaluation>;
     using DimMatrix = Dune::FieldMatrix<Scalar, dimWorld, dimWorld>;
@@ -2129,8 +2129,7 @@ protected:
         const auto& simulator = this->simulator();
 
         // initial condition corresponds to hydrostatic conditions.
-        using EquilInitializer = EclEquilInitializer<TypeTag>;
-        EquilInitializer equilInitializer(simulator, *materialLawManager_);
+        EquilInitializer<TypeTag> equilInitializer(simulator, *materialLawManager_);
 
         std::size_t numElems = this->model().numGridDof();
         initialFluidStates_.resize(numElems);
