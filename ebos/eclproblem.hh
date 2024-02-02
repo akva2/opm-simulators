@@ -35,7 +35,6 @@
 #include <dune/common/fmatrix.hh>
 
 #include <ebos/eclproblem_properties.hh>
-#include <ebos/ecltransmissibility.hh>
 
 #include <opm/common/utility/TimeService.hpp>
 
@@ -78,6 +77,7 @@
 #include <opm/simulators/flow/NewTranFluxModule.hpp>
 #include <opm/simulators/flow/OutputBlackoilModule.hpp>
 #include <opm/simulators/flow/TracerModel.hpp>
+#include <opm/simulators/flow/Transmissibility.hpp>
 #include <opm/simulators/flow/VtkTracerModule.hpp>
 #include <opm/simulators/timestepping/AdaptiveTimeStepping.hpp>
 #include <opm/simulators/timestepping/SimulatorReport.hpp>

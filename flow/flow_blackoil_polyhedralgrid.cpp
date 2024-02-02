@@ -27,12 +27,12 @@
 #include <opm/simulators/flow/Main.hpp>
 
 // these are not explicitly instanced in library
-#include <ebos/ecltransmissibility_impl.hh>
 #include <opm/simulators/flow/CollectDataToIORank_impl.hpp>
 #include <opm/simulators/flow/EclGenericWriter_impl.hpp>
 #include <opm/simulators/flow/FlowGenericProblem_impl.hpp>
 #include <opm/simulators/flow/GenericThresholdPressure_impl.hpp>
 #include <opm/simulators/flow/GenericTracerModel_impl.hpp>
+#include <opm/simulators/flow/Transmissibility_impl.hpp>
 #include <opm/simulators/flow/equil/InitStateEquil_impl.hpp>
 #include <opm/simulators/utils/GridDataOutput_impl.hpp>
 
