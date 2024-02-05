@@ -28,13 +28,13 @@
 #define OPM_FLOW_CP_GRID_VANGUARD_HPP
 
 #include <ebos/ecltransmissibility.hh>
-#include <ebos/femcpgridcompat.hh>
 
 #include <opm/common/TimingMacros.hpp>
 
 #include <opm/models/common/multiphasebaseproperties.hh>
 #include <opm/models/blackoil/blackoilproperties.hh>
 
+#include <opm/simulators/flow/FemCpGridCompat.hpp>
 #include <opm/simulators/flow/FlowBaseVanguard.hpp>
 #include <opm/simulators/flow/FlowGenericCpGridVanguard.hpp>
 
