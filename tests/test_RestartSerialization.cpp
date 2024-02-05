@@ -429,7 +429,7 @@ BOOST_AUTO_TEST_CASE(EclGenericTracerModel)
 
 namespace Opm {
 
-class TBatchExport : public EclTracerModel<Properties::TTag::TestTypeTag> {
+class TBatchExport : public TracerModel<Properties::TTag::TestTypeTag> {
 public:
     using TBatch = TracerBatch<double>;
 };
