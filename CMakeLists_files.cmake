@@ -433,6 +433,7 @@ list (APPEND PUBLIC_HEADER_FILES
   opm/simulators/flow/EclGenericWriter_impl.hpp
   opm/simulators/flow/EquilInitializer.hpp
   opm/simulators/flow/ExtraConvergenceOutputThread.hpp
+  opm/simulators/flow/FIBlackoilModel.hpp
   opm/simulators/flow/FlowAluGridVanguard.hpp
   opm/simulators/flow/FlowBaseVanguard.hpp
   opm/simulators/flow/FlowCpGridVanguard.hpp
