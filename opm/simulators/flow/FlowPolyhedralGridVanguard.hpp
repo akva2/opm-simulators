@@ -22,10 +22,10 @@
 */
 /*!
  * \file
- * \copydoc Opm::EclPolyhedralGridVanguard
+ * \copydoc Opm::FlowPolyhedralGridVanguard
  */
-#ifndef EWOMS_ECL_POLYHEDRAL_GRID_VANGUARD_HH
-#define EWOMS_ECL_POLYHEDRAL_GRID_VANGUARD_HH
+#ifndef OPM_FLOW_POLYHEDRAL_GRID_VANGUARD_HPP
+#define OPM_FLOW_POLYHEDRAL_GRID_VANGUARD_HPP
 
 #include <ebos/ecltransmissibility.hh>
 
@@ -43,28 +43,28 @@
 
 namespace Opm {
 template <class TypeTag>
-class EclPolyhedralGridVanguard;
+class FlowPolyhedralGridVanguard;
 }
 
 namespace Opm::Properties {
 
 namespace TTag {
-struct EclPolyhedralGridVanguard {
+struct FlowPolyhedralGridVanguard {
     using InheritsFrom = std::tuple<FlowBaseVanguard>;
 };
 }
 
 // declare the properties
 template<class TypeTag>
-struct Vanguard<TypeTag, TTag::EclPolyhedralGridVanguard> {
-    using type = Opm::EclPolyhedralGridVanguard<TypeTag>;
+struct Vanguard<TypeTag, TTag::FlowPolyhedralGridVanguard> {
+    using type = Opm::FlowPolyhedralGridVanguard<TypeTag>;
 };
 template<class TypeTag>
-struct Grid<TypeTag, TTag::EclPolyhedralGridVanguard> {
+struct Grid<TypeTag, TTag::FlowPolyhedralGridVanguard> {
     using type = Dune::PolyhedralGrid<3, 3>;
 };
 template<class TypeTag>
-struct EquilGrid<TypeTag, TTag::EclPolyhedralGridVanguard> {
+struct EquilGrid<TypeTag, TTag::FlowPolyhedralGridVanguard> {
     using type = GetPropType<TypeTag, Properties::Grid>;
 };
 
@@ -73,14 +73,14 @@ struct EquilGrid<TypeTag, TTag::EclPolyhedralGridVanguard> {
 namespace Opm {
 
 /*!
- * \ingroup EclBlackOilSimulator
+ * \ingroup BlackOilSimulator
  *
  * \brief Helper class for grid instantiation of ECL file-format using problems.
  *
  * This class uses Dune::PolyhedralGrid as the simulation grid.
  */
 template <class TypeTag>
-class EclPolyhedralGridVanguard : public FlowBaseVanguard<TypeTag>
+class FlowPolyhedralGridVanguard : public FlowBaseVanguard<TypeTag>
 {
     friend class FlowBaseVanguard<TypeTag>;
     using ParentType = FlowBaseVanguard<TypeTag>;
@@ -106,7 +106,7 @@ public:
     using TransmissibilityType = EclTransmissibility<Grid, GridView, ElementMapper,
                                                      CartesianIndexMapper, Scalar>;
 
-    EclPolyhedralGridVanguard(Simulator& simulator)
+    FlowPolyhedralGridVanguard(Simulator& simulator)
         : FlowBaseVanguard<TypeTag>(simulator),
           simulator_( simulator )
     {
@@ -118,10 +118,6 @@ public:
         for(int i=0; i < num_cells; ++i){
             globalcell_[i] = globalcellorg[i];
         }
-    }
-
-    ~EclPolyhedralGridVanguard()
-    {
     }
 
     /*!
@@ -258,4 +254,4 @@ protected:
 
 } // namespace Opm
 
-#endif
+#endif // OPM_FLOW_POLYHEDRAL_GRID_VANGUARD_HPP
