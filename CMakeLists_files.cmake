@@ -404,7 +404,6 @@ list (APPEND TEST_DATA_FILES
 list (APPEND PUBLIC_HEADER_FILES
   ebos/eclproblem.hh
   ebos/eclproblem_properties.hh
-  ebos/ecltracermodel.hh
   ebos/ecltransmissibility.hh
   ebos/ecltransmissibility_impl.hh
   ebos/vtkecltracermodule.hh
@@ -458,6 +457,7 @@ list (APPEND PUBLIC_HEADER_FILES
   opm/simulators/flow/SimulatorSerializer.hpp
   opm/simulators/flow/SolutionContainers.hpp
   opm/simulators/flow/SubDomain.hpp
+  opm/simulators/flow/TracerModel.hpp
   opm/simulators/flow/ValidationFunctions.hpp
   opm/simulators/flow/equil/EquilibrationHelpers.hpp
   opm/simulators/flow/equil/EquilibrationHelpers_impl.hpp
