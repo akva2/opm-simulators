@@ -402,7 +402,6 @@ list (APPEND TEST_DATA_FILES
 # originally generated with the command:
 # find opm -name '*.h*' -a ! -name '*-pch.hpp' -printf '\t%p\n' | sort
 list (APPEND PUBLIC_HEADER_FILES
-  ebos/ecloutputblackoilmodule.hh
   ebos/eclpolyhedralgridvanguard.hh
   ebos/eclproblem.hh
   ebos/eclproblem_properties.hh
@@ -451,6 +450,7 @@ list (APPEND PUBLIC_HEADER_FILES
   opm/simulators/flow/MixingRateControls.hpp
   opm/simulators/flow/NonlinearSolver.hpp
   opm/simulators/flow/NewTranFluxModule.hpp
+  opm/simulators/flow/OutputBlackoilModule.hpp
   opm/simulators/flow/partitionCells.hpp
   opm/simulators/flow/priVarsPacking.hpp
   opm/simulators/flow/RSTConv.hpp

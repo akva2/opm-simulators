@@ -33,14 +33,13 @@
 
 #include <dune/grid/common/partitionset.hh>
 
-#include <ebos/ecloutputblackoilmodule.hh>
-
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <opm/simulators/flow/countGlobalCells.hpp>
 #include <opm/simulators/flow/DamarisProperties.hpp>
 #include <opm/simulators/flow/EclGenericWriter.hpp>
 #include <opm/simulators/flow/FlowBaseVanguard.hpp>
+#include <opm/simulators/flow/OutputBlackoilModule.hpp>
 #include <opm/simulators/utils/DamarisVar.hpp>
 #include <opm/simulators/utils/DeferredLoggingErrorHelpers.hpp>
 #include <opm/simulators/utils/GridDataOutput.hpp>
@@ -167,7 +166,7 @@ public:
         numElements_ = std::distance(interior_elements.begin(), interior_elements.end());
 
         this->elements_rank_offsets_.resize(nranks_) ;
-        this->damarisOutputModule_ = std::make_unique<EclOutputBlackOilModule<TypeTag>>(simulator, this->collectToIORank_);
+        this->damarisOutputModule_ = std::make_unique<OutputBlackOilModule<TypeTag>>(simulator, this->collectToIORank_);
     }
 
     /*!
@@ -236,7 +235,7 @@ private:
     int numElements_ ;  ///<  size of the unique vector elements
     
     Simulator& simulator_;
-    std::unique_ptr<EclOutputBlackOilModule<TypeTag>> damarisOutputModule_;
+    std::unique_ptr<OutputBlackOilModule<TypeTag>> damarisOutputModule_;
     std::vector<unsigned long long> elements_rank_offsets_ ;
     bool damarisUpdate_ = false;  ///< Whenever this is true writeOutput() will set up Damaris mesh information and offsets of model fields
 
