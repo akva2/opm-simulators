@@ -30,8 +30,6 @@
 
 #include <dune/grid/common/partitionset.hh>
 
-#include <ebos/ecloutputblackoilmodule.hh>
-
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -42,6 +40,7 @@
 #include <opm/simulators/flow/countGlobalCells.hpp>
 #include <opm/simulators/flow/EclGenericWriter.hpp>
 #include <opm/simulators/flow/FlowBaseVanguard.hpp>
+#include <opm/simulators/flow/OutputBlackoilModule.hpp>
 #include <opm/simulators/timestepping/SimulatorTimer.hpp>
 #include <opm/simulators/utils/DeferredLoggingErrorHelpers.hpp>
 #include <opm/simulators/utils/ParallelRestart.hpp>
@@ -122,7 +121,7 @@ public:
 
     static void registerParameters()
     {
-        EclOutputBlackOilModule<TypeTag>::registerParameters();
+        OutputBlackOilModule<TypeTag>::registerParameters();
 
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableAsyncEclOutput,
                              "Write the ECL-formated results in a non-blocking way (i.e., using a separate thread).");
@@ -152,7 +151,7 @@ public:
                    EWOMS_GET_PARAM(TypeTag, bool, EnableEsmry))
         , simulator_(simulator)
     {
-        this->eclOutputModule_ = std::make_unique<EclOutputBlackOilModule<TypeTag>>
+        this->outputModule_ = std::make_unique<OutputBlackOilModule<TypeTag>>
             (simulator, this->collectToIORank_);
             
         rank_ = simulator_.vanguard().grid().comm().rank() ;
@@ -210,7 +209,7 @@ public:
         const auto localWellTestState = simulator_.problem().wellModel().wellTestState();
         this->prepareLocalCellData(isSubStep, reportStepNum);
 
-        if (this->eclOutputModule_->needInterfaceFluxes(isSubStep)) {
+        if (this->outputModule_->needInterfaceFluxes(isSubStep)) {
             this->captureLocalFluxData();
         }
 
@@ -218,13 +217,13 @@ public:
             OPM_BEGIN_PARALLEL_TRY_CATCH()
 
             this->collectToIORank_.collect({},
-                                           eclOutputModule_->getBlockData(),
+                                           outputModule_->getBlockData(),
                                            localWellData,
                                            localWBP,
                                            localGroupAndNetworkData,
                                            localAquiferData,
                                            localWellTestState,
-                                           this->eclOutputModule_->getInterRegFlows(),
+                                           this->outputModule_->getInterRegFlows(),
                                            {},
                                            {});
 
@@ -253,7 +252,7 @@ public:
         {
             OPM_TIMEBLOCK(outputFipLogAndFipresvLog);
 
-            inplace = eclOutputModule_->calc_inplace(miscSummaryData, regionData, simulator_.gridView().comm());
+            inplace = outputModule_->calc_inplace(miscSummaryData, regionData, simulator_.gridView().comm());
             
             if (this->collectToIORank_.isIORank()){
                 inplace_ = inplace;
@@ -291,11 +290,11 @@ public:
 
             const auto& blockData = this->collectToIORank_.isParallel()
                 ? this->collectToIORank_.globalBlockData()
-                : this->eclOutputModule_->getBlockData();
+                : this->outputModule_->getBlockData();
 
             const auto& interRegFlows = this->collectToIORank_.isParallel()
                 ? this->collectToIORank_.globalInterRegFlows()
-                : this->eclOutputModule_->getInterRegFlows();
+                : this->outputModule_->getInterRegFlows();
 
             this->evalSummary(reportStepNum,
                               curTime,
@@ -307,7 +306,7 @@ public:
                               miscSummaryData,
                               regionData,
                               inplace,
-                              this->eclOutputModule_->initialInplace(),
+                              this->outputModule_->initialInplace(),
                               interRegFlows,
                               this->summaryState(),
                               this->udqState());
@@ -327,7 +326,7 @@ public:
         const int num_interior = detail::
             countLocalInteriorCellsGridView(gridView);
 
-        this->eclOutputModule_->
+        this->outputModule_->
             allocBuffers(num_interior, 0, false, false, /*isRestart*/ false);
 
 #ifdef _OPENMP
@@ -337,7 +336,7 @@ public:
             const auto& intQuants = *simulator_.model().cachedIntensiveQuantities(dofIdx, /*timeIdx=*/0);
             const auto totVolume = simulator_.model().dofTotalVolume(dofIdx);
 
-            this->eclOutputModule_->updateFluidInPlace(dofIdx, intQuants, totVolume);
+            this->outputModule_->updateFluidInPlace(dofIdx, intQuants, totVolume);
         }
 
         std::map<std::string, double> miscSummaryData;
@@ -348,13 +347,13 @@ public:
             
             boost::posix_time::ptime start_time = boost::posix_time::from_time_t(simulator_.vanguard().schedule().getStartTime());
 
-            inplace = eclOutputModule_->calc_inplace(miscSummaryData, regionData, simulator_.gridView().comm());
+            inplace = outputModule_->calc_inplace(miscSummaryData, regionData, simulator_.gridView().comm());
 
             if (this->collectToIORank_.isIORank()){
                 inplace_ = inplace;
                 
-                eclOutputModule_->outputFipAndResvLog(inplace_, 0, 0.0, start_time, 
-                                                     false, simulator_.gridView().comm());
+                outputModule_->outputFipAndResvLog(inplace_, 0, 0.0, start_time,
+                                                  false, simulator_.gridView().comm());
             }
         }
     }
@@ -365,7 +364,7 @@ public:
 
         const int reportStepNum = simulator_.episodeIndex() + 1;
         this->prepareLocalCellData(isSubStep, reportStepNum);
-        this->eclOutputModule_->outputErrorLog(simulator_.gridView().comm());
+        this->outputModule_->outputErrorLog(simulator_.gridView().comm());
 
         // output using eclWriter if enabled
         auto localWellData = simulator_.problem().wellModel().wellData();
@@ -375,11 +374,11 @@ public:
         auto localAquiferData = simulator_.problem().aquiferModel().aquiferData();
         auto localWellTestState = simulator_.problem().wellModel().wellTestState();
 
-        const bool isFlowsn = this->eclOutputModule_->hasFlowsn();
-        auto flowsn = this->eclOutputModule_->getFlowsn();
+        const bool isFlowsn = this->outputModule_->hasFlowsn();
+        auto flowsn = this->outputModule_->getFlowsn();
 
-        const bool isFloresn = this->eclOutputModule_->hasFloresn();
-        auto floresn = this->eclOutputModule_->getFloresn();
+        const bool isFloresn = this->outputModule_->hasFloresn();
+        auto floresn = this->outputModule_->getFloresn();
 
         // data::Solution localCellData = {};
         if (! isSubStep) {
@@ -388,25 +387,25 @@ public:
             
             if ((rstep > 0) && (this->collectToIORank_.isIORank())){
 
-                eclOutputModule_->outputFipAndResvLog(inplace_, rstep, timer.simulationTimeElapsed(),
-                                                     timer.currentDateTime(), false, simulator_.gridView().comm()); 
+                outputModule_->outputFipAndResvLog(inplace_, rstep, timer.simulationTimeElapsed(),
+                                                   timer.currentDateTime(), false, simulator_.gridView().comm());
 
 
-                eclOutputModule_->outputTimeStamp("WELLS", timer.simulationTimeElapsed(), rstep, timer.currentDateTime()); 
+                outputModule_->outputTimeStamp("WELLS", timer.simulationTimeElapsed(), rstep, timer.currentDateTime());
                                                              
-                eclOutputModule_->outputProdLog(reportStepNum);
-                eclOutputModule_->outputInjLog(reportStepNum);
-                eclOutputModule_->outputCumLog(reportStepNum);
+                outputModule_->outputProdLog(reportStepNum);
+                outputModule_->outputInjLog(reportStepNum);
+                outputModule_->outputCumLog(reportStepNum);
 
                 OpmLog::note("");   // Blank line after all reports.
             }
             
             if (localCellData.empty()) {
-                this->eclOutputModule_->assignToSolution(localCellData);
+                this->outputModule_->assignToSolution(localCellData);
             }
 
             // Add cell data to perforations for RFT output
-            this->eclOutputModule_->addRftDataToWells(localWellData, reportStepNum);
+            this->outputModule_->addRftDataToWells(localWellData, reportStepNum);
         }
 
         if (this->collectToIORank_.isParallel() ||
@@ -418,7 +417,7 @@ public:
             // properties on the I/O rank.
 
             this->collectToIORank_.collect(localCellData,
-                                           this->eclOutputModule_->getBlockData(),
+                                           this->outputModule_->getBlockData(),
                                            localWellData,
                                            /* wbpData = */ {},
                                            localGroupAndNetworkData,
@@ -428,10 +427,10 @@ public:
                                            flowsn,
                                            floresn);
             if (this->collectToIORank_.isIORank()) {
-                this->eclOutputModule_->assignGlobalFieldsToSolution(this->collectToIORank_.globalCellData());
+                this->outputModule_->assignGlobalFieldsToSolution(this->collectToIORank_.globalCellData());
             }
         } else {
-            this->eclOutputModule_->assignGlobalFieldsToSolution(localCellData);
+            this->outputModule_->assignGlobalFieldsToSolution(localCellData);
         }
 
         if (this->collectToIORank_.isIORank()) {
@@ -497,7 +496,7 @@ public:
 
         const auto& gridView = simulator_.vanguard().gridView();
         unsigned numElements = gridView.size(/*codim=*/0);
-        eclOutputModule_->allocBuffers(numElements, restartStepIdx, /*isSubStep=*/false, /*log=*/false, /*isRestart*/ true);
+        outputModule_->allocBuffers(numElements, restartStepIdx, /*isSubStep=*/false, /*log=*/false, /*isRestart*/ true);
 
         {
             SummaryState& summaryState = simulator_.vanguard().summaryState();
@@ -506,7 +505,7 @@ public:
                                                      gridView.grid().comm());
             for (unsigned elemIdx = 0; elemIdx < numElements; ++elemIdx) {
                 unsigned globalIdx = this->collectToIORank_.localIdxToGlobalIdx(elemIdx);
-                eclOutputModule_->setRestart(restartValues.solution, elemIdx, globalIdx);
+                outputModule_->setRestart(restartValues.solution, elemIdx, globalIdx);
             }
 
             auto& tracer_model = simulator_.problem().tracerModel();
@@ -538,11 +537,11 @@ public:
     void endRestart()
     {}
 
-    const EclOutputBlackOilModule<TypeTag>& eclOutputModule() const
-    { return *eclOutputModule_; }
+    const OutputBlackOilModule<TypeTag>& outputModule() const
+    { return *outputModule_; }
 
-    EclOutputBlackOilModule<TypeTag>& mutableEclOutputModule() const
-    { return *eclOutputModule_; }
+    OutputBlackOilModule<TypeTag>& mutableOutputModule() const
+    { return *outputModule_; }
 
     Scalar restartTimeStepSize() const
     { return restartTimeStepSize_; }
@@ -550,7 +549,7 @@ public:
     template <class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer(*eclOutputModule_);
+        serializer(*outputModule_);
     }
 
 private:
@@ -577,7 +576,7 @@ private:
     {
         OPM_TIMEBLOCK(prepareLocalCellData);
 
-        if (this->eclOutputModule_->localDataValid()) {
+        if (this->outputModule_->localDataValid()) {
             return;
         }
 
@@ -586,7 +585,7 @@ private:
 
         const int num_interior = detail::
             countLocalInteriorCellsGridView(gridView);
-        this->eclOutputModule_->
+        this->outputModule_->
             allocBuffers(num_interior, reportStepNum,
                          isSubStep, log, /*isRestart*/ false);
 
@@ -603,7 +602,7 @@ private:
                 elemCtx.updatePrimaryStencil(elem);
                 elemCtx.updatePrimaryIntensiveQuantities(/*timeIdx=*/0);
 
-                this->eclOutputModule_->processElement(elemCtx);
+                this->outputModule_->processElement(elemCtx);
             }
 
             this->eclOutputModule_->accumulateDensityParallel();
@@ -615,7 +614,7 @@ private:
                 for (const auto& elem : elements(gridView, Dune::Partitions::interior)) {
                     elemCtx.updatePrimaryStencil(elem);
                     elemCtx.updatePrimaryIntensiveQuantities(/*timeIdx=*/0);
-                    eclOutputModule_->processElementMech(elemCtx);
+                    outputModule_->processElementMech(elemCtx);
                 }
             }
         }
@@ -626,7 +625,7 @@ private:
                 elemCtx.updatePrimaryStencil(elem);
                 elemCtx.updatePrimaryIntensiveQuantities(/*timeIdx=*/0);
 
-                this->eclOutputModule_->processElementFlows(elemCtx);
+                this->outputModule_->processElementFlows(elemCtx);
             }
         }
 
@@ -636,7 +635,7 @@ private:
                 elemCtx.updatePrimaryStencil(elem);
                 elemCtx.updatePrimaryIntensiveQuantities(/*timeIdx=*/0);
 
-                this->eclOutputModule_->processElementBlockData(elemCtx);
+                this->outputModule_->processElementBlockData(elemCtx);
             }
         }
 
@@ -650,11 +649,11 @@ private:
                 const auto& intQuants = *simulator_.model().cachedIntensiveQuantities(dofIdx, /*timeIdx=*/0);
                 const auto totVolume = simulator_.model().dofTotalVolume(dofIdx);
 
-                this->eclOutputModule_->updateFluidInPlace(dofIdx, intQuants, totVolume);
+                this->outputModule_->updateFluidInPlace(dofIdx, intQuants, totVolume);
             }
         }
 
-        this->eclOutputModule_->validateLocalData();
+        this->outputModule_->validateLocalData();
 
         OPM_END_PARALLEL_TRY_CATCH("EclWriter::prepareLocalCellData() failed: ",
                                    this->simulator_.vanguard().grid().comm());
@@ -680,7 +679,7 @@ private:
             return this->cartMapper_.cartesianIndex(elemIndex);
         };
 
-        this->eclOutputModule_->initializeFluxData();
+        this->outputModule_->initializeFluxData();
 
         OPM_BEGIN_PARALLEL_TRY_CATCH();
 
@@ -689,17 +688,17 @@ private:
             elemCtx.updateIntensiveQuantities(timeIdx);
             elemCtx.updateExtensiveQuantities(timeIdx);
 
-            this->eclOutputModule_->processFluxes(elemCtx, activeIndex, cartesianIndex);
+            this->outputModule_->processFluxes(elemCtx, activeIndex, cartesianIndex);
         }
 
         OPM_END_PARALLEL_TRY_CATCH("EclWriter::captureLocalFluxData() failed: ",
                                    this->simulator_.vanguard().grid().comm())
 
-        this->eclOutputModule_->finalizeFluxData();
+        this->outputModule_->finalizeFluxData();
     }
 
     Simulator& simulator_;
-    std::unique_ptr<EclOutputBlackOilModule<TypeTag> > eclOutputModule_;
+    std::unique_ptr<OutputBlackOilModule<TypeTag> > outputModule_;
     Scalar restartTimeStepSize_;
     int rank_ ;
     Inplace inplace_;
