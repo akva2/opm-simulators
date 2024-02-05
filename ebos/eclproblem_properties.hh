@@ -28,8 +28,6 @@
 #ifndef ECL_PROBLEM_PROPERTIES_HH
 #define ECL_PROBLEM_PROPERTIES_HH
 
-#include <ebos/vtkecltracermodule.hh>
-
 #include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
 
 #include <opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp>
@@ -45,6 +43,7 @@
 #include <opm/simulators/flow/FlowCpGridVanguard.hpp>
 #include <opm/simulators/flow/NewTranFluxModule.hpp>
 #include <opm/simulators/flow/OutputBlackoilModule.hpp>
+#include <opm/simulators/flow/VtkTracerModule.hpp>
 
 #if HAVE_DAMARIS
 #include <opm/simulators/flow/DamarisWriter.hpp>
@@ -62,7 +61,7 @@ namespace Opm::Properties {
 namespace TTag {
 
 struct EclBaseProblem {
-  using InheritsFrom = std::tuple<VtkEclTracer, OutputBlackOil, FlowCpGridVanguard>;
+  using InheritsFrom = std::tuple<VtkTracer, OutputBlackOil, FlowCpGridVanguard>;
 };
 }
 
