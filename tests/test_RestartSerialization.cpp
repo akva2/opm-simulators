@@ -21,8 +21,6 @@
 
 #include "TestTypeTag.hpp"
 
-#include <ebos/femcpgridcompat.hh>
-
 #include <opm/common/utility/Serializer.hpp>
 
 #include <opm/input/eclipse/Schedule/Action/State.hpp>
@@ -38,6 +36,7 @@
 
 #include <opm/models/blackoil/blackoilprimaryvariables.hh>
 
+#include <opm/simulators/flow/FemCpGridCompat.hpp>
 #include <opm/simulators/flow/FlowGenericVanguard.hpp>
 #include <opm/simulators/timestepping/AdaptiveTimeStepping.hpp>
 #include <opm/simulators/timestepping/SimulatorReport.hpp>
