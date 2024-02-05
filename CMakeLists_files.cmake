@@ -413,7 +413,6 @@ list (APPEND PUBLIC_HEADER_FILES
   ebos/eclproblem_properties.hh
   ebos/ecltransmissibility.hh
   ebos/ecltransmissibility_impl.hh
-  ebos/vtkecltracermodule.hh
   opm/simulators/flow/ActionHandler.hpp
   opm/simulators/flow/AluGridCartesianIndexMapper.hpp
   opm/simulators/flow/Banners.hpp
@@ -468,6 +467,7 @@ list (APPEND PUBLIC_HEADER_FILES
   opm/simulators/flow/SubDomain.hpp
   opm/simulators/flow/TracerModel.hpp
   opm/simulators/flow/ValidationFunctions.hpp
+  opm/simulators/flow/VtkTracerModule.hpp
   opm/simulators/flow/equil/EquilibrationHelpers.hpp
   opm/simulators/flow/equil/EquilibrationHelpers_impl.hpp
   opm/simulators/flow/equil/InitStateEquil.hpp
