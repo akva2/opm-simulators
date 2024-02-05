@@ -411,7 +411,6 @@ list (APPEND TEST_DATA_FILES
 list (APPEND PUBLIC_HEADER_FILES
   ebos/eclproblem.hh
   ebos/eclproblem_properties.hh
-  ebos/eclthresholdpressure.hh
   ebos/ecltracermodel.hh
   ebos/ecltransmissibility.hh
   ebos/ecltransmissibility_impl.hh
@@ -444,6 +443,7 @@ list (APPEND PUBLIC_HEADER_FILES
   opm/simulators/flow/FlowMain.hpp
   opm/simulators/flow/FlowsData.hpp
   opm/simulators/flow/FlowPolyhedralGridVanguard.hpp
+  opm/simulators/flow/FlowThresholdPressure.hpp
   opm/simulators/flow/GenericOutputBlackoilModule.hpp
   opm/simulators/flow/GenericThresholdPressure.hpp
   opm/simulators/flow/GenericThresholdPressure_impl.hpp
