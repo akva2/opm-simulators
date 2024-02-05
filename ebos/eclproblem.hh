@@ -34,7 +34,6 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-#include <ebos/eclnewtonmethod.hh>
 #include <ebos/ecloutputblackoilmodule.hh>
 #include <ebos/eclproblem_properties.hh>
 #include <ebos/eclthresholdpressure.hh>

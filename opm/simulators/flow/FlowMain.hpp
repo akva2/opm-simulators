@@ -164,18 +164,6 @@ void handleExtraConvergenceOutput(SimulatorReport& report,
             EWOMS_HIDE_PARAM(TypeTag, MinTimeStepSize);
             EWOMS_HIDE_PARAM(TypeTag, PredeterminedTimeStepsFile);
 
-            // flow also does not use the eWoms Newton method
-            EWOMS_HIDE_PARAM(TypeTag, NewtonMaxError);
-            EWOMS_HIDE_PARAM(TypeTag, NewtonTolerance);
-            EWOMS_HIDE_PARAM(TypeTag, NewtonTargetIterations);
-            EWOMS_HIDE_PARAM(TypeTag, NewtonVerbose);
-            EWOMS_HIDE_PARAM(TypeTag, NewtonWriteConvergence);
-            EWOMS_HIDE_PARAM(TypeTag, EclNewtonSumTolerance);
-            EWOMS_HIDE_PARAM(TypeTag, EclNewtonSumToleranceExponent);
-            EWOMS_HIDE_PARAM(TypeTag, EclNewtonStrictIterations);
-            EWOMS_HIDE_PARAM(TypeTag, EclNewtonRelaxedVolumeFraction);
-            EWOMS_HIDE_PARAM(TypeTag, EclNewtonRelaxedTolerance);
-
             // the default eWoms checkpoint/restart mechanism does not work with flow
             EWOMS_HIDE_PARAM(TypeTag, RestartTime);
             EWOMS_HIDE_PARAM(TypeTag, RestartWritingInterval);
