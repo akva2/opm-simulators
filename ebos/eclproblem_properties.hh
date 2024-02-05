@@ -28,7 +28,6 @@
 #ifndef ECL_PROBLEM_PROPERTIES_HH
 #define ECL_PROBLEM_PROPERTIES_HH
 
-#include <ebos/eclwriter.hh>
 #include <ebos/vtkecltracermodule.hh>
 
 #include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
@@ -41,6 +40,7 @@
 
 #include <opm/simulators/flow/BaseAquiferModel.hpp>
 #include <opm/simulators/flow/DummyGradientCalculator.hpp>
+#include <opm/simulators/flow/EclWriter.hpp>
 #include <opm/simulators/flow/FIBlackoilModel.hpp>
 #include <opm/simulators/flow/FlowCpGridVanguard.hpp>
 #include <opm/simulators/flow/NewTranFluxModule.hpp>
