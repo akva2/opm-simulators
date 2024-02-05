@@ -34,8 +34,6 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-#include <ebos/eclproblem_properties.hh>
-
 #include <opm/common/utility/TimeService.hpp>
 
 #include <opm/core/props/satfunc/RelpermDiagnostics.hpp>
@@ -73,6 +71,7 @@
 #include <opm/simulators/flow/FIBlackoilModel.hpp>
 #include <opm/simulators/flow/FlowCpGridVanguard.hpp>
 #include <opm/simulators/flow/FlowGenericProblem.hpp>
+#include <opm/simulators/flow/FlowProblemProperties.hpp>
 #include <opm/simulators/flow/FlowThresholdPressure.hpp>
 #include <opm/simulators/flow/NewTranFluxModule.hpp>
 #include <opm/simulators/flow/OutputBlackoilModule.hpp>
