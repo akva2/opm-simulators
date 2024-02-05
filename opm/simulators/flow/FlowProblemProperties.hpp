@@ -53,7 +53,7 @@
 
 namespace Opm {
 template <class TypeTag>
-class EclProblem;
+class FlowProblem;
 }
 
 namespace Opm::Properties {
@@ -144,7 +144,7 @@ struct ExplicitRockCompaction {
 // Set the problem property
 template<class TypeTag>
 struct Problem<TypeTag, TTag::FlowBaseProblem> {
-    using type = EclProblem<TypeTag>;
+    using type = FlowProblem<TypeTag>;
 };
 
 template<class TypeTag>
