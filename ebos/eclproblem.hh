@@ -36,7 +36,6 @@
 
 #include <ebos/eclproblem_properties.hh>
 #include <ebos/ecltransmissibility.hh>
-#include <ebos/eclwriter.hh>
 #include <ebos/ecltracermodel.hh>
 #include <ebos/vtkecltracermodule.hh>
 
@@ -72,6 +71,7 @@
 #include <opm/simulators/flow/ActionHandler.hpp>
 #include <opm/simulators/flow/BaseAquiferModel.hpp>
 #include <opm/simulators/flow/DummyGradientCalculator.hpp>
+#include <opm/simulators/flow/EclWriter.hpp>
 #include <opm/simulators/flow/EquilInitializer.hpp>
 #include <opm/simulators/flow/FIBlackoilModel.hpp>
 #include <opm/simulators/flow/FlowCpGridVanguard.hpp>

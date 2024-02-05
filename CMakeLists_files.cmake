@@ -414,7 +414,6 @@ list (APPEND PUBLIC_HEADER_FILES
   ebos/ecltracermodel.hh
   ebos/ecltransmissibility.hh
   ebos/ecltransmissibility_impl.hh
-  ebos/eclwriter.hh
   ebos/femcpgridcompat.hh
   ebos/vtkecltracermodule.hh
   opm/simulators/flow/ActionHandler.hpp
@@ -431,6 +430,7 @@ list (APPEND PUBLIC_HEADER_FILES
   opm/simulators/flow/DummyGradientCalculator.hpp
   opm/simulators/flow/EclGenericWriter.hpp
   opm/simulators/flow/EclGenericWriter_impl.hpp
+  opm/simulators/flow/EclWriter.hpp
   opm/simulators/flow/EquilInitializer.hpp
   opm/simulators/flow/ExtraConvergenceOutputThread.hpp
   opm/simulators/flow/FIBlackoilModel.hpp
