@@ -184,11 +184,11 @@ public:
     /// \param[in] eclipse_state the object which represents an internalized ECL deck
     /// \param[in] output_writer
     /// \param[in] threshold_pressures_by_face   if nonempty, threshold pressures that inhibit flow
-    SimulatorFullyImplicitBlackoil(Simulator& ebosSimulator)
-        : ebosSimulator_(ebosSimulator)
+    SimulatorFullyImplicitBlackoil(Simulator& modelSimulator)
+        : modelSimulator_(modelSimulator)
         , serializer_(*this,
                       FlowGenericVanguard::comm(),
-                      ebosSimulator_.vanguard().eclState().getIOConfig(),
+                      modelSimulator_.vanguard().eclState().getIOConfig(),
                       EWOMS_GET_PARAM(TypeTag, std::string, SaveStep),
                       EWOMS_GET_PARAM(TypeTag, int, LoadStep),
                       EWOMS_GET_PARAM(TypeTag, std::string, SaveFile),
@@ -265,7 +265,7 @@ public:
     {
         init(timer);
         // Make cache up to date. No need for updating it in elementCtx.
-        ebosSimulator_.model().invalidateAndUpdateIntensiveQuantities(/*timeIdx=*/0);
+        modelSimulator_.model().invalidateAndUpdateIntensiveQuantities(/*timeIdx=*/0);
         // Main simulation loop.
         while (!timer.done()) {
             bool continue_looping = runStep(timer);
@@ -276,7 +276,7 @@ public:
 
     void init(SimulatorTimer &timer)
     {
-        ebosSimulator_.setEpisodeIndex(-1);
+        modelSimulator_.setEpisodeIndex(-1);
 
         // Create timers and file for writing timing info.
         solverTimer_ = std::make_unique<time::StopWatch>();
@@ -287,7 +287,7 @@ public:
         bool enableAdaptive = EWOMS_GET_PARAM(TypeTag, bool, EnableAdaptiveTimeStepping);
         bool enableTUNING = EWOMS_GET_PARAM(TypeTag, bool, EnableTuning);
         if (enableAdaptive) {
-            const UnitSystem& unitSystem = this->ebosSimulator_.vanguard().eclState().getUnits();
+            const UnitSystem& unitSystem = this->modelSimulator_.vanguard().eclState().getUnits();
             if (enableTUNING) {
                 const auto& sched_state = schedule()[timer.currentStepNum()];
                 auto max_next_tstep = sched_state.max_next_tstep();
@@ -300,9 +300,9 @@ public:
             }
 
             if (isRestart()) {
-                // For restarts the ebosSimulator may have gotten some information
+                // For restarts the modelSimulator may have gotten some information
                 // about the next timestep size from the OPMEXTRA field
-                adaptiveTimeStepping_->setSuggestedNextStep(ebosSimulator_.timeStepSize());
+                adaptiveTimeStepping_->setSuggestedNextStep(modelSimulator_.timeStepSize());
             }
         }
     }
@@ -345,11 +345,11 @@ public:
             Dune::Timer perfTimer;
             perfTimer.start();
 
-            ebosSimulator_.setEpisodeIndex(-1);
-            ebosSimulator_.setEpisodeLength(0.0);
-            ebosSimulator_.setTimeStepSize(0.0);
+            modelSimulator_.setEpisodeIndex(-1);
+            modelSimulator_.setEpisodeLength(0.0);
+            modelSimulator_.setTimeStepSize(0.0);
             wellModel_().beginReportStep(timer.currentStepNum());
-            ebosSimulator_.problem().writeOutput(timer);
+            modelSimulator_.problem().writeOutput(timer);
 
             report_.success.output_write_time += perfTimer.stop();
         }
@@ -361,15 +361,15 @@ public:
             solver_ = createSolver(wellModel_());
         }
 
-        ebosSimulator_.startNextEpisode(
-            ebosSimulator_.startTime()
+        modelSimulator_.startNextEpisode(
+            modelSimulator_.startTime()
                + schedule().seconds(timer.currentStepNum()),
             timer.currentStepLength());
-        ebosSimulator_.setEpisodeIndex(timer.currentStepNum());
+        modelSimulator_.setEpisodeIndex(timer.currentStepNum());
         if (serializer_.shouldLoad()) {
             wellModel_().prepareDeserialize(serializer_.loadStep() - 1);
             serializer_.loadState();
-            ebosSimulator_.model().invalidateAndUpdateIntensiveQuantities(/*timeIdx=*/0);
+            modelSimulator_.model().invalidateAndUpdateIntensiveQuantities(/*timeIdx=*/0);
         }
         solver_->model().beginReportStep();
         bool enableTUNING = EWOMS_GET_PARAM(TypeTag, bool, EnableTuning);
@@ -402,7 +402,7 @@ public:
             auto stepReport = adaptiveTimeStepping_->step(timer, *solver_, event, nullptr);
             report_ += stepReport;
             //Pass simulation report to eclwriter for summary output
-            ebosSimulator_.problem().setSimulationReport(report_);
+            modelSimulator_.problem().setSimulationReport(report_);
         } else {
             // solve for complete report step
             auto stepReport = solver_->step(timer);
@@ -418,8 +418,8 @@ public:
         Dune::Timer perfTimer;
         perfTimer.start();
         const double nextstep = adaptiveTimeStepping_ ? adaptiveTimeStepping_->suggestedNextStep() : -1.0;
-        ebosSimulator_.problem().setNextTimeStepSize(nextstep);
-        ebosSimulator_.problem().writeOutput(timer);
+        modelSimulator_.problem().setNextTimeStepSize(nextstep);
+        modelSimulator_.problem().writeOutput(timer);
         report_.success.output_write_time += perfTimer.stop();
 
         solver_->model().endReportStep();
@@ -459,7 +459,7 @@ public:
             Dune::Timer finalOutputTimer;
             finalOutputTimer.start();
 
-            ebosSimulator_.problem().finalizeOutput();
+            modelSimulator_.problem().finalizeOutput();
             report_.success.output_write_time += finalOutputTimer.stop();
         }
 
@@ -472,12 +472,12 @@ public:
     }
 
     const Grid& grid() const
-    { return ebosSimulator_.vanguard().grid(); }
+    { return modelSimulator_.vanguard().grid(); }
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer(ebosSimulator_);
+        serializer(modelSimulator_);
         serializer(report_);
         serializer(adaptiveTimeStepping_);
     }
@@ -512,20 +512,20 @@ protected:
         return {"OPM Flow",
                 moduleVersion(),
                 compileTimestamp(),
-                ebosSimulator_.vanguard().caseName(),
+                modelSimulator_.vanguard().caseName(),
                 str.str()};
     }
 
     //! \brief Returns local-to-global cell mapping.
     const std::vector<int>& getCellMapping() const override
     {
-        return ebosSimulator_.vanguard().globalCell();
+        return modelSimulator_.vanguard().globalCell();
     }
 
 
     std::unique_ptr<Solver> createSolver(WellModel& wellModel)
     {
-        auto model = std::make_unique<Model>(ebosSimulator_,
+        auto model = std::make_unique<Model>(modelSimulator_,
                                              modelParam_,
                                              wellModel,
                                              terminalOutput_);
@@ -552,11 +552,11 @@ protected:
     }
 
     const EclipseState& eclState() const
-    { return ebosSimulator_.vanguard().eclState(); }
+    { return modelSimulator_.vanguard().eclState(); }
 
 
     const Schedule& schedule() const
-    { return ebosSimulator_.vanguard().schedule(); }
+    { return modelSimulator_.vanguard().schedule(); }
 
     bool isRestart() const
     {
@@ -565,10 +565,10 @@ protected:
     }
 
     WellModel& wellModel_()
-    { return ebosSimulator_.problem().wellModel(); }
+    { return modelSimulator_.problem().wellModel(); }
 
     const WellModel& wellModel_() const
-    { return ebosSimulator_.problem().wellModel(); }
+    { return modelSimulator_.problem().wellModel(); }
 
     void startConvergenceOutputThread(std::string_view convOutputOptions,
                                       std::string_view optionName)
@@ -630,7 +630,7 @@ protected:
     }
 
     // Data.
-    Simulator& ebosSimulator_;
+    Simulator& modelSimulator_;
 
     ModelParameters modelParam_;
     SolverParameters solverParam_;
