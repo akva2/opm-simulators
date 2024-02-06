@@ -628,7 +628,7 @@ namespace Opm {
         void solveJacobianSystem(BVector& x)
         {
 
-            auto& ebosJac = modelSimulator_.model().linearizer().jacobian().istlMatrix();
+            auto& modelJac = modelSimulator_.model().linearizer().jacobian().istlMatrix();
             auto& ebosResid = modelSimulator_.model().linearizer().residual();
             auto& ebosSolver = modelSimulator_.model().newtonMethod().linearSolver();
 
@@ -649,7 +649,7 @@ namespace Opm {
                     BVector x0(x);
                     ebosSolver.setActiveSolver(solver);
                     perfTimer.start();
-                    ebosSolver.prepare(ebosJac, ebosResid);
+                    ebosSolver.prepare(modelJac, ebosResid);
                     setupTimes[solver] = perfTimer.stop();
                     perfTimer.reset();
                     ebosSolver.setResidual(ebosResid);
@@ -676,7 +676,7 @@ namespace Opm {
 
                 Dune::Timer perfTimer;
                 perfTimer.start();
-                ebosSolver.prepare(ebosJac, ebosResid);
+                ebosSolver.prepare(modelJac, ebosResid);
                 linear_solve_setup_time_ = perfTimer.stop();
                 ebosSolver.setResidual(ebosResid);
                 // actually, the error needs to be calculated after setResidual in order to
