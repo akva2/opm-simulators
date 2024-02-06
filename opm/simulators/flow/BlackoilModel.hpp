@@ -142,7 +142,7 @@ struct EnableDispersion<TypeTag, TTag::EclFlowProblem> {
 };
 
 template<class TypeTag>
-struct EclWellModel<TypeTag, TTag::EclFlowProblem> {
+struct WellModel<TypeTag, TTag::EclFlowProblem> {
     using type = BlackoilWellModel<TypeTag>;
 };
 template<class TypeTag>
