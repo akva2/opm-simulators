@@ -69,8 +69,8 @@ private:
     // MPI at the correct time (ie after the other objects).
     std::unique_ptr<Opm::Main> main_;
 
-    std::unique_ptr<Opm::FlowMain<TypeTag>> main_ebos_;
-    Simulator *ebos_simulator_;
+    std::unique_ptr<Opm::FlowMain<TypeTag>> flow_main_;
+    Simulator* model_simulator_;
     std::unique_ptr<PyMaterialState<TypeTag>> material_state_;
     std::shared_ptr<Opm::Deck> deck_;
     std::shared_ptr<Opm::EclipseState> eclipse_state_;
