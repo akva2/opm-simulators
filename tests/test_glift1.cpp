@@ -105,7 +105,7 @@ struct GliftFixture {
     Dune::MPIHelper::instance(argc, argv);
 #endif
         Opm::FlowGenericVanguard::setCommunication(std::make_unique<Opm::Parallel::Communication>());
-        using TypeTag = Opm::Properties::TTag::EclFlowProblem;
+        using TypeTag = Opm::Properties::TTag::FlowProblem;
         Opm::registerAllParameters_<TypeTag>();
     }
 };
@@ -116,7 +116,7 @@ BOOST_GLOBAL_FIXTURE(GliftFixture);
 
 BOOST_AUTO_TEST_CASE(G1)
 {
-    //using TypeTag = Opm::Properties::TTag::EclFlowProblem;
+    //using TypeTag = Opm::Properties::TTag::FlowProblem;
     using TypeTag = Opm::Properties::TTag::TestGliftTypeTag;
     //using EclProblem = Opm::EclProblem<TypeTag>;
     //using EclWellModel = typename EclProblem::EclWellModel;
