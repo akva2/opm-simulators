@@ -364,7 +364,7 @@ std::set<std::string> consistentlyFailingWells(const std::vector<StepReport>& sr
             }
 
             auto& modelSimulator = solver.model().modelSimulator();
-            auto& ebosProblem = modelSimulator.problem();
+            auto& problem = modelSimulator.problem();
 
             // create adaptive step timer with previously used sub step size
             AdaptiveSimulatorTimer substepTimer(simulatorTimer, suggestedNextTimestep_, maxTimeStep_);
@@ -496,7 +496,7 @@ std::set<std::string> consistentlyFailingWells(const std::vector<StepReport>& sr
                         time::StopWatch perfTimer;
                         perfTimer.start();
 
-                        ebosProblem.writeOutput(simulatorTimer);
+                        problem.writeOutput(simulatorTimer);
 
                         report.success.output_write_time += perfTimer.secsSinceStart();
                     }
@@ -591,7 +591,7 @@ std::set<std::string> consistentlyFailingWells(const std::vector<StepReport>& sr
                         }
                     }
                 }
-                ebosProblem.setNextTimeStepSize(substepTimer.currentStepLength());
+                problem.setNextTimeStepSize(substepTimer.currentStepLength());
             }
 
             // store estimated time step for next reportStep
