@@ -172,10 +172,10 @@ public:
 
     using FlowMainType = FlowMain<Properties::TTag::EclFlowProblemTPFA>;
     // To be called from the Python interface code. Only do the
-    // initialization and then return a pointer to the FlowEbosMain
+    // initialization and then return a pointer to the FlowMain
     // object that can later be accessed directly from the Python interface
     // to e.g. advance the simulator one report step
-    std::unique_ptr<FlowMainType> initFlowEbosBlackoil(int& exitCode)
+    std::unique_ptr<FlowMainType> initFlowBlackoil(int& exitCode)
     {
         exitCode = EXIT_SUCCESS;
         if (initialize_<Properties::TTag::FlowEarlyBird>(exitCode)) {
