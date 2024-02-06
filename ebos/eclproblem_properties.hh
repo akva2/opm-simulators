@@ -119,12 +119,6 @@ struct AquiferModel {
     using type = UndefinedProperty;
 };
 
-// In experimental mode, decides if the aquifer model should be enabled or not
-template<class TypeTag, class MyTypeTag>
-struct EclEnableAquifers {
-    using type = UndefinedProperty;
-};
-
 // time stepping parameters
 template<class TypeTag, class MyTypeTag>
 struct EnableTuning {
@@ -254,12 +248,6 @@ public:
 template<class TypeTag>
 struct AquiferModel<TypeTag, TTag::EclBaseProblem> {
     using type = BaseAquiferModel<TypeTag>;
-};
-
-// Enable aquifers by default in experimental mode
-template<class TypeTag>
-struct EclEnableAquifers<TypeTag, TTag::EclBaseProblem> {
-    static constexpr bool value = true;
 };
 
 // Enable gravity
