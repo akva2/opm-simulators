@@ -159,7 +159,7 @@ public:
     using MaterialLaw = GetPropType<TypeTag, Properties::MaterialLaw>;
     using SolutionVector = GetPropType<TypeTag, Properties::SolutionVector>;
     using MaterialLawParams = GetPropType<TypeTag, Properties::MaterialLawParams>;
-    using AquiferModel = GetPropType<TypeTag, Properties::EclAquiferModel>;
+    using AquiferModel = GetPropType<TypeTag, Properties::AquiferModel>;
 
     using TimeStepper = AdaptiveTimeStepping<TypeTag>;
     using PolymerModule = BlackOilPolymerModule<TypeTag>;

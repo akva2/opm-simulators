@@ -98,7 +98,7 @@ struct UseVolumetricResidual<TypeTag, TTag::EclFlowProblem> {
 };
 
 template<class TypeTag>
-struct EclAquiferModel<TypeTag, TTag::EclFlowProblem> {
+struct AquiferModel<TypeTag, TTag::EclFlowProblem> {
     using type = BlackoilAquiferModel<TypeTag>;
 };
 
