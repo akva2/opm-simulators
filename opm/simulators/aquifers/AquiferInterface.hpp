@@ -40,9 +40,9 @@ public:
 
     // Constructor
     AquiferInterface(int aqID,
-                     const Simulator& ebosSimulator)
+                     const Simulator& modelSimulator)
         : aquiferID_(aqID)
-        , ebos_simulator_(ebosSimulator)
+        , model_simulator_(modelSimulator)
     {
     }
 
@@ -80,7 +80,7 @@ public:
 protected:
     bool co2store_or_h2store_() const
     {
-        const auto& rspec = ebos_simulator_.vanguard().eclState().runspec();
+        const auto& rspec = model_simulator_.vanguard().eclState().runspec();
         return rspec.co2Storage() || rspec.h2Storage();
     }
 
@@ -94,7 +94,7 @@ protected:
     }
 
     const int aquiferID_{};
-    const Simulator& ebos_simulator_;
+    const Simulator& model_simulator_;
 };
 
 } // namespace Opm
