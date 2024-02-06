@@ -630,10 +630,10 @@ namespace Opm {
 
             auto& modelJac = modelSimulator_.model().linearizer().jacobian().istlMatrix();
             auto& modelResid = modelSimulator_.model().linearizer().residual();
-            auto& ebosSolver = modelSimulator_.model().newtonMethod().linearSolver();
+            auto& modelSolver = modelSimulator_.model().newtonMethod().linearSolver();
 
-            const int numSolvers = ebosSolver.numAvailableSolvers();
-            if ((numSolvers > 1) && (ebosSolver.getSolveCount() % 100 == 0)) {
+            const int numSolvers = modelSolver.numAvailableSolvers();
+            if ((numSolvers > 1) && (modelSolver.getSolveCount() % 100 == 0)) {
 
                 if ( terminal_output_ ) {
                     OpmLog::debug("\nRunning speed test for comparing available linear solvers.");
@@ -647,14 +647,14 @@ namespace Opm {
                 std::vector<BVector> x_trial(numSolvers, x);
                 for (int solver = 0; solver < numSolvers; ++solver) {
                     BVector x0(x);
-                    ebosSolver.setActiveSolver(solver);
+                    modelSolver.setActiveSolver(solver);
                     perfTimer.start();
-                    ebosSolver.prepare(modelJac, modelResid);
+                    modelSolver.prepare(modelJac, modelResid);
                     setupTimes[solver] = perfTimer.stop();
                     perfTimer.reset();
-                    ebosSolver.setResidual(modelResid);
+                    modelSolver.setResidual(modelResid);
                     perfTimer.start();
-                    ebosSolver.solve(x_trial[solver]);
+                    modelSolver.solve(x_trial[solver]);
                     times[solver] = perfTimer.stop();
                     perfTimer.reset();
                     if (terminal_output_) {
@@ -667,7 +667,7 @@ namespace Opm {
                 grid_.comm().broadcast(&fastest_solver, 1, 0);
                 linear_solve_setup_time_ = setupTimes[fastest_solver];
                 x = x_trial[fastest_solver];
-                ebosSolver.setActiveSolver(fastest_solver);
+                modelSolver.setActiveSolver(fastest_solver);
 
             } else {
 
@@ -676,14 +676,14 @@ namespace Opm {
 
                 Dune::Timer perfTimer;
                 perfTimer.start();
-                ebosSolver.prepare(modelJac, modelResid);
+                modelSolver.prepare(modelJac, modelResid);
                 linear_solve_setup_time_ = perfTimer.stop();
-                ebosSolver.setResidual(modelResid);
+                modelSolver.setResidual(modelResid);
                 // actually, the error needs to be calculated after setResidual in order to
                 // account for parallelization properly. since the residual of ECFV
                 // discretizations does not need to be synchronized across processes to be
                 // consistent, this is not relevant for OPM-flow...
-                ebosSolver.solve(x);
+                modelSolver.solve(x);
             }
        }
 
