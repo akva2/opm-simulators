@@ -10,7 +10,7 @@ add_test_compare_parallel_simulation(CASENAME spe1
                                      SIMULATOR flow
                                      ABS_TOL ${abs_tol_parallel}
                                      REL_TOL ${rel_tol_parallel}
-                                     TEST_ARGS --linear-solver-reduction=1e-7 --tolerance-cnv=5e-6 --tolerance-mb=1e-8 --ecl-enable-drift-compensation=false)
+                                     TEST_ARGS --linear-solver-reduction=1e-7 --tolerance-cnv=5e-6 --tolerance-mb=1e-8 --enable-drift-compensation=false)
 
 add_test_compare_parallel_simulation(CASENAME spe1_gaswater
                                      FILENAME SPE1CASE2_GASWATER
@@ -25,7 +25,7 @@ add_test_compare_parallel_simulation(CASENAME spe9
                                      SIMULATOR flow
                                      ABS_TOL ${abs_tol_parallel}
                                      REL_TOL ${rel_tol_parallel}
-                                     TEST_ARGS --linear-solver-reduction=1e-7 --tolerance-cnv=5e-6 --tolerance-mb=1e-8 --ecl-enable-drift-compensation=false)
+                                     TEST_ARGS --linear-solver-reduction=1e-7 --tolerance-cnv=5e-6 --tolerance-mb=1e-8 --enable-drift-compensation=false)
 
 # A test for distributed standard wells. We load distribute only along the z-axis
 add_test_compare_parallel_simulation(CASENAME spe9_dist_z
@@ -34,7 +34,7 @@ add_test_compare_parallel_simulation(CASENAME spe9_dist_z
                                      SIMULATOR flow_distribute_z
                                      ABS_TOL ${abs_tol_parallel}
                                      REL_TOL ${rel_tol_parallel}
-                                     TEST_ARGS --linear-solver-reduction=1e-7 --tolerance-cnv=5e-6 --tolerance-mb=1e-8 --ecl-enable-drift-compensation=false)
+                                     TEST_ARGS --linear-solver-reduction=1e-7 --tolerance-cnv=5e-6 --tolerance-mb=1e-8 --enable-drift-compensation=false)
 
 add_test_compare_parallel_simulation(CASENAME spe9group
                                      FILENAME SPE9_CP_GROUP
@@ -179,7 +179,7 @@ add_test_compare_parallel_simulation(CASENAME winjmult_msw
                                      ABS_TOL ${abs_tol}
                                      REL_TOL ${rel_tol}
                                      DIR winjmult
-                                     TEST_ARGS --ecl-enable-drift-compensation=false --enable-tuning=true --linear-solver-reduction=1e-7 --tolerance-cnv=5e-6 --tolerance-mb=1e-8)
+                                     TEST_ARGS --enable-drift-compensation=false --enable-tuning=true --linear-solver-reduction=1e-7 --tolerance-cnv=5e-6 --tolerance-mb=1e-8)
 
 add_test_compare_parallel_simulation(CASENAME winjdam_msw
                                      FILENAME WINJDAM_MSW
@@ -187,7 +187,7 @@ add_test_compare_parallel_simulation(CASENAME winjdam_msw
                                      ABS_TOL ${abs_tol}
                                      REL_TOL ${rel_tol}
                                      DIR winjdam
-                                     TEST_ARGS --ecl-enable-drift-compensation=false --enable-tuning=true --linear-solver-reduction=1e-7 --tolerance-cnv=5e-6 --tolerance-mb=1e-8)
+                                     TEST_ARGS --enable-drift-compensation=false --enable-tuning=true --linear-solver-reduction=1e-7 --tolerance-cnv=5e-6 --tolerance-mb=1e-8)
 
 add_test_compare_parallel_simulation(CASENAME 3_a_mpi_multflt_mod2
                                      FILENAME 3_A_MPI_MULTFLT_SCHED_MODEL2
@@ -195,7 +195,7 @@ add_test_compare_parallel_simulation(CASENAME 3_a_mpi_multflt_mod2
                                      ABS_TOL ${abs_tol_parallel}
                                      REL_TOL ${rel_tol_parallel}
       			       DIR model2
-                                     TEST_ARGS --linear-solver-reduction=1e-7 --tolerance-cnv=5e-6 --tolerance-mb=1e-8 --ecl-enable-drift-compensation=false)
+                                     TEST_ARGS --linear-solver-reduction=1e-7 --tolerance-cnv=5e-6 --tolerance-mb=1e-8 --enable-drift-compensation=false)
 
 add_test_compare_parallel_simulation(CASENAME rxft
                                      FILENAME TEST_RXFT
@@ -203,4 +203,4 @@ add_test_compare_parallel_simulation(CASENAME rxft
                                      ABS_TOL ${abs_tol_parallel}
                                      REL_TOL 1.0e-3
                                      DIR rxft_smry
-                                     TEST_ARGS --enable-tuning=true --linear-solver-reduction=1e-7 --tolerance-cnv=5e-6 --tolerance-mb=1e-8 --ecl-enable-drift-compensation=false)
+                                     TEST_ARGS --enable-tuning=true --linear-solver-reduction=1e-7 --tolerance-cnv=5e-6 --tolerance-mb=1e-8 --enable-drift-compensation=false)
