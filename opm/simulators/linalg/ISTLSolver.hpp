@@ -209,7 +209,7 @@ std::unique_ptr<Matrix> blockJacobiAdjacency(const Grid& grid,
 
         void initialize()
         {
-            OPM_TIMEBLOCK(IstlSolverEbos);
+            OPM_TIMEBLOCK(IstlSolver);
 
             if (parameters_[0].linsolver_ == "hybrid") {
                 // Experimental hybrid configuration.
@@ -348,7 +348,7 @@ std::unique_ptr<Matrix> blockJacobiAdjacency(const Grid& grid,
 
         void prepare(const Matrix& M, Vector& b)
         {
-            OPM_TIMEBLOCK(istlSolverEbosPrepare);
+            OPM_TIMEBLOCK(istlSolverPrepare);
 
             initPrepare(M,b);
 
@@ -381,7 +381,7 @@ std::unique_ptr<Matrix> blockJacobiAdjacency(const Grid& grid,
 
         bool solve(Vector& x)
         {
-            OPM_TIMEBLOCK(istlSolverEbosSolve);
+            OPM_TIMEBLOCK(istlSolverSolve);
             ++solveCount_;
             // Write linear system if asked for.
             const int verbosity = prm_[activeSolverNum_].get("verbosity", 0);
