@@ -692,15 +692,15 @@ namespace Opm {
         void updateSolution(const BVector& dx)
         {
             OPM_TIMEBLOCK(updateSolution);
-            auto& ebosNewtonMethod = modelSimulator_.model().newtonMethod();
+            auto& modelNewtonMethod = modelSimulator_.model().newtonMethod();
             SolutionVector& solution = modelSimulator_.model().solution(/*timeIdx=*/0);
 
-            ebosNewtonMethod.update_(/*nextSolution=*/solution,
-                                     /*curSolution=*/solution,
-                                     /*update=*/dx,
-                                     /*resid=*/dx); // the update routines of the black
-                                                    // oil model do not care about the
-                                                    // residual
+            modelNewtonMethod.update_(/*nextSolution=*/solution,
+                                      /*curSolution=*/solution,
+                                      /*update=*/dx,
+                                      /*resid=*/dx); // the update routines of the black
+                                                     // oil model do not care about the
+                                                     // residual
 
             // if the solution is updated, the intensive quantities need to be recalculated
             {
