@@ -63,10 +63,6 @@ template<class TypeTag, class MyTypeTag>
 struct EnableAdaptiveTimeStepping {
     using type = UndefinedProperty;
 };
-template<class TypeTag, class MyTypeTag>
-struct EnableTuning {
-    using type = UndefinedProperty;
-};
 
 template <class TypeTag, class MyTypeTag>
 struct OutputExtraConvergenceInfo
@@ -105,10 +101,6 @@ struct EnableTerminalOutput<TypeTag, TTag::EclFlowProblem> {
 template<class TypeTag>
 struct EnableAdaptiveTimeStepping<TypeTag, TTag::EclFlowProblem> {
     static constexpr bool value = true;
-};
-template<class TypeTag>
-struct EnableTuning<TypeTag, TTag::EclFlowProblem> {
-    static constexpr bool value = false;
 };
 
 template <class TypeTag>

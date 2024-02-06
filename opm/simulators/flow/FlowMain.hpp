@@ -164,8 +164,6 @@ void handleExtraConvergenceOutput(SimulatorReport& report,
             EWOMS_HIDE_PARAM(TypeTag, MinTimeStepSize);
             EWOMS_HIDE_PARAM(TypeTag, PredeterminedTimeStepsFile);
 
-            EWOMS_HIDE_PARAM(TypeTag, EclEnableTuning);
-
             // the default eWoms checkpoint/restart mechanism does not work with flow
             EWOMS_HIDE_PARAM(TypeTag, RestartTime);
             EWOMS_HIDE_PARAM(TypeTag, RestartWritingInterval);
