@@ -863,7 +863,7 @@ accelerationPressureLossContribution(const int seg,
 template <class FluidSystem, class Indices, class Scalar>
 void
 MultisegmentWellSegments<FluidSystem,Indices,Scalar>::
-copyPhaseDensities(const PhaseUsage& pu, SegmentState& segSol) const
+copyPhaseDensities(const PhaseUsage& pu, SegmentState<Scalar>& segSol) const
 {
     auto* rho = segSol.phase_density.data();
 
