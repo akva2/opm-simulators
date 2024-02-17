@@ -382,7 +382,7 @@ void BlackoilWellModelConstraints::
 actionOnBrokenConstraints(const Group& group,
                           const Group::InjectionCMode& newControl,
                           const Phase& controlPhase,
-                          GroupState& group_state,
+                          GroupState<double>& group_state,
                           DeferredLogger& deferred_logger) const
 {
     auto oldControl = wellModel_.groupState().injection_control(group.name(), controlPhase);
@@ -404,7 +404,7 @@ void BlackoilWellModelConstraints::
 actionOnBrokenConstraints(const Group& group,
                           const Group::GroupLimitAction group_limit_action,
                           const Group::ProductionCMode& newControl,
-                          GroupState& group_state,
+                          GroupState<double>& group_state,
                           DeferredLogger& deferred_logger) const
 {
     const Group::ProductionCMode oldControl = wellModel_.groupState().production_control(group.name());
@@ -469,7 +469,7 @@ updateGroupIndividualControl(const Group& group,
                              const int reportStepIdx,
                              std::map<std::pair<std::string,Opm::Phase>,std::string>& switched_inj,
                              std::map<std::string, std::string>& switched_prod,
-                             GroupState& group_state,
+                             GroupState<double>& group_state,
                              WellState<double>& well_state,
                              DeferredLogger& deferred_logger) const
 {

@@ -91,7 +91,7 @@ namespace Opm
 
         /// updating the well state based the current control mode
         virtual void updateWellStateWithTarget(const Simulator& ebos_simulator,
-                                               const GroupState& group_state,
+                                               const GroupState<Scalar>& group_state,
                                                WellState<Scalar>& well_state,
                                                DeferredLogger& deferred_logger) const override;
 
@@ -261,7 +261,7 @@ namespace Opm
                                               const Well::InjectionControls& inj_controls,
                                               const Well::ProductionControls& prod_controls,
                                               WellState<Scalar>& well_state,
-                                              const GroupState& group_state,
+                                              const GroupState<Scalar>& group_state,
                                               DeferredLogger& deferred_logger) override;
 
         virtual bool iterateWellEqWithSwitching(const Simulator& ebosSimulator,
@@ -269,7 +269,7 @@ namespace Opm
                                                 const Well::InjectionControls& inj_controls,
                                                 const Well::ProductionControls& prod_controls,
                                                 WellState<Scalar>& well_state,
-                                                const GroupState& group_state,
+                                                const GroupState<Scalar>& group_state,
                                                 DeferredLogger& deferred_logger, 
                                                 const bool fixed_control = false, 
                                                 const bool fixed_status = false) override;
@@ -279,7 +279,7 @@ namespace Opm
                                                     const Well::InjectionControls& inj_controls,
                                                     const Well::ProductionControls& prod_controls,
                                                     WellState<Scalar>& well_state,
-                                                    const GroupState& group_state,
+                                                    const GroupState<Scalar>& group_state,
                                                     DeferredLogger& deferred_logger) override;
 
         virtual void updateWaterThroughput(const double dt, WellState<Scalar>& well_state) const override;

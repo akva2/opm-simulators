@@ -172,7 +172,7 @@ namespace Opm
     void
     MultisegmentWell<TypeTag>::
     updateWellStateWithTarget(const Simulator& ebos_simulator,
-                              const GroupState& group_state,
+                              const GroupState<Scalar>& group_state,
                               WellState<Scalar>& well_state,
                               DeferredLogger&  deferred_logger) const
     {
@@ -1437,7 +1437,7 @@ namespace Opm
                              const Well::InjectionControls& inj_controls,
                              const Well::ProductionControls& prod_controls,
                              WellState<Scalar>& well_state,
-                             const GroupState& group_state,
+                             const GroupState<Scalar>& group_state,
                              DeferredLogger& deferred_logger)
     {
         if (!this->isOperableAndSolvable() && !this->wellIsStopped()) return true;
@@ -1589,7 +1589,7 @@ namespace Opm
                              const Well::InjectionControls& inj_controls,
                              const Well::ProductionControls& prod_controls,
                              WellState<Scalar>& well_state,
-                             const GroupState& group_state,
+                             const GroupState<Scalar>& group_state,
                              DeferredLogger& deferred_logger, 
                              const bool fixed_control /*false*/, 
                              const bool fixed_status /*false*/)
@@ -1779,7 +1779,7 @@ namespace Opm
                                    const Well::InjectionControls& inj_controls,
                                    const Well::ProductionControls& prod_controls,
                                    WellState<Scalar>& well_state,
-                                   const GroupState& group_state,
+                                   const GroupState<Scalar>& group_state,
                                    DeferredLogger& deferred_logger)
     {
         if (!this->isOperableAndSolvable() && !this->wellIsStopped()) return;

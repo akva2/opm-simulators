@@ -202,7 +202,7 @@ namespace Opm
                                       const Well::InjectionControls& inj_controls,
                                       const Well::ProductionControls& prod_controls,
                                       WellState<Scalar>& well_state,
-                                      const GroupState& group_state,
+                                      const GroupState<Scalar>& group_state,
                                       DeferredLogger& deferred_logger) override;
 
         // iterate well equations including control switching
@@ -211,7 +211,7 @@ namespace Opm
                                         const Well::InjectionControls& inj_controls,
                                         const Well::ProductionControls& prod_controls,
                                         WellState<Scalar>& well_state,
-                                        const GroupState& group_state,
+                                        const GroupState<Scalar>& group_state,
                                         DeferredLogger& deferred_logger, 
                                         const bool fixed_control = false,
                                         const bool fixed_status = false) override;
@@ -359,7 +359,7 @@ namespace Opm
                                             const Well::InjectionControls& inj_controls,
                                             const Well::ProductionControls& prod_controls,
                                             WellState<Scalar>& well_state,
-                                            const GroupState& group_state,
+                                            const GroupState<Scalar>& group_state,
                                             DeferredLogger& deferred_logger) override;
 
         void assembleWellEqWithoutIterationImpl(const Simulator& ebosSimulator,
@@ -367,7 +367,7 @@ namespace Opm
                                                 const Well::InjectionControls& inj_controls,
                                                 const Well::ProductionControls& prod_controls,
                                                 WellState<Scalar>& well_state,
-                                                const GroupState& group_state,
+                                                const GroupState<Scalar>& group_state,
                                                 DeferredLogger& deferred_logger);
 
         void calculateSinglePerf(const Simulator& ebosSimulator,
