@@ -1181,7 +1181,7 @@ namespace Opm {
 
         //update guide rates
         const int reportStepIdx = ebosSimulator_.episodeIndex();
-        if (alq_updated || BlackoilWellModelGuideRates(*this).
+        if (alq_updated || BlackoilWellModelGuideRates<double>(*this).
                            guideRateUpdateIsNeeded(reportStepIdx)) {
             const double simulationTime = ebosSimulator_.time();
             const auto& comm = ebosSimulator_.vanguard().grid().comm();
