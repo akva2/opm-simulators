@@ -118,7 +118,7 @@ ActionHandler(EclipseState& ecl_state,
               Schedule& schedule,
               Action::State& actionState,
               SummaryState& summaryState,
-              BlackoilWellModelGeneric& wellModel,
+              BlackoilWellModelGeneric<Scalar>& wellModel,
               Parallel::Communication comm)
     : ecl_state_(ecl_state)
     , schedule_(schedule)

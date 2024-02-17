@@ -38,7 +38,7 @@ class ActionX;
 class State;
 }
 
-class BlackoilWellModelGeneric;
+template<class Scalar> class BlackoilWellModelGeneric;
 class EclipseState;
 class Schedule;
 struct SimulatorUpdate;
@@ -57,7 +57,7 @@ public:
                   Schedule& schedule,
                   Action::State& actionState,
                   SummaryState& summaryState,
-                  BlackoilWellModelGeneric& wellModel,
+                  BlackoilWellModelGeneric<Scalar>& wellModel,
                   Parallel::Communication comm);
 
     void applyActions(int reportStep,
@@ -89,7 +89,7 @@ public:
     Schedule& schedule_;
     Action::State& actionState_;
     SummaryState& summaryState_;
-    BlackoilWellModelGeneric& wellModel_;
+    BlackoilWellModelGeneric<Scalar>& wellModel_;
     Parallel::Communication comm_;
 };
 
