@@ -46,6 +46,7 @@ class SummaryState;
 class UDQState;
 
 //! \brief Class handling Action support in simulator
+template<class Scalar>
 class ActionHandler
 {
 public:
