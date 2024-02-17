@@ -101,16 +101,17 @@ BOOST_AUTO_TEST_CASE(NAME) \
 #define TEST_FOR_TYPE(TYPE) \
     TEST_FOR_TYPE_NAMED(TYPE, TYPE)
 
-TEST_FOR_TYPE(ALQState)
+namespace Opm { using ALQS = ALQState<double>; }
+TEST_FOR_TYPE_NAMED(ALQS, ALQState)
 TEST_FOR_TYPE(GroupState)
 TEST_FOR_TYPE(HardcodedTimeStepControl)
 TEST_FOR_TYPE(Inplace)
 namespace Opm { using PerfD = PerfData<double>; }
-TEST_FOR_TYPE(PerfD)
+TEST_FOR_TYPE_NAMED(PerfD, PerfData)
 TEST_FOR_TYPE(PIDAndIterationCountTimeStepControl)
 TEST_FOR_TYPE(PIDTimeStepControl)
 namespace Opm { using SegmState = SegmentState<double>; }
-TEST_FOR_TYPE(SegmState)
+TEST_FOR_TYPE_NAMED(SegmState, SegmentState)
 TEST_FOR_TYPE(SimpleIterationCountTimeStepControl)
 TEST_FOR_TYPE(SimulatorReport)
 TEST_FOR_TYPE(SimulatorReportSingle)
