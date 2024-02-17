@@ -31,7 +31,7 @@ namespace Opm {
 
 class BlackoilWellModelGeneric;
 class DeferredLogger;
-class GroupState;
+template<class Scalar> class GroupState;
 class SummaryState;
 template<class Scalar> class WellState;
 
@@ -56,14 +56,14 @@ public:
     void actionOnBrokenConstraints(const Group& group,
                                    const Group::InjectionCMode& newControl,
                                    const Phase& controlPhase,
-                                   GroupState& group_state,
+                                   GroupState<double>& group_state,
                                    DeferredLogger& deferred_logger) const;
 
     //! \brief Execute action on broken constraint for a production well group.
     void actionOnBrokenConstraints(const Group& group,
                                    const Group::GroupLimitAction group_limit_action,
                                    const Group::ProductionCMode& newControl,
-                                   GroupState& group_state,
+                                   GroupState<double>& group_state,
                                    DeferredLogger& deferred_logger) const;
 
     //! \brief Update the individual controls for wells in a group.
@@ -71,7 +71,7 @@ public:
                                       const int reportStepIdx,
                                       std::map<std::pair<std::string,Opm::Phase>,std::string>& switched_inj,
                                       std::map<std::string, std::string>& switched_prod,
-                                      GroupState& group_state,
+                                      GroupState<double>& group_state,
                                       WellState<double>& well_state,
                                       DeferredLogger& deferred_logger) const;
 
