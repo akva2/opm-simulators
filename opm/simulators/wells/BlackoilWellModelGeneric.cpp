@@ -211,14 +211,14 @@ initFromRestartFile(const RestartValue& restartValues,
                                  this->schedule(), handle_ms_well, numCells,
                                  this->well_perf_data_, this->summaryState_);
 
-        BlackoilWellModelRestart(*this).loadRestartData(restartValues.wells,
+        BlackoilWellModelRestart<double>(*this).loadRestartData(restartValues.wells,
                                                         restartValues.grp_nwrk,
                                                         handle_ms_well,
                                                         this->wellState(),
                                                         this->groupState());
 
         if (config.has_model()) {
-            BlackoilWellModelRestart(*this).loadRestartGuideRates(report_step,
+            BlackoilWellModelRestart<double>(*this).loadRestartGuideRates(report_step,
                                                                   config.model().target(),
                                                                   restartValues.wells,
                                                                   this->guideRate_);
@@ -226,7 +226,7 @@ initFromRestartFile(const RestartValue& restartValues,
     }
 
     if (config.has_model()) {
-        BlackoilWellModelRestart(*this).loadRestartGuideRates(report_step,
+        BlackoilWellModelRestart<double>(*this).loadRestartGuideRates(report_step,
                                                               config,
                                                               restartValues.grp_nwrk.groupData,
                                                               this->guideRate_);
