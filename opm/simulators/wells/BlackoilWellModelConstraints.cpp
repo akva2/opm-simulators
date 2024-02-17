@@ -470,7 +470,7 @@ updateGroupIndividualControl(const Group& group,
                              std::map<std::pair<std::string,Opm::Phase>,std::string>& switched_inj,
                              std::map<std::string, std::string>& switched_prod,
                              GroupState& group_state,
-                             WellState& well_state,
+                             WellState<double>& well_state,
                              DeferredLogger& deferred_logger) const
 {
     bool changed = false;

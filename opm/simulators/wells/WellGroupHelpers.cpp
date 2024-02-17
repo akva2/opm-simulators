@@ -72,7 +72,7 @@ namespace {
     double sumWellPhaseRates(bool res_rates,
                              const Opm::Group& group,
                              const Opm::Schedule& schedule,
-                             const Opm::WellState& wellState,
+                             const Opm::WellState<double>& wellState,
                              const int reportStepIdx,
                              const int phasePos,
                              const bool injector)
@@ -203,7 +203,7 @@ namespace WellGroupHelpers
 
     double sumWellSurfaceRates(const Group& group,
                                const Schedule& schedule,
-                               const WellState& wellState,
+                               const WellState<double>& wellState,
                                const int reportStepIdx,
                                const int phasePos,
                                const bool injector)
@@ -213,7 +213,7 @@ namespace WellGroupHelpers
 
     double sumWellResRates(const Group& group,
                            const Schedule& schedule,
-                           const WellState& wellState,
+                           const WellState<double>& wellState,
                            const int reportStepIdx,
                            const int phasePos,
                            const bool injector)
@@ -223,7 +223,7 @@ namespace WellGroupHelpers
 
     double sumSolventRates(const Group& group,
                            const Schedule& schedule,
-                           const WellState& wellState,
+                           const WellState<double>& wellState,
                            const int reportStepIdx,
                            const bool injector)
     {
@@ -268,7 +268,7 @@ namespace WellGroupHelpers
                                             const SummaryState& summaryState,
                                             const Opm::PhaseUsage& pu,
                                             const int reportStepIdx,
-                                            const WellState& wellState,
+                                            const WellState<double>& wellState,
                                             const GroupState& group_state,
                                             GuideRate* guideRate,
                                             Opm::DeferredLogger& deferred_logger)
@@ -329,7 +329,7 @@ namespace WellGroupHelpers
                                     const bool isInjector,
                                     const PhaseUsage& pu,
                                     const GuideRate& guide_rate,
-                                    const WellState& wellState,
+                                    const WellState<double>& wellState,
                                     GroupState& group_state,
                                     std::vector<double>& groupTargetReduction)
     {
@@ -467,7 +467,7 @@ namespace WellGroupHelpers
                                              const int reportStepIdx,
                                              bool isInjector,
                                              const GroupState& group_state,
-                                             WellState& wellState) {
+                                             WellState<double>& wellState) {
         for (const std::string& groupName : group.groups()) {
             bool individual_control = false;
             if (isInjector) {
@@ -533,7 +533,7 @@ namespace WellGroupHelpers
     void updateVREPForGroups(const Group& group,
                              const Schedule& schedule,
                              const int reportStepIdx,
-                             const WellState& wellState,
+                             const WellState<double>& wellState,
                              GroupState& group_state)
     {
         for (const std::string& groupName : group.groups()) {
@@ -557,7 +557,7 @@ namespace WellGroupHelpers
     void updateReservoirRatesInjectionGroups(const Group& group,
                                              const Schedule& schedule,
                                              const int reportStepIdx,
-                                             const WellState& wellState,
+                                             const WellState<double>& wellState,
                                              GroupState& group_state)
     {
         for (const std::string& groupName : group.groups()) {
@@ -581,7 +581,7 @@ namespace WellGroupHelpers
     void updateSurfaceRatesInjectionGroups(const Group& group,
                                            const Schedule& schedule,
                                            const int reportStepIdx,
-                                           const WellState& wellState,
+                                           const WellState<double>& wellState,
                                            GroupState& group_state)
     {
         for (const std::string& groupName : group.groups()) {
@@ -605,8 +605,8 @@ namespace WellGroupHelpers
     void updateWellRates(const Group& group,
                          const Schedule& schedule,
                          const int reportStepIdx,
-                         const WellState& wellStateNupcol,
-                         WellState& wellState)
+                         const WellState<double>& wellStateNupcol,
+                         WellState<double>& wellState)
     {
         for (const std::string& groupName : group.groups()) {
             const Group& groupTmp = schedule.getGroup(groupName, reportStepIdx);
@@ -635,7 +635,7 @@ namespace WellGroupHelpers
     void updateGroupProductionRates(const Group& group,
                                     const Schedule& schedule,
                                     const int reportStepIdx,
-                                    const WellState& wellState,
+                                    const WellState<double>& wellState,
                                     GroupState& group_state)
     {
         for (const std::string& groupName : group.groups()) {
@@ -656,7 +656,7 @@ namespace WellGroupHelpers
                              const int reportStepIdx,
                              const PhaseUsage& pu,
                              const SummaryState& st,
-                             const WellState& wellState,
+                             const WellState<double>& wellState,
                              GroupState& group_state,
                              bool sum_rank)
     {
@@ -692,7 +692,7 @@ namespace WellGroupHelpers
                                       const RegionalValues& regional_values,
                                       const int reportStepIdx,
                                       const double dt,
-                                      const WellState& well_state,
+                                      const WellState<double>& well_state,
                                       GroupState& group_state)
     {
         for (const std::string& groupName : group.groups()) {
@@ -778,7 +778,7 @@ namespace WellGroupHelpers
 
     std::map<std::string, double>
     computeNetworkPressures(const Opm::Network::ExtNetwork& network,
-                            const WellState& well_state,
+                            const WellState<double>& well_state,
                             const GroupState& group_state,
                             const VFPProdProperties& vfp_prod_props,
                             const Schedule& schedule,
@@ -915,7 +915,9 @@ namespace WellGroupHelpers
 
 
     GuideRate::RateVector
-    getWellRateVector(const WellState& well_state, const PhaseUsage& pu, const std::string& name)
+    getWellRateVector(const WellState<double>& well_state,
+                      const PhaseUsage& pu,
+                      const std::string& name)
     {
         return getGuideRateVector(well_state.currentWellRates(name), pu);
     }
@@ -928,7 +930,7 @@ namespace WellGroupHelpers
 
     double getGuideRate(const std::string& name,
                         const Schedule& schedule,
-                        const WellState& wellState,
+                        const WellState<double>& wellState,
                         const GroupState& group_state,
                         const int reportStepIdx,
                         const GuideRate* guideRate,
@@ -982,7 +984,7 @@ namespace WellGroupHelpers
 
     double getGuideRateInj(const std::string& name,
                            const Schedule& schedule,
-                           const WellState& wellState,
+                           const WellState<double>& wellState,
                            const GroupState& group_state,
                            const int reportStepIdx,
                            const GuideRate* guideRate,
@@ -1033,7 +1035,7 @@ namespace WellGroupHelpers
 
 
     int groupControlledWells(const Schedule& schedule,
-                             const WellState& well_state,
+                             const WellState<double>& well_state,
                              const GroupState& group_state,
                              const int report_step,
                              const std::string& group_name,
@@ -1074,7 +1076,7 @@ namespace WellGroupHelpers
     }
 
     FractionCalculator::FractionCalculator(const Schedule& schedule,
-                                           const WellState& well_state,
+                                           const WellState<double>& well_state,
                                            const GroupState& group_state,
                                            const int report_step,
                                            const GuideRate* guide_rate,
@@ -1229,7 +1231,7 @@ namespace WellGroupHelpers
     std::pair<bool, double> checkGroupConstraintsProd(const std::string& name,
                                                       const std::string& parent,
                                                       const Group& group,
-                                                      const WellState& wellState,
+                                                      const WellState<double>& wellState,
                                                       const GroupState& group_state,
                                                       const int reportStepIdx,
                                                       const GuideRate* guideRate,
@@ -1375,7 +1377,7 @@ namespace WellGroupHelpers
     std::pair<bool, double> checkGroupConstraintsInj(const std::string& name,
                                                      const std::string& parent,
                                                      const Group& group,
-                                                     const WellState& wellState,
+                                                     const WellState<double>& wellState,
                                                      const GroupState& group_state,
                                                      const int reportStepIdx,
                                                      const GuideRate* guideRate,
@@ -1556,7 +1558,7 @@ namespace WellGroupHelpers
                           const PhaseUsage& pu,
                           const int report_step,
                           const double sim_time,
-                          WellState& well_state,
+                          WellState<double>& well_state,
                           const GroupState& group_state,
                           const Comm& comm,
                           GuideRate* guide_rate,
@@ -1575,7 +1577,7 @@ namespace WellGroupHelpers
                                             const PhaseUsage& pu,
                                             const int reportStepIdx,
                                             const double& simTime,
-                                            WellState& wellState,
+                                            WellState<double>& wellState,
                                             const GroupState& group_state,
                                             const Comm& comm,
                                             GuideRate* guideRate,
@@ -1653,7 +1655,7 @@ namespace WellGroupHelpers
                                   const PhaseUsage& pu,
                                   const int reportStepIdx,
                                   const double& simTime,
-                                  const WellState& wellState,
+                                  const WellState<double>& wellState,
                                   const Comm& comm,
                                   GuideRate* guideRate)
     {
@@ -1692,7 +1694,7 @@ namespace WellGroupHelpers
                                                                     const AvgPMap&,
                                                                     int,
                                                                     double,
-                                                                    const WellState&,
+                                                                    const WellState<double>&,
                                                                     GroupState&);
  template void WellGroupHelpers::setRegionAveragePressureCalculator<AvgP>(const Group&,
                                             const Schedule&,
@@ -1707,7 +1709,7 @@ void updateGuideRateForProductionGroups<Parallel::Communication>(const Group& gr
                                                                  const PhaseUsage& pu,
                                                                  const int reportStepIdx,
                                                                  const double& simTime,
-                                                                 WellState& wellState,
+                                                                 WellState<double>& wellState,
                                                                  const GroupState& group_state,
                                                                  const Parallel::Communication& comm,
                                                                  GuideRate* guideRate,
@@ -1717,7 +1719,7 @@ void updateGuideRatesForWells<Parallel::Communication>(const Schedule& schedule,
                                                        const PhaseUsage& pu,
                                                        const int reportStepIdx,
                                                        const double& simTime,
-                                                       const WellState& wellState,
+                                                       const WellState<double>& wellState,
                                                        const Parallel::Communication& comm,
                                                        GuideRate* guideRate);
 template
@@ -1727,7 +1729,7 @@ void updateGuideRates<Parallel::Communication>(const Group& group,
                                                const PhaseUsage& pu,
                                                const int report_step,
                                                const double sim_time,
-                                               WellState& well_state,
+                                               WellState<double>& well_state,
                                                const GroupState& group_state,
                                                const Parallel::Communication& comm,
                                                GuideRate* guide_rate,

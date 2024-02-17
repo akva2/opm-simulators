@@ -84,7 +84,7 @@ private:
 template<class FluidSystem, class Indices, class Scalar>
 void
 StandardWellAssemble<FluidSystem,Indices,Scalar>::
-assembleControlEq(const WellState& well_state,
+assembleControlEq(const WellState<Scalar>& well_state,
                   const GroupState& group_state,
                   const Schedule& schedule,
                   const SummaryState& summaryState,

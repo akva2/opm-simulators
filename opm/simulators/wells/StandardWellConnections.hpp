@@ -35,7 +35,7 @@ namespace Opm
 class DeferredLogger;
 enum class Phase;
 template<class FluidSystem, class Indices, class Scalar> class WellInterfaceIndices;
-class WellState;
+template<class Scalar> class WellState;
 
 template<class FluidSystem, class Indices, class Scalar>
 class StandardWellConnections
@@ -53,7 +53,7 @@ public:
         std::vector<Scalar> surf_dens_perf;
     };
 
-    void computePropertiesForPressures(const WellState& well_state,
+    void computePropertiesForPressures(const WellState<Scalar>& well_state,
                                        const std::function<Scalar(int,int)>& getTemperature,
                                        const std::function<Scalar(int)>& getSaltConcentration,
                                        const std::function<int(int)>& pvtRegionIdx,
@@ -62,7 +62,7 @@ public:
                                        Properties& props) const;
 
     //! \brief Compute connection properties (densities, pressure drop, ...)
-    void computeProperties(const WellState& well_state,
+    void computeProperties(const WellState<Scalar>& well_state,
                            const std::function<Scalar(int,int)>& invB,
                            const std::function<Scalar(int,int)>& mobility,
                            const std::function<Scalar(int)>& solventInverseFormationVolumeFactor,

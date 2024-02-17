@@ -33,7 +33,7 @@ class BlackoilWellModelGeneric;
 class DeferredLogger;
 class GroupState;
 class SummaryState;
-class WellState;
+template<class Scalar> class WellState;
 
 /// Class for handling constraints for the blackoil well model.
 class BlackoilWellModelConstraints
@@ -72,7 +72,7 @@ public:
                                       std::map<std::pair<std::string,Opm::Phase>,std::string>& switched_inj,
                                       std::map<std::string, std::string>& switched_prod,
                                       GroupState& group_state,
-                                      WellState& well_state,
+                                      WellState<double>& well_state,
                                       DeferredLogger& deferred_logger) const;
 
 private:

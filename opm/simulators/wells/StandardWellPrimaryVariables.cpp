@@ -119,7 +119,7 @@ resize(const int numWellEq)
 
 template<class FluidSystem, class Indices, class Scalar>
 void StandardWellPrimaryVariables<FluidSystem,Indices,Scalar>::
-update(const WellState& well_state,
+update(const WellState<Scalar>& well_state,
        const bool stop_or_zero_rate_target,
        DeferredLogger& deferred_logger)
 {
@@ -227,7 +227,7 @@ update(const WellState& well_state,
 
 template<class FluidSystem, class Indices, class Scalar>
 void StandardWellPrimaryVariables<FluidSystem,Indices,Scalar>::
-updatePolyMW(const WellState& well_state)
+updatePolyMW(const WellState<Scalar>& well_state)
 {
     if (well_.isInjector()) {
         const auto& ws = well_state.well(well_.indexOfWell());
@@ -324,7 +324,7 @@ updateNewtonPolyMW(const BVectorWell& dwells)
 
 template<class FluidSystem, class Indices, class Scalar>
 void StandardWellPrimaryVariables<FluidSystem,Indices,Scalar>::
-copyToWellState(WellState& well_state,
+copyToWellState(WellState<Scalar>& well_state,
                 DeferredLogger& deferred_logger) const
 {
     static constexpr int Water = BlackoilPhases::Aqua;
@@ -429,7 +429,7 @@ copyToWellState(WellState& well_state,
 
 template<class FluidSystem, class Indices, class Scalar>
 void StandardWellPrimaryVariables<FluidSystem,Indices,Scalar>::
-copyToWellStatePolyMW(WellState& well_state) const
+copyToWellStatePolyMW(WellState<Scalar>& well_state) const
 {
     if (well_.isInjector()) {
         auto& ws = well_state.well(well_.indexOfWell());
