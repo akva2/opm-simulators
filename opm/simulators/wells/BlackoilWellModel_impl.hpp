@@ -2130,7 +2130,7 @@ namespace Opm {
             updateAndCommunicate(reportStepIdx, iterationIdx, deferred_logger);
         }
         bool changed_individual =
-            BlackoilWellModelConstraints(*this).
+            BlackoilWellModelConstraints<double>(*this).
                 updateGroupIndividualControl(group,
                                              reportStepIdx,
                                              this->switched_inj_groups_,
