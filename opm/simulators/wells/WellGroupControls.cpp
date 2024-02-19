@@ -30,6 +30,7 @@
 
 #include <opm/material/densead/Evaluation.hpp>
 
+#include <opm/simulators/wells/FractionCalculator.hpp>
 #include <opm/simulators/wells/GroupState.hpp>
 #include <opm/simulators/wells/TargetCalculator.hpp>
 #include <opm/simulators/wells/WellGroupHelpers.hpp>
@@ -141,11 +142,11 @@ getGroupInjectionControl(const Group& group,
                                                       injectionPhase,
                                                       group.has_gpmaint_control(injectionPhase, currentGroupControl),
                                                       deferred_logger);
-    WellGroupHelpers::FractionCalculator fcalc(schedule, well_state,
-                                               group_state, well_.currentStep(),
-                                               well_.guideRate(),
-                                               tcalc.guideTargetMode(),
-                                               pu, false, injectionPhase);
+    WGHelpers::FractionCalculator fcalc(schedule, well_state,
+                                        group_state, well_.currentStep(),
+                                        well_.guideRate(),
+                                        tcalc.guideTargetMode(),
+                                        pu, false, injectionPhase);
 
     auto localFraction = [&](const std::string& child) {
         return fcalc.localFraction(child, child);
@@ -264,9 +265,9 @@ getGroupInjectionTargetRate(const Group& group,
                                                       injectionPhase,
                                                       group.has_gpmaint_control(injectionPhase, currentGroupControl),
                                                       deferred_logger);
-    WellGroupHelpers::FractionCalculator fcalc(schedule, well_state, group_state,
-                                               well_.currentStep(), well_.guideRate(),
-                                               tcalc.guideTargetMode(), pu, false, injectionPhase);
+    WGHelpers::FractionCalculator fcalc(schedule, well_state, group_state,
+                                        well_.currentStep(), well_.guideRate(),
+                                        tcalc.guideTargetMode(), pu, false, injectionPhase);
 
     auto localFraction = [&](const std::string& child) {
         return fcalc.localFraction(child, child); //Note child needs to be passed to always include since the global isGrup map is not updated yet.
@@ -366,11 +367,11 @@ void WellGroupControls::getGroupProductionControl(const Group& group,
                                              gratTargetFromSales, group.name(),
                                              group_state,
                                              group.has_gpmaint_control(currentGroupControl));
-    WellGroupHelpers::FractionCalculator fcalc(schedule, well_state, group_state,
-                                               well_.currentStep(),
-                                               well_.guideRate(),
-                                               tcalc.guideTargetMode(),
-                                               pu, true, Phase::OIL);
+    WGHelpers::FractionCalculator fcalc(schedule, well_state, group_state,
+                                         well_.currentStep(),
+                                         well_.guideRate(),
+                                         tcalc.guideTargetMode(),
+                                         pu, true, Phase::OIL);
 
     auto localFraction = [&](const std::string& child) {
         return fcalc.localFraction(child, child);
@@ -452,11 +453,11 @@ getGroupProductionTargetRate(const Group& group,
         gratTargetFromSales = group_state.grat_sales_target(group.name());
 
     WellGroupHelpers::TargetCalculator tcalc(currentGroupControl, pu, resv_coeff, gratTargetFromSales, group.name(), group_state, group.has_gpmaint_control(currentGroupControl));
-    WellGroupHelpers::FractionCalculator fcalc(schedule, well_state, group_state,
-                                               well_.currentStep(),
-                                               well_.guideRate(),
-                                               tcalc.guideTargetMode(),
-                                               pu, true, Phase::OIL);
+    WGHelpers::FractionCalculator fcalc(schedule, well_state, group_state,
+                                         well_.currentStep(),
+                                         well_.guideRate(),
+                                         tcalc.guideTargetMode(),
+                                         pu, true, Phase::OIL);
 
     auto localFraction = [&](const std::string& child) {
         return fcalc.localFraction(child, child); //Note child needs to be passed to always include since the global isGrup map is not updated yet.
