@@ -196,9 +196,9 @@ checkGroupConstraints(WellState<double>& well_state,
 
     };
 
-    return WellGroupConstraints(*this).checkGroupConstraints(well_state, group_state,
-                                                             schedule, summaryState,
-                                                             rCoeff, deferred_logger);
+    return WellGroupConstraints<double>(*this).checkGroupConstraints(well_state, group_state,
+                                                                     schedule, summaryState,
+                                                                     rCoeff, deferred_logger);
 }
 
 template <typename FluidSystem>
