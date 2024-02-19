@@ -171,8 +171,8 @@ getGroupInjectionControl(const Group& group,
 
     const double orig_target = tcalc.groupTarget(ctrl,
                                                 deferred_logger);
-    const auto chain = WellGroupHelpers::groupChainTopBot(well_.name(), group.name(),
-                                                          schedule, well_.currentStep());
+    const auto chain = WellGroupHelpers<double>::groupChainTopBot(well_.name(), group.name(),
+                                                                  schedule, well_.currentStep());
     // Because 'name' is the last of the elements, and not an ancestor, we subtract one below.
     const std::size_t num_ancestors = chain.size() - 1;
     double target = orig_target;
@@ -303,7 +303,10 @@ getGroupInjectionTargetRate(const Group& group,
 
     const double orig_target = tcalc.groupTarget(ctrl, deferred_logger);
 
-    const auto chain = WellGroupHelpers::groupChainTopBot(well_.name(), group.name(), schedule, well_.currentStep());
+    const auto chain = WellGroupHelpers<double>::groupChainTopBot(well_.name(),
+                                                                  group.name(),
+                                                                  schedule,
+                                                                  well_.currentStep());
     // Because 'name' is the last of the elements, and not an ancestor, we subtract one below.
     const std::size_t num_ancestors = chain.size() - 1;
     double target = orig_target;
@@ -413,8 +416,8 @@ void WellGroupControls::getGroupProductionControl(const Group& group,
         ctrl = group.productionControls(summaryState);
 
     const double orig_target = tcalc.groupTarget(ctrl, deferred_logger);
-    const auto chain = WellGroupHelpers::groupChainTopBot(well_.name(), group.name(),
-                                                          schedule, well_.currentStep());
+    const auto chain = WellGroupHelpers<double>::groupChainTopBot(well_.name(), group.name(),
+                                                                  schedule, well_.currentStep());
     // Because 'name' is the last of the elements, and not an ancestor, we subtract one below.
     const std::size_t num_ancestors = chain.size() - 1;
     double target = orig_target;
@@ -509,8 +512,8 @@ getGroupProductionTargetRate(const Group& group,
         ctrl = group.productionControls(summaryState);
 
     const double orig_target = tcalc.groupTarget(ctrl, deferred_logger);
-    const auto chain = WellGroupHelpers::groupChainTopBot(well_.name(), group.name(),
-                                                          schedule, well_.currentStep());
+    const auto chain = WellGroupHelpers<double>::groupChainTopBot(well_.name(), group.name(),
+                                                                  schedule, well_.currentStep());
     // Because 'name' is the last of the elements, and not an ancestor, we subtract one below.
     const std::size_t num_ancestors = chain.size() - 1;
     double target = orig_target;
