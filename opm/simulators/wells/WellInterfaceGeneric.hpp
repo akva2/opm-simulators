@@ -40,7 +40,7 @@ class ParallelWellInfo;
 struct PerforationData;
 struct PhaseUsage;
 class SummaryState;
-class VFPProperties;
+template<class Scalar> class VFPProperties;
 class WellTestState;
 template<class Scalar> class WellState;
 template<class Scalar> class SingleWellState;
@@ -93,7 +93,7 @@ public:
     void initCompletions();
     void closeCompletions(const WellTestState& wellTestState);
 
-    void setVFPProperties(const VFPProperties* vfp_properties_arg);
+    void setVFPProperties(const VFPProperties<double>* vfp_properties_arg);
     void setPrevSurfaceRates(WellState<double>& well_state,
                              const WellState<double>& prev_well_state) const;
     void setGuideRate(const GuideRate* guide_rate_arg);
@@ -151,7 +151,7 @@ public:
         return gravity_;
     }
 
-    const VFPProperties* vfpProperties() const {
+    const VFPProperties<double>* vfpProperties() const {
         return vfp_properties_;
     }
 
@@ -388,7 +388,7 @@ protected:
     std::vector<double> inj_fc_multiplier_;
 
     double well_efficiency_factor_;
-    const VFPProperties* vfp_properties_;
+    const VFPProperties<double>* vfp_properties_;
     const GuideRate* guide_rate_;
 
     std::vector< std::string> well_control_log_;
