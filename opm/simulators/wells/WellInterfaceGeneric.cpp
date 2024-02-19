@@ -344,7 +344,7 @@ void WellInterfaceGeneric::closeCompletions(const WellTestState& wellTestState)
     }
 }
 
-void WellInterfaceGeneric::setVFPProperties(const VFPProperties* vfp_properties_arg)
+void WellInterfaceGeneric::setVFPProperties(const VFPProperties<double>* vfp_properties_arg)
 {
     vfp_properties_ = vfp_properties_arg;
 }
