@@ -1550,7 +1550,6 @@ void setRegionAveragePressureCalculator(const Group& group,
     }
 }
 
-template <class Comm>
 void updateGuideRates(const Group& group,
                       const Schedule& schedule,
                       const SummaryState& summary_state,
@@ -1559,7 +1558,7 @@ void updateGuideRates(const Group& group,
                       const double sim_time,
                       WellState<double>& well_state,
                       const GroupState<double>& group_state,
-                      const Comm& comm,
+                      const Parallel::Communication& comm,
                       GuideRate* guide_rate,
                       std::vector<double>& pot,
                       Opm::DeferredLogger& deferred_logger)
@@ -1570,7 +1569,6 @@ void updateGuideRates(const Group& group,
     updateGuideRatesForWells(schedule, pu, report_step, sim_time, well_state, comm, guide_rate);
 }
 
-template <class Comm>
 void updateGuideRateForProductionGroups(const Group& group,
                                         const Schedule& schedule,
                                         const PhaseUsage& pu,
@@ -1578,7 +1576,7 @@ void updateGuideRateForProductionGroups(const Group& group,
                                         const double& simTime,
                                         WellState<double>& wellState,
                                         const GroupState<double>& group_state,
-                                        const Comm& comm,
+                                        const Parallel::Communication& comm,
                                         GuideRate* guideRate,
                                         std::vector<double>& pot)
 {
@@ -1649,13 +1647,12 @@ void updateGuideRateForProductionGroups(const Group& group,
     guideRate->compute(group.name(), reportStepIdx, simTime, oilPot, gasPot, waterPot);
 }
 
-template <class Comm>
 void updateGuideRatesForWells(const Schedule& schedule,
                               const PhaseUsage& pu,
                               const int reportStepIdx,
                               const double& simTime,
                               const WellState<double>& wellState,
-                              const Comm& comm,
+                              const Parallel::Communication& comm,
                               GuideRate* guideRate)
 {
     for (const auto& well : schedule.getWells(reportStepIdx)) {
@@ -1701,40 +1698,6 @@ void updateGuideRatesForWells(const Schedule& schedule,
                                             const FieldPropsManager&,
                                             const PhaseUsage&,
                                             AvgPMap&);
-
-template
-void updateGuideRateForProductionGroups<Parallel::Communication>(const Group&,
-                                                                 const Schedule&,
-                                                                 const PhaseUsage&,
-                                                                 const int,
-                                                                 const double&,
-                                                                 WellState<double>&,
-                                                                 const GroupState<double>&,
-                                                                 const Parallel::Communication&,
-                                                                 GuideRate*,
-                                                                 std::vector<double>&);
-template
-void updateGuideRatesForWells<Parallel::Communication>(const Schedule& schedule,
-                                                       const PhaseUsage& pu,
-                                                       const int reportStepIdx,
-                                                       const double& simTime,
-                                                       const WellState<double>& wellState,
-                                                       const Parallel::Communication& comm,
-                                                       GuideRate* guideRate);
-template
-void updateGuideRates<Parallel::Communication>(const Group&,
-                                               const Schedule&,
-                                               const SummaryState&,
-                                               const PhaseUsage&,
-                                               const int,
-                                               const double,
-                                               WellState<double>&,
-                                               const GroupState<double>&,
-                                               const Parallel::Communication&,
-                                               GuideRate*,
-                                               std::vector<double>&,
-                                               DeferredLogger&);
-
 } // namespace WellGroupHelpers
 
 } // namespace Opm
