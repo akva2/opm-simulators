@@ -51,15 +51,15 @@ namespace Opm {
     template<typename TypeTag>
     BlackoilWellModel<TypeTag>::
     BlackoilWellModel(Simulator& simulator, const PhaseUsage& phase_usage)
-        : BlackoilWellModelGeneric<<Scalar>(simulator.vanguard().schedule(),
-                                            simulator.vanguard().summaryState(),
-                                            simulator.vanguard().eclState(),
-                                            phase_usage,
-                                            simulator.gridView().comm())
+        : BlackoilWellModelGeneric<Scalar>(simulator.vanguard().schedule(),
+                                           simulator.vanguard().summaryState(),
+                                           simulator.vanguard().eclState(),
+                                           phase_usage,
+                                           simulator.gridView().comm())
         , simulator_(simulator)
     {
-        terminal_output_ = ((simulator.gridView().comm().rank() == 0) &&
-                            Parameters::get<TypeTag, Properties::EnableTerminalOutput>());
+        this->terminal_output_ = ((simulator.gridView().comm().rank() == 0) &&
+                                 Parameters::get<TypeTag, Properties::EnableTerminalOutput>());
 
         local_num_cells_ = simulator_.gridView().size(0);
 
@@ -428,8 +428,8 @@ namespace Opm {
 
             // Wells are active if they are active wells on at least one process.
             const Grid& grid = simulator_.vanguard().grid();
-            wells_active_ = !this->well_container_.empty();
-            wells_active_ = grid.comm().max(wells_active_);
+            this->wells_active_ = !this->well_container_.empty();
+            this->wells_active_ = grid.comm().max(this->wells_active_);
 
             // do the initialization for all the wells
             // TODO: to see whether we can postpone of the intialization of the well containers to
@@ -504,8 +504,8 @@ namespace Opm {
 
         //update guide rates
         const auto& comm = simulator_.vanguard().grid().comm();
-        std::vector<double> pot(numPhases(), 0.0);
-        const Group& fieldGroup = schedule().getGroup("FIELD", reportStepIdx);
+        std::vector<double> pot(this->numPhases(), 0.0);
+        const Group& fieldGroup = this->schedule().getGroup("FIELD", reportStepIdx);
         WellGroupHelpers::updateGuideRates(fieldGroup, this->schedule(), summaryState,
                                            this->phase_usage_, reportStepIdx, simulationTime,
                                            this->wellState(), this->groupState(), comm, 
@@ -1087,7 +1087,7 @@ namespace Opm {
         {
             const int episodeIdx = simulator_.episodeIndex();
             const auto& network = this->schedule()[episodeIdx].network();
-            if (!this->wellsActive() && !this->network.active()) {
+            if (!this->wellsActive() && !network.active()) {
                 return;
             }
         }
@@ -1221,7 +1221,7 @@ namespace Opm {
         {
             const int episodeIdx = simulator_.episodeIndex();
             const auto& network = this->schedule()[episodeIdx].network();
-            if (!this->wellsActive() && !this->network.active()) {
+            if (!this->wellsActive() && !network.active()) {
                 return;
             }
         }
@@ -1297,7 +1297,7 @@ namespace Opm {
             this->gasLiftOptimizationStage2(deferred_logger, prod_wells, glift_wells,
                                             group_info, state_map, simulator_.episodeIndex());
             if (this->glift_debug) {
-                gliftDebugShowALQ(deferred_logger);
+                this->gliftDebugShowALQ(deferred_logger);
             }
             num_wells_changed = glift_wells.size();
         }
@@ -1854,7 +1854,7 @@ namespace Opm {
     {
         const int episodeIdx = simulator_.episodeIndex();
         const auto& network = this->schedule()[episodeIdx].network();
-        if (!this->wellsActive() && !this->network.active()) {
+        if (!this->wellsActive() && !network.active()) {
             return {false, false};
         }
 
@@ -1869,7 +1869,8 @@ namespace Opm {
             const double network_imbalance = comm.max(local_network_imbalance);
             const auto& balance = this->schedule()[episodeIdx].network_balance();
             constexpr double relaxtion_factor = 10.0;
-            const double tolerance = relax_network_tolerance ? relaxtion_factor * balance.pressure_tolerance() : balance.pressure_tolerance();
+            const double tolerance = relax_network_tolerance ? relaxtion_factor * balance.pressure_tolerance()
+                                                             : balance.pressure_tolerance();
             more_network_update = this->networkActive() && network_imbalance > tolerance;
         }
 
@@ -2524,7 +2525,7 @@ namespace Opm {
             auto& perf_phase_rate = perf_data.phase_rates;
 
             using int_type = decltype(this->well_perf_data_[wellID].size());
-            for (int_type perf = 0, end_perf = well_perf_data_[wellID].size(); perf < end_perf; ++perf) {
+            for (int_type perf = 0, end_perf = this->well_perf_data_[wellID].size(); perf < end_perf; ++perf) {
                 const int cell_idx = this->well_perf_data_[wellID][perf].cell_index;
                 const auto& intQuants = simulator_.model().intensiveQuantities(cell_idx, /*timeIdx=*/0);
                 const auto& fs = intQuants.fluidState();
