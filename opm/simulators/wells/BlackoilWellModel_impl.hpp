@@ -342,16 +342,16 @@ namespace Opm {
             const auto& fieldGroup =
                 this->schedule().getGroup("FIELD", reportStepIdx);
 
-            WellGroupHelpers::setCmodeGroup(fieldGroup,
-                                            this->schedule(),
-                                            this->summaryState(),
-                                            reportStepIdx,
-                                            this->groupState());
+            WellGroupHelpers<Scalar>::setCmodeGroup(fieldGroup,
+                                                    this->schedule(),
+                                                    this->summaryState(),
+                                                    reportStepIdx,
+                                                    this->groupState());
 
             // Define per region average pressure calculators for use by
             // pressure maintenance groups (GPMAINT keyword).
             if (this->schedule()[reportStepIdx].has_gpmaint()) {
-                WellGroupHelpers::setRegionAveragePressureCalculator
+                WellGroupHelpers<Scalar>::setRegionAveragePressureCalculator
                     (fieldGroup,
                      this->schedule(),
                      reportStepIdx,
@@ -506,10 +506,18 @@ namespace Opm {
         const auto& comm = simulator_.vanguard().grid().comm();
         std::vector<double> pot(this->numPhases(), 0.0);
         const Group& fieldGroup = this->schedule().getGroup("FIELD", reportStepIdx);
-        WellGroupHelpers::updateGuideRates(fieldGroup, this->schedule(), summaryState,
-                                           this->phase_usage_, reportStepIdx, simulationTime,
-                                           this->wellState(), this->groupState(), comm, 
-                                           &this->guideRate_, pot, local_deferredLogger);
+        WellGroupHelpers<Scalar>::updateGuideRates(fieldGroup,
+                                                   this->schedule(),
+                                                   summaryState,
+                                                   this->phase_usage_,
+                                                   reportStepIdx,
+                                                   simulationTime,
+                                                   this->wellState(),
+                                                   this->groupState(),
+                                                   comm,
+                                                   &this->guideRate_,
+                                                   pot,
+                                                   local_deferredLogger);
         std::string exc_msg;
         auto exc_type = ExceptionType::NONE;
         // update gpmaint targets
@@ -518,8 +526,13 @@ namespace Opm {
                 calculator.second->template defineState<ElementContext>(simulator_);
             }
             const double dt = simulator_.timeStepSize();
-            WellGroupHelpers::updateGpMaintTargetForGroups(fieldGroup,
-                                                           this->schedule_, regionalAveragePressureCalculator_, reportStepIdx, dt, this->wellState(), this->groupState());
+            WellGroupHelpers<Scalar>::updateGpMaintTargetForGroups(fieldGroup,
+                                                                   this->schedule_,
+                                                                   regionalAveragePressureCalculator_,
+                                                                   reportStepIdx,
+                                                                   dt,
+                                                                   this->wellState(),
+                                                                   this->groupState());
         }
         try {
             // Compute initial well solution for new wells and injectors that change injection type i.e. WAG.
@@ -575,8 +588,11 @@ namespace Opm {
             well->init(&this->phase_usage_, depth_, gravity_, local_num_cells_, B_avg_, true);
 
             double well_efficiency_factor = wellEcl.getEfficiencyFactor();
-            WellGroupHelpers::accumulateGroupEfficiencyFactor(this->schedule().getGroup(wellEcl.groupName(), timeStepIdx),
-                                                              this->schedule(), timeStepIdx, well_efficiency_factor);
+            WellGroupHelpers<Scalar>::accumulateGroupEfficiencyFactor(this->schedule().getGroup(wellEcl.groupName(),
+                                                                                                timeStepIdx),
+                                                                      this->schedule(),
+                                                                      timeStepIdx,
+                                                                      well_efficiency_factor);
 
             well->setWellEfficiencyFactor(well_efficiency_factor);
             well->setVFPProperties(this->vfp_properties_.get());
@@ -1195,12 +1211,19 @@ namespace Opm {
             const auto& summaryState = simulator_.vanguard().summaryState();
             std::vector<double> pot(this->numPhases(), 0.0);
             const Group& fieldGroup = this->schedule().getGroup("FIELD", reportStepIdx);
-            WellGroupHelpers::updateGuideRates(fieldGroup, this->schedule(), summaryState,
-                                               this->phase_usage_, reportStepIdx, simulationTime,
-                                               this->wellState(), this->groupState(), comm,
-                                               &this->guideRate_, pot, local_deferredLogger);
+            WellGroupHelpers<Scalar>::updateGuideRates(fieldGroup,
+                                                       this->schedule(),
+                                                       summaryState,
+                                                       this->phase_usage_,
+                                                       reportStepIdx,
+                                                       simulationTime,
+                                                       this->wellState(),
+                                                       this->groupState(),
+                                                       comm,
+                                                       &this->guideRate_,
+                                                       pot,
+                                                       local_deferredLogger);
         }
-
 
         return {more_network_update, well_group_control_changed};
     }
