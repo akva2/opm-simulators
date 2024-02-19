@@ -43,58 +43,60 @@ class WellInterfaceGeneric;
 template<class Scalar> class WellState;
 
 //! \brief Class for computing well group controls.
+template<class Scalar>
 class WellGroupControls {
 public:
     //! \brief Constructor sets reference to well.
     WellGroupControls(const WellInterfaceGeneric& well) : well_(well) {}
 
-    using RateConvFunc = std::function<void(const RegionId, const int, const std::optional<std::string>&, std::vector<double>&)>;
+    using RateConvFunc = std::function<void(const RegionId, const int,
+                                            const std::optional<std::string>&, std::vector<Scalar>&)>;
 
     template<class EvalWell>
     void getGroupInjectionControl(const Group& group,
-                                  const WellState<double>& well_state,
-                                  const GroupState<double>& group_state,
+                                  const WellState<Scalar>& well_state,
+                                  const GroupState<Scalar>& group_state,
                                   const Schedule& schedule,
                                   const SummaryState& summaryState,
                                   const InjectorType& injectorType,
                                   const EvalWell& bhp,
                                   const EvalWell& injection_rate,
                                   const RateConvFunc& rateConverter,
-                                  double efficiencyFactor,
+                                  Scalar efficiencyFactor,
                                   EvalWell& control_eq,
                                   DeferredLogger& deferred_logger) const;
 
-    std::optional<double>
+    std::optional<Scalar>
     getGroupInjectionTargetRate(const Group& group,
-                                const WellState<double>& well_state,
-                                const GroupState<double>& group_state,
+                                const WellState<Scalar>& well_state,
+                                const GroupState<Scalar>& group_state,
                                 const Schedule& schedule,
                                 const SummaryState& summaryState,
                                 const InjectorType& injectorType,
                                 const RateConvFunc& rateConverter,
-                                double efficiencyFactor,
+                                Scalar efficiencyFactor,
                                 DeferredLogger& deferred_logger) const;
 
     template<class EvalWell>
     void getGroupProductionControl(const Group& group,
-                                   const WellState<double>& well_state,
-                                   const GroupState<double>& group_state,
+                                   const WellState<Scalar>& well_state,
+                                   const GroupState<Scalar>& group_state,
                                    const Schedule& schedule,
                                    const SummaryState& summaryState,
                                    const EvalWell& bhp,
                                    const std::vector<EvalWell>& rates,
                                    const RateConvFunc& rateConverter,
-                                   double efficiencyFactor,
+                                   Scalar efficiencyFactor,
                                    EvalWell& control_eq,
                                    DeferredLogger& deferred_logger) const;
 
-    double getGroupProductionTargetRate(const Group& group,
-                                        const WellState<double>& well_state,
-                                        const GroupState<double>& group_state,
+    Scalar getGroupProductionTargetRate(const Group& group,
+                                        const WellState<Scalar>& well_state,
+                                        const GroupState<Scalar>& group_state,
                                         const Schedule& schedule,
                                         const SummaryState& summaryState,
                                         const RateConvFunc& rateConverter,
-                                        double efficiencyFactor,
+                                        Scalar efficiencyFactor,
                                         DeferredLogger& deferred_logger) const;
 
 private:
