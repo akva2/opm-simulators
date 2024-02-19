@@ -256,11 +256,15 @@ getGroupInjectionTargetRate(const Group& group,
 
     };
 
-    return WellGroupControls(*this).getGroupInjectionTargetRate(group, well_state,
-                                                                group_state, schedule,
-                                                                summaryState, injectorType,
-                                                                rCoeff, efficiencyFactor,
-                                                                deferred_logger);
+    return WellGroupControls<double>(*this).getGroupInjectionTargetRate(group,
+                                                                        well_state,
+                                                                        group_state,
+                                                                        schedule,
+                                                                        summaryState,
+                                                                        injectorType,
+                                                                        rCoeff,
+                                                                        efficiencyFactor,
+                                                                        deferred_logger);
 }
 
 template<typename FluidSystem>
@@ -283,11 +287,14 @@ getGroupProductionTargetRate(const Group& group,
 
     };
 
-    return WellGroupControls(*this).getGroupProductionTargetRate(group, well_state,
-                                                                 group_state, schedule,
-                                                                 summaryState,
-                                                                 rCoeff, efficiencyFactor,
-                                                                 deferred_logger);
+    return WellGroupControls<double>(*this).getGroupProductionTargetRate(group,
+                                                                         well_state,
+                                                                         group_state,
+                                                                         schedule,
+                                                                         summaryState,
+                                                                         rCoeff,
+                                                                         efficiencyFactor,
+                                                                         deferred_logger);
 }
 
 template class WellInterfaceFluidSystem<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>>;
