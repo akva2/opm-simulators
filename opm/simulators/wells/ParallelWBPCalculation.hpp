@@ -163,7 +163,7 @@ public:
     ///
     /// \return Result set from most recent call to member function \c
     ///   inferBlockAveragePressures() for \c calcIndex.
-    const PAvgCalculator::Result&
+    const PAvgCalculator<double>::Result&
     averagePressures(const std::size_t calcIndex) const;
 
 private:
@@ -326,7 +326,7 @@ private:
 
     /// Collection of WBPn calculation objects.  One object for each well on
     /// rank.
-    PAvgCalculatorCollection calculators_{};
+    PAvgCalculatorCollection<double> calculators_{};
 
     /// Source term objects for each well on rank.
     std::vector<SourceData> wellConnSrc_{};
@@ -360,7 +360,7 @@ private:
     /// terms.
     ///
     /// \return WBPn source terms aggregated for \p well.
-    PAvgCalculator::Sources makeEvaluationSources(const WellID well) const;
+    PAvgCalculator<double>::Sources makeEvaluationSources(const WellID well) const;
 };
 
 } // namespace Opm

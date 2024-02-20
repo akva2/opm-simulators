@@ -36,7 +36,7 @@ Opm::ParallelPAvgCalculator::
 ParallelPAvgCalculator(const Parallel::Communication& comm,
                        const GridDims&                cellIndexMap,
                        const WellConnections&         connections)
-    : PAvgCalculator { cellIndexMap, connections }
+    : PAvgCalculator<double> { cellIndexMap, connections }
     , comm_          { comm }
 {}
 
