@@ -1209,7 +1209,7 @@ namespace Opm
     void
     StandardWell<TypeTag>::
     updateProductivityIndex(const Simulator& ebosSimulator,
-                            const WellProdIndexCalculator& wellPICalc,
+                            const WellProdIndexCalculator<Scalar>& wellPICalc,
                             WellState<Scalar>& well_state,
                             DeferredLogger& deferred_logger) const
     {

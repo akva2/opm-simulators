@@ -179,7 +179,7 @@ namespace Opm
                                          DeferredLogger& deferred_logger) override; // should be const?
 
         void updateProductivityIndex(const Simulator& ebosSimulator,
-                                     const WellProdIndexCalculator& wellPICalc,
+                                     const WellProdIndexCalculator<Scalar>& wellPICalc,
                                      WellState<Scalar>& well_state,
                                      DeferredLogger& deferred_logger) const override;
 
