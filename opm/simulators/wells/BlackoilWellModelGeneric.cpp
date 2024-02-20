@@ -356,7 +356,7 @@ initializeWellPerfData()
                         hasFirstConnection = true;
                     }
 
-                    auto pd = PerforationData{};
+                    auto pd = PerforationData<Scalar>{};
                     pd.cell_index = active_index;
                     pd.connection_transmissibility_factor = connection.CF();
                     pd.satnum_id = connection.satTableId();
