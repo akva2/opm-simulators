@@ -293,7 +293,7 @@ namespace Opm
                              const int perf,
                              const bool allow_cf,
                              std::vector<Value>& cq_s,
-                             PerforationRates& perf_rates,
+                             PerforationRates<Scalar>& perf_rates,
                              DeferredLogger& deferred_logger) const;
 
         template<class Value>
@@ -311,7 +311,7 @@ namespace Opm
                              const Value& skin_pressure,
                              const std::vector<Value>& cmix_s,
                              std::vector<Value>& cq_s,
-                             PerforationRates& perf_rates,
+                             PerforationRates<Scalar>& perf_rates,
                              DeferredLogger& deferred_logger) const;
 
         void computeWellRatesWithBhpIterations(const Simulator& ebosSimulator,
@@ -471,7 +471,7 @@ namespace Opm
 
         template<class Value>
         void gasOilPerfRateInj(const std::vector<Value>& cq_s,
-                               PerforationRates& perf_rates,
+                               PerforationRates<Scalar>& perf_rates,
                                const Value& rv,
                                const Value& rs,
                                const Value& pressure,
@@ -480,20 +480,20 @@ namespace Opm
 
         template<class Value>
         void gasOilPerfRateProd(std::vector<Value>& cq_s,
-                                PerforationRates& perf_rates,
+                                PerforationRates<Scalar>& perf_rates,
                                 const Value& rv,
                                 const Value& rs,
                                 const Value& rvw) const;
 
         template<class Value>
         void gasWaterPerfRateProd(std::vector<Value>& cq_s,
-                                  PerforationRates& perf_rates,
+                                  PerforationRates<Scalar>& perf_rates,
                                   const Value& rvw,
                                   const Value& rsw) const;
 
         template<class Value>
         void gasWaterPerfRateInj(const std::vector<Value>& cq_s,
-                                 PerforationRates& perf_rates,
+                                 PerforationRates<Scalar>& perf_rates,
                                  const Value& rvw,
                                  const Value& rsw,
                                  const Value& pressure,
