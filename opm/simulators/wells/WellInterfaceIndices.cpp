@@ -91,7 +91,7 @@ ebosCompIdxToFlowCompIdx(const unsigned compIdx) const
 }
 
 template<class FluidSystem, class Indices, class Scalar>
-double
+Scalar
 WellInterfaceIndices<FluidSystem,Indices,Scalar>::
 scalingFactor(const int phaseIdx) const
 {
