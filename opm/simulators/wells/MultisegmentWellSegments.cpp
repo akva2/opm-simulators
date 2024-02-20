@@ -100,7 +100,7 @@ MultisegmentWellSegments(const int numSegments,
             }
             perforations_[segment_index].push_back(i_perf_wells);
             well.perfDepth()[i_perf_wells] = connection.depth();
-            const double segment_depth = segment_set[segment_index].depth();
+            const Scalar segment_depth = segment_set[segment_index].depth();
             perforation_depth_diffs_[i_perf_wells] = well_.perfDepth()[i_perf_wells] - segment_depth;
             i_perf_wells++;
         }
@@ -120,10 +120,10 @@ MultisegmentWellSegments(const int numSegments,
     // calculating the depth difference between the segment and its oulet_segments
     // for the top segment, we will make its zero unless we find other purpose to use this value
     for (int seg = 1; seg < numSegments; ++seg) {
-        const double segment_depth = segment_set[seg].depth();
+        const Scalar segment_depth = segment_set[seg].depth();
         const int outlet_segment_number = segment_set[seg].outletSegment();
         const Segment& outlet_segment = segment_set[segment_set.segmentNumberToIndex(outlet_segment_number)];
-        const double outlet_depth = outlet_segment.depth();
+        const Scalar outlet_depth = outlet_segment.depth();
         depth_diffs_[seg] = segment_depth - outlet_depth;
     }
 }
@@ -136,7 +136,7 @@ computeFluidProperties(const EvalWell& temperature,
                        int pvt_region_index,
                        DeferredLogger& deferred_logger)
 {
-    std::vector<double> surf_dens(well_.numComponents());
+    std::vector<Scalar> surf_dens(well_.numComponents());
     // Surface density.
     for (unsigned phaseIdx = 0; phaseIdx < FluidSystem::numPhases; ++phaseIdx) {
         if (!FluidSystem::phaseIsActive(phaseIdx)) {
@@ -489,7 +489,7 @@ getSurfaceVolume(const EvalWell& temperature,
     }
 
     // We increase the segment volume with a factor 10 to stabilize the system.
-    const double volume = well_.wellEcl().getSegments()[seg_idx].volume();
+    const Scalar volume = well_.wellEcl().getSegments()[seg_idx].volume();
 
     return volume / vol_ratio;
 }
@@ -535,13 +535,13 @@ getFrictionPressureLoss(const int seg,
 
     const auto& segment_set = well_.wellEcl().getSegments();
     const int outlet_segment_index = segment_set.segmentNumberToIndex(segment_set[seg].outletSegment());
-    const double length = segment_set[seg].totalLength() - segment_set[outlet_segment_index].totalLength();
+    const Scalar length = segment_set[seg].totalLength() - segment_set[outlet_segment_index].totalLength();
     assert(length > 0.);
-    const double roughness = segment_set[seg].roughness();
-    const double area = segment_set[seg].crossArea();
-    const double diameter = segment_set[seg].internalDiameter();
+    const Scalar roughness = segment_set[seg].roughness();
+    const Scalar area = segment_set[seg].crossArea();
+    const Scalar diameter = segment_set[seg].internalDiameter();
 
-    const double sign = mass_rate < 0. ? 1.0 : - 1.0;
+    const Scalar sign = mass_rate < 0. ? 1.0 : - 1.0;
 
     return sign * mswellhelpers::frictionPressureLoss(length, diameter, area, roughness, density, mass_rate, visc);
 }
@@ -623,7 +623,7 @@ pressureDropSpiralICD(const int seg,
 
     // viscosity contribution from the liquid
     const EvalWell liquid_viscosity_fraction = liquid_fraction < 1.e-30 ? oil_fraction * oil_viscosity + water_fraction * water_viscosity :
-        liquid_fraction * mswellhelpers::emulsionViscosity<EvalWell,double>(water_fraction, water_viscosity, oil_fraction, oil_viscosity, sicd);
+        liquid_fraction * mswellhelpers::emulsionViscosity<EvalWell,Scalar>(water_fraction, water_viscosity, oil_fraction, oil_viscosity, sicd);
 
     const EvalWell mixture_viscosity = liquid_viscosity_fraction + gas_fraction * gas_viscosity;
 
@@ -631,11 +631,11 @@ pressureDropSpiralICD(const int seg,
 
     const EvalWell reservoir_rate_icd = reservoir_rate * sicd.scalingFactor();
 
-    const double viscosity_cali = sicd.viscosityCalibration();
+    const Scalar viscosity_cali = sicd.viscosityCalibration();
 
     using MathTool = MathToolbox<EvalWell>;
 
-    const double density_cali = sicd.densityCalibration();
+    const Scalar density_cali = sicd.densityCalibration();
     // make sure we don't pass negative base to powers
     const EvalWell temp_value1 = density > 0.0 ? MathTool::pow(density / density_cali, 0.75) : 0.0;
     const EvalWell temp_value2 = mixture_viscosity > 0.0 ? MathTool::pow(mixture_viscosity / viscosity_cali, 0.25) : 0.0;
@@ -643,9 +643,9 @@ pressureDropSpiralICD(const int seg,
     // formulation before 2016, base_strength is used
     // const double base_strength = sicd.strength() / density_cali;
     // formulation since 2016, strength is used instead
-    const double strength = sicd.strength();
+    const Scalar strength = sicd.strength();
 
-    const double sign = reservoir_rate_icd <= 0. ? 1.0 : -1.0;
+    const Scalar sign = reservoir_rate_icd <= 0. ? 1.0 : -1.0;
 
     return sign * temp_value1 * temp_value2 * strength * reservoir_rate_icd * reservoir_rate_icd;
 }
@@ -736,7 +736,7 @@ pressureDropAutoICD(const int seg,
 
     using MathTool = MathToolbox<EvalWell>;
     // make sure we don't pass negative base to powers
-    auto safe_pow = [](const auto& a, const double b) {
+    auto safe_pow = [](const auto& a, const Scalar b) {
         return a > 0.0 ? MathTool::pow(a,b) : 0.0;
     };
 
@@ -748,13 +748,13 @@ pressureDropAutoICD(const int seg,
                                    + safe_pow(oil_fraction, aicd.oilDensityExponent()) * oil_density
                                    + safe_pow(gas_fraction, aicd.gasDensityExponent()) * gas_density;
 
-    const double rho_reference = aicd.densityCalibration();
-    const double visc_reference = aicd.viscosityCalibration();
+    const Scalar rho_reference = aicd.densityCalibration();
+    const Scalar visc_reference = aicd.viscosityCalibration();
     const auto volume_rate_icd = mass_rate * aicd.scalingFactor() / mixture_density;
-    const double sign = volume_rate_icd <= 0. ? 1.0 : -1.0;
+    const Scalar sign = volume_rate_icd <= 0. ? 1.0 : -1.0;
     // convert 1 unit volume rate
     using M  = UnitSystem::measure;
-    const double unit_volume_rate = unit_system.to_si(M::geometric_volume_rate, 1.);
+    const Scalar unit_volume_rate = unit_system.to_si(M::geometric_volume_rate, 1.);
 
     // TODO: we did not consider the maximum allowed rate here
     const auto result = sign / rho_reference * mixture_density * mixture_density
@@ -806,22 +806,22 @@ pressureDropValve(const int seg,
         }
     }
 
-    const double additional_length = valve.pipeAdditionalLength();
-    const double roughness = valve.pipeRoughness();
-    const double diameter = valve.pipeDiameter();
-    const double area = valve.pipeCrossArea();
+    const Scalar additional_length = valve.pipeAdditionalLength();
+    const Scalar roughness = valve.pipeRoughness();
+    const Scalar diameter = valve.pipeDiameter();
+    const Scalar area = valve.pipeCrossArea();
 
     const EvalWell friction_pressure_loss =
         mswellhelpers::frictionPressureLoss(additional_length, diameter, area, roughness, density, mass_rate, visc);
 
     const ValveUDAEval uda_eval {summary_state, this->well_.name(), static_cast<std::size_t>(segment_set[seg].segmentNumber())};
-    const double area_con = valve.conCrossArea(uda_eval);
-    const double cv = valve.conFlowCoefficient();
+    const Scalar area_con = valve.conCrossArea(uda_eval);
+    const Scalar cv = valve.conFlowCoefficient();
 
     const EvalWell constriction_pressure_loss =
         mswellhelpers::valveContrictionPressureLoss(mass_rate, density, area_con, cv);
 
-    const double sign = mass_rate <= 0. ? 1.0 : -1.0;
+    const Scalar sign = mass_rate <= 0. ? 1.0 : -1.0;
     return sign * (friction_pressure_loss + constriction_pressure_loss);
 }
 
@@ -829,7 +829,7 @@ template<class FluidSystem, class Indices, class Scalar>
 typename MultisegmentWellSegments<FluidSystem,Indices,Scalar>::EvalWell
 MultisegmentWellSegments<FluidSystem,Indices,Scalar>::
 accelerationPressureLossContribution(const int seg,
-                                     const double area,
+                                     const Scalar area,
                                      const bool extra_reverse_flow_derivatives /*false*/) const
 {
     // Compute the *signed* velocity head for given segment (sign is positive for flow towards surface, i.e., negative rate) 
@@ -855,7 +855,7 @@ accelerationPressureLossContribution(const int seg,
             mass_rate.clearDerivatives();
         }
     }
-    const double sign = mass_rate > 0 ? -1.0 : 1.0;
+    const Scalar sign = mass_rate > 0 ? -1.0 : 1.0;
     return sign*mswellhelpers::velocityHead(area, mass_rate, density);
 }                                     
 
@@ -899,7 +899,7 @@ void
 MultisegmentWellSegments<FluidSystem,Indices,Scalar>::
 copyPhaseDensities(const unsigned    phaseIdx,
                    const std::size_t stride,
-                   double*           dens) const
+                   Scalar*           dens) const
 {
     const auto compIdx = Indices::canonicalToActiveComponentIndex
         (FluidSystem::solventComponentIndex(phaseIdx));
@@ -911,7 +911,7 @@ copyPhaseDensities(const unsigned    phaseIdx,
 }
 
 template <class FluidSystem, class Indices, class Scalar>
-double
+Scalar
 MultisegmentWellSegments<FluidSystem,Indices,Scalar>::
 mixtureDensity(const int seg) const
 {
@@ -940,7 +940,7 @@ mixtureDensity(const int seg) const
 }
 
 template <class FluidSystem, class Indices, class Scalar>
-double
+Scalar
 MultisegmentWellSegments<FluidSystem,Indices,Scalar>::
 mixtureDensityWithExponents(const int seg) const
 {
@@ -956,7 +956,7 @@ mixtureDensityWithExponents(const int seg) const
 }
 
 template <class FluidSystem, class Indices, class Scalar>
-double
+Scalar
 MultisegmentWellSegments<FluidSystem,Indices,Scalar>::
 mixtureDensityWithExponents(const AutoICD& aicd, const int seg) const
 {
