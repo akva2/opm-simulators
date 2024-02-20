@@ -123,7 +123,7 @@ namespace Opm
                     const int perf,
                     const bool allow_cf,
                     std::vector<Value>& cq_s,
-                    PerforationRates& perf_rates,
+                    PerforationRates<Scalar>& perf_rates,
                     DeferredLogger& deferred_logger) const
     {
         auto obtain = [this](const Eval& value)
@@ -230,7 +230,7 @@ namespace Opm
                     const Value& skin_pressure,
                     const std::vector<Value>& cmix_s,
                     std::vector<Value>& cq_s,
-                    PerforationRates& perf_rates,
+                    PerforationRates<Scalar>& perf_rates,
                     DeferredLogger& deferred_logger) const
     {
         // Pressure drawdown (also used to determine direction of flow)
@@ -495,8 +495,8 @@ namespace Opm
         std::vector<EvalWell> mob(this->num_components_, {this->primary_variables_.numWellEq() + Indices::numEq, 0.});
         getMobility(simulator, perf, mob, deferred_logger);
 
-        PerforationRates perf_rates;
-        Scalar trans_mult = simulator.problem().template wellTransMultiplier<double>(intQuants,  cell_idx);
+        PerforationRates<Scalar> perf_rates;
+        Scalar trans_mult = simulator.problem().template wellTransMultiplier<Scalar>(intQuants,  cell_idx);
         const auto& wellstate_nupcol = simulator.problem().wellModel().nupcolWellState().well(this->index_of_well_);
         const std::vector<Scalar> Tw = this->wellIndex(perf, intQuants, trans_mult, wellstate_nupcol);
         computePerfRate(intQuants, mob, bhp, Tw, perf, allow_cf,
@@ -1462,7 +1462,7 @@ namespace Opm
             const std::vector<Scalar> Tw = this->wellIndex(perf, intQuants, trans_mult, wellstate_nupcol);
 
             std::vector<Scalar> cq_s(this->num_components_, 0.);
-            PerforationRates perf_rates;
+            PerforationRates<Scalar> perf_rates;
             computePerfRate(intQuants, mob, bhp, Tw, perf, allow_cf,
                             cq_s, perf_rates, deferred_logger);
 
@@ -1829,7 +1829,7 @@ namespace Opm
             const EvalWell& bhp = this->primary_variables_.eval(Bhp);
 
             std::vector<EvalWell> cq_s(this->num_components_, {this->primary_variables_.numWellEq() + Indices::numEq, 0.});
-            PerforationRates perf_rates;
+            PerforationRates<Scalar> perf_rates;
             Scalar trans_mult = simulator.problem().template wellTransMultiplier<Scalar>(int_quant, cell_idx);
             const auto& wellstate_nupcol = simulator.problem().wellModel().nupcolWellState().well(this->index_of_well_);
             const std::vector<Scalar> Tw = this->wellIndex(perf, int_quant, trans_mult, wellstate_nupcol);  
@@ -2454,7 +2454,7 @@ namespace Opm
             Scalar trans_mult = simulator.problem().template wellTransMultiplier<Scalar>(intQuants,  cell_idx);
             const auto& wellstate_nupcol = simulator.problem().wellModel().nupcolWellState().well(this->index_of_well_);
             const std::vector<Scalar> Tw = this->wellIndex(perf, intQuants, trans_mult, wellstate_nupcol);
-            PerforationRates perf_rates;
+            PerforationRates<Scalar> perf_rates;
             computePerfRate(intQuants, mob, bhp.value(), Tw, perf, allow_cf,
                             cq_s, perf_rates, deferred_logger);
             for (int comp = 0; comp < this->num_components_; ++comp) {
@@ -2587,7 +2587,7 @@ namespace Opm
     void
     StandardWell<TypeTag>::
     gasOilPerfRateInj(const std::vector<Value>& cq_s,
-                      PerforationRates& perf_rates,
+                      PerforationRates<Scalar>& perf_rates,
                       const Value& rv,
                       const Value& rs,
                       const Value& pressure,
@@ -2635,7 +2635,7 @@ namespace Opm
     void
     StandardWell<TypeTag>::
     gasOilPerfRateProd(std::vector<Value>& cq_s,
-                       PerforationRates& perf_rates,
+                       PerforationRates<Scalar>& perf_rates,
                        const Value& rv,
                        const Value& rs,
                        const Value& rvw) const
@@ -2671,7 +2671,7 @@ namespace Opm
     void
     StandardWell<TypeTag>::
     gasWaterPerfRateProd(std::vector<Value>& cq_s,
-                         PerforationRates& perf_rates,
+                         PerforationRates<Scalar>& perf_rates,
                          const Value& rvw,
                          const Value& rsw) const
     {
@@ -2695,7 +2695,7 @@ namespace Opm
     void
     StandardWell<TypeTag>::
     gasWaterPerfRateInj(const std::vector<Value>& cq_s,
-                        PerforationRates& perf_rates,
+                        PerforationRates<Scalar>& perf_rates,
                         const Value& rvw,
                         const Value& rsw,
                         const Value& pressure,
