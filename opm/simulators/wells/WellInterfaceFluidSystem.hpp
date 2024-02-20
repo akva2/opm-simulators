@@ -67,7 +67,7 @@ public:
 
 protected:
     WellInterfaceFluidSystem(const Well& well,
-                             const ParallelWellInfo& parallel_well_info,
+                             const ParallelWellInfo<Scalar>& parallel_well_info,
                              const int time_step,
                              const RateConverterType& rate_converter,
                              const int pvtRegionIdx,
