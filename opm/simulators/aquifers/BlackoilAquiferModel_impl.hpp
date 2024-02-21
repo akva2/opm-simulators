@@ -355,7 +355,7 @@ void BlackoilAquiferModel<TypeTag>::computeConnectionAreaFraction() const
 
     maxAquID = this->simulator_.vanguard().grid().comm().max(maxAquID);
 
-    auto totalConnArea = std::vector<double>(maxAquID, 0.0);
+    auto totalConnArea = std::vector<Scalar>(maxAquID, 0.0);
     for (const auto& aquifer : this->aquifers) {
         totalConnArea[aquifer->aquiferID() - 1] += aquifer->totalFaceArea();
     }
