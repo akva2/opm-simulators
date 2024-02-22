@@ -535,6 +535,20 @@ opm_add_test(test_broadcast
     4
 )
 
+opm_add_test(test_PropsDataHandle
+  DEPENDS "opmsimulators"
+  LIBRARIES opmsimulators ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+  SOURCES
+    tests/test_PropsDataHandle.cpp
+  CONDITION
+    MPI_FOUND AND Boost_UNIT_TEST_FRAMEWORK_FOUND
+  DRIVER_ARGS
+    -n 4
+    -b ${PROJECT_BINARY_DIR}
+  PROCESSORS
+    4
+)
+
 opm_add_test(test_HDF5File_Parallel
   DEPENDS "opmsimulators"
   LIBRARIES opmsimulators ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}

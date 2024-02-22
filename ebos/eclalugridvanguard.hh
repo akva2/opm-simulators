@@ -27,6 +27,8 @@
 #ifndef EWOMS_ECL_ALU_GRID_VANGUARD_HH
 #define EWOMS_ECL_ALU_GRID_VANGUARD_HH
 
+#define DISABLE_ALUGRID_SFC_ORDERING 1
+
 #include <dune/alugrid/common/fromtogridfactory.hh>
 #include <dune/alugrid/dgf.hh>
 #include <dune/alugrid/grid.hh>
@@ -42,6 +44,7 @@
 #include <opm/models/common/multiphasebaseproperties.hh>
 
 #include <opm/simulators/utils/ParallelEclipseState.hpp>
+#include <opm/simulators/utils/PropsDataHandle.hpp>
 
 #include <array>
 #include <cstddef>
@@ -172,12 +175,6 @@ public:
     {
         auto gridView = grid().leafGridView();
         auto dataHandle = cartesianIndexMapper_->dataHandle(gridView);
-        grid().loadBalance(*dataHandle);
-
-        // communicate non-interior cells values
-        grid().communicate(*dataHandle,
-                           Dune::InteriorBorder_All_Interface,
-                           Dune::ForwardCommunication );
 
        if (grid().size(0))
        {
@@ -192,10 +189,26 @@ public:
                                                                  Properties::EnableDiffusion>(),
                                                                  getPropValue<TypeTag,
                                                                  Properties::EnableDispersion>());
-            // Re-ordering  for ALUGrid
+            // Re-ordering for ALUGrid
             globalTrans_->update(false, [&](unsigned int i) { return gridEquilIdxToGridIdx(i);});
         }
-        
+
+        PropsDataHandle<Grid> pHandle {
+            grid(), dynamic_cast<ParallelEclipseState&>(*this->eclState_)
+        };
+
+        grid().loadBalance(pHandle);
+
+        // communicate non-interior cells values
+        grid().communicate(*dataHandle,
+                           Dune::InteriorBorder_All_Interface,
+                           Dune::ForwardCommunication );
+
+        grid().communicate(pHandle,
+                           Dune::InteriorBorder_All_Interface,
+                           Dune::ForwardCommunication );
+
+       this->distributeFieldProps_();
     }
 
     template<class DataHandle>
@@ -348,6 +361,35 @@ protected:
     void filterConnections_()
     {
         // not handling the removal of completions for this type of grid yet.
+    }
+
+    void distributeFieldProps_()
+    {
+    //    OPM_TIMEBLOCK(distributeFProps);
+        const auto mpiSize = this->grid_->comm().size();
+
+        if (mpiSize == 1) {
+            return;
+        }
+
+        if (auto* parallelEclState = dynamic_cast<ParallelEclipseState*>(this->eclState_.get());
+            parallelEclState != nullptr)
+        {
+            // Reset Cartesian index mapper for automatic creation of field
+            // properties
+            parallelEclState->resetCartesianMapper(this->cartesianIndexMapper_.get());
+            parallelEclState->switchToDistributedProps();
+        }
+        else {
+            const auto message = std::string {
+                "Parallel simulator setup is incorrect as "
+                "it does not use ParallelEclipseState"
+            };
+
+            OpmLog::error(message);
+
+            throw std::invalid_argument { message };
+        }
     }
 
     std::unique_ptr<Grid> grid_;

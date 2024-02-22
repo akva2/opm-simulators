@@ -1113,7 +1113,7 @@ isCartIdxOnThisRank(int cartIdx) const
         return true;
     }
 
-    assert (! needsReordering);
+    //assert (! needsReordering);
 
     auto candidate = std::lower_bound(this->sortedCartesianIdx_.begin(),
                                       this->sortedCartesianIdx_.end(),

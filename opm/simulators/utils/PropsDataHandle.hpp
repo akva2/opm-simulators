@@ -87,7 +87,7 @@ public:
                 Dune::MultipleCodimMultipleGeomTypeMapper<typename Grid::LevelGridView>;
             ElementMapper elemMapper(gridView, Dune::mcmgElementLayout());
 
-            for (const auto &element : elements(gridView, Dune::Partitions::interiorBorder))
+            for (const auto &element : elements(gridView, Dune::Partitions::all))
             {
                 const auto& id = idSet.id(element);
                 auto index = elemMapper.index(element);
@@ -131,9 +131,9 @@ public:
 
         // copy data for the persistent mao to the field properties
         const auto& idSet = m_grid.localIdSet();
-        const auto& gridView = m_grid.levelGridView(0);
+        const auto gridView = m_grid.leafGridView();
         using ElementMapper =
-            Dune::MultipleCodimMultipleGeomTypeMapper<typename Grid::LevelGridView>;
+            Dune::MultipleCodimMultipleGeomTypeMapper<typename Grid::LeafGridView>;
         ElementMapper elemMapper(gridView, Dune::mcmgElementLayout());
 
         for (const auto &element : elements( gridView, Dune::Partitions::all))
@@ -160,22 +160,18 @@ public:
         }
     }
 
-    bool contains(int /* dim */, int codim)
+    bool contains(int /* dim */, int codim) const
     {
         return codim == 0;
     }
 
-    bool fixedsize(int /* dim */, int /* codim */)
-    {
-        return true;
-    }
-    bool fixedSize(int /* dim */, int /* codim */)
+    bool fixedsize(int /* dim */, int /* codim */) const
     {
         return true;
     }
 
     template<class EntityType>
-    std::size_t size(const EntityType /* entity */)
+    std::size_t size(const EntityType /* entity */) const
     {
         return m_no_data;
     }
@@ -183,6 +179,7 @@ public:
     template<class BufferType, class EntityType>
     void gather(BufferType& buffer, const EntityType& e) const
     {
+        std::cout << "gather for " << m_grid.comm().rank() << " " << m_grid.localIdSet().id(e) << std::endl;
         auto iter = elementData_.find(m_grid.localIdSet().id(e));
         assert(iter != elementData_.end());
         for (const auto& data : iter->second)
@@ -194,6 +191,7 @@ public:
     template<class BufferType, class EntityType>
     void scatter(BufferType& buffer, const EntityType& e, std::size_t n)
     {
+        std::cout << "scatter for " << m_grid.comm().rank() << " " << m_grid.localIdSet().id(e) << std::endl;
         assert(n == m_no_data);
         auto& array = elementData_[m_grid.localIdSet().id(e)];
         array.resize(n);
@@ -223,7 +221,8 @@ private:
     /// \brief The data per element as a vector mapped from the local id.
     ///
     /// each entry is a pair of data and value_status.
-    std::unordered_map<typename LocalIdSet::IdType, std::vector<std::pair<double,unsigned char> > > elementData_;
+    std::unordered_map<typename LocalIdSet::IdType,
+                       std::vector<std::pair<double,unsigned char>>> elementData_;
     /// \brief The amount of data to send for each element
     std::size_t m_no_data;
 };

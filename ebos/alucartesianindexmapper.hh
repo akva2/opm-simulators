@@ -209,7 +209,7 @@ public:
     }
 
     /** \brief return index of the cells in the logical Cartesian grid */
-    int cartesianIndex(const std::array<int, dimension>& coords) const
+/*    int cartesianIndex(const std::array<int, dimension>& coords) const
     {
         int cartIndex = coords[0];
         int factor = cartesianDimensions()[0];
@@ -219,7 +219,7 @@ public:
         }
 
         return cartIndex;
-    }
+    }*/
 
     /** \brief return Cartesian coordinate, i.e. IJK, for a given cell */
     void cartesianCoordinate(const int compressedElementIndex, std::array<int, dimension>& coords) const
