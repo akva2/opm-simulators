@@ -109,12 +109,10 @@ namespace Opm {
 template <class TypeTag>
 class EclProblem : public GetPropType<TypeTag, Properties::BaseProblem>
                  , public EclGenericProblem<GetPropType<TypeTag, Properties::GridView>,
-                                            GetPropType<TypeTag, Properties::FluidSystem>,
-                                            GetPropType<TypeTag, Properties::Scalar>>
+                                            GetPropType<TypeTag, Properties::FluidSystem>>
 {
     using BaseType = EclGenericProblem<GetPropType<TypeTag, Properties::GridView>,
-                                       GetPropType<TypeTag, Properties::FluidSystem>,
-                                       GetPropType<TypeTag, Properties::Scalar>>;
+                                       GetPropType<TypeTag, Properties::FluidSystem>>;
     using ParentType = GetPropType<TypeTag, Properties::BaseProblem>;
     using Implementation = GetPropType<TypeTag, Properties::Problem>;
 
@@ -198,13 +196,13 @@ class EclProblem : public GetPropType<TypeTag, Properties::BaseProblem>
     using DirectionalMobilityPtr = Opm::Utility::CopyablePtr<DirectionalMobility<TypeTag, Evaluation>>;
 
 public:
-    using EclGenericProblem<GridView,FluidSystem,Scalar>::briefDescription;
-    using EclGenericProblem<GridView,FluidSystem,Scalar>::helpPreamble;
-    using EclGenericProblem<GridView,FluidSystem,Scalar>::shouldWriteOutput;
-    using EclGenericProblem<GridView,FluidSystem,Scalar>::shouldWriteRestartFile;
-    using EclGenericProblem<GridView,FluidSystem,Scalar>::rockCompressibility;
-    using EclGenericProblem<GridView,FluidSystem,Scalar>::rockReferencePressure;
-    using EclGenericProblem<GridView,FluidSystem,Scalar>::porosity;
+    using BaseType::briefDescription;
+    using BaseType::helpPreamble;
+    using BaseType::shouldWriteOutput;
+    using BaseType::shouldWriteRestartFile;
+    using BaseType::rockCompressibility;
+    using BaseType::rockReferencePressure;
+    using BaseType::porosity;
 
     /*!
      * \copydoc FvBaseProblem::registerParameters
@@ -271,9 +269,9 @@ public:
      */
     EclProblem(Simulator& simulator)
         : ParentType(simulator)
-        , EclGenericProblem<GridView,FluidSystem,Scalar>(simulator.vanguard().eclState(),
-                                                         simulator.vanguard().schedule(),
-                                                         simulator.vanguard().gridView())
+        , BaseType(simulator.vanguard().eclState(),
+                   simulator.vanguard().schedule(),
+                   simulator.vanguard().gridView())
         , transmissibilities_(simulator.vanguard().eclState(),
                               simulator.vanguard().gridView(),
                               simulator.vanguard().cartesianIndexMapper(),
@@ -1078,7 +1076,7 @@ public:
     std::shared_ptr<EclMaterialLawManager> materialLawManager()
     { return materialLawManager_; }
 
-    using EclGenericProblem<GridView,FluidSystem,Scalar>::pvtRegionIndex;
+    using BaseType::pvtRegionIndex;
     /*!
      * \brief Returns the index of the relevant region for thermodynmic properties
      */
@@ -1086,7 +1084,7 @@ public:
     unsigned pvtRegionIndex(const Context& context, unsigned spaceIdx, unsigned timeIdx) const
     { return pvtRegionIndex(context.globalSpaceIndex(spaceIdx, timeIdx)); }
 
-    using EclGenericProblem<GridView,FluidSystem,Scalar>::satnumRegionIndex;
+    using BaseType::satnumRegionIndex;
     /*!
      * \brief Returns the index of the relevant region for thermodynmic properties
      */
@@ -1094,7 +1092,7 @@ public:
     unsigned satnumRegionIndex(const Context& context, unsigned spaceIdx, unsigned timeIdx) const
     { return this->satnumRegionIndex(context.globalSpaceIndex(spaceIdx, timeIdx)); }
 
-    using EclGenericProblem<GridView,FluidSystem,Scalar>::miscnumRegionIndex;
+    using BaseType::miscnumRegionIndex;
     /*!
      * \brief Returns the index of the relevant region for thermodynmic properties
      */
@@ -1102,7 +1100,7 @@ public:
     unsigned miscnumRegionIndex(const Context& context, unsigned spaceIdx, unsigned timeIdx) const
     { return this->miscnumRegionIndex(context.globalSpaceIndex(spaceIdx, timeIdx)); }
 
-    using EclGenericProblem<GridView,FluidSystem,Scalar>::plmixnumRegionIndex;
+    using BaseType::plmixnumRegionIndex;
     /*!
      * \brief Returns the index of the relevant region for thermodynmic properties
      */
@@ -1110,7 +1108,7 @@ public:
     unsigned plmixnumRegionIndex(const Context& context, unsigned spaceIdx, unsigned timeIdx) const
     { return this->plmixnumRegionIndex(context.globalSpaceIndex(spaceIdx, timeIdx)); }
 
-    using EclGenericProblem<GridView,FluidSystem,Scalar>::maxPolymerAdsorption;
+    using BaseType::maxPolymerAdsorption;
     /*!
      * \brief Returns the max polymer adsorption value
      */

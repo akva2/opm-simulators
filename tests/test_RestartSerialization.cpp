@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(EclGenericProblem)
     auto gridView = grid.leafGridView();
 #endif // HAVE_DUNE_FEM
     auto data_out
-        = Opm::EclGenericProblem<GridView, Opm::BlackOilFluidSystem<double, Opm::BlackOilDefaultIndexTraits>, double>::
+        = Opm::EclGenericProblem<GridView, Opm::BlackOilFluidSystem<double, Opm::BlackOilDefaultIndexTraits>>::
             serializationTestObject(eclState, schedule, gridView);
     Opm::Serialization::MemPacker packer;
     Opm::Serializer ser(packer);

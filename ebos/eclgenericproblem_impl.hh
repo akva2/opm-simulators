@@ -80,8 +80,8 @@ int eclPositionalParameter(Dune::ParameterTree& tree,
     return 1;
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+EclGenericProblem<GridView,FluidSystem>::
 EclGenericProblem(const EclipseState& eclState,
                   const Schedule& schedule,
                   const GridView& gridView)
@@ -93,9 +93,9 @@ EclGenericProblem(const EclipseState& eclState,
 {
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-EclGenericProblem<GridView,FluidSystem,Scalar>
-EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+EclGenericProblem<GridView,FluidSystem>
+EclGenericProblem<GridView,FluidSystem>::
 serializationTestObject(const EclipseState& eclState,
                         const Schedule& schedule,
                         const GridView& gridView)
@@ -114,9 +114,9 @@ serializationTestObject(const EclipseState& eclState,
     return result;
 }
 
-template<class GridView, class FluidSystem, class Scalar>
+template<class GridView, class FluidSystem>
 std::string
-EclGenericProblem<GridView,FluidSystem,Scalar>::
+EclGenericProblem<GridView,FluidSystem>::
 helpPreamble(int,
              const char **argv)
 {
@@ -129,9 +129,9 @@ helpPreamble(int,
         + desc;
 }
 
-template<class GridView, class FluidSystem, class Scalar>
+template<class GridView, class FluidSystem>
 std::string
-EclGenericProblem<GridView,FluidSystem,Scalar>::
+EclGenericProblem<GridView,FluidSystem>::
 briefDescription()
 {
     if (briefDescription_.empty())
@@ -147,8 +147,8 @@ briefDescription()
         return briefDescription_;
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-void EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+void EclGenericProblem<GridView,FluidSystem>::
 readRockParameters_(const std::vector<Scalar>& cellCenterDepths,
                     std::function<std::array<int,3>(const unsigned)> ijkIndex)
 {
@@ -222,8 +222,8 @@ readRockParameters_(const std::vector<Scalar>& cellCenterDepths,
     }
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-void EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+void EclGenericProblem<GridView,FluidSystem>::
 readRockCompactionParameters_()
 {
     const auto& rock_config = eclState_.getSimulationConfig().rock_config();
@@ -315,8 +315,9 @@ readRockCompactionParameters_()
     }
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-Scalar EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+typename EclGenericProblem<GridView,FluidSystem>::Scalar
+EclGenericProblem<GridView,FluidSystem>::
 rockCompressibility(unsigned globalSpaceIdx) const
 {
     if (this->rockParams_.empty())
@@ -329,8 +330,9 @@ rockCompressibility(unsigned globalSpaceIdx) const
     return this->rockParams_[tableIdx].compressibility;
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-Scalar EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+typename EclGenericProblem<GridView,FluidSystem>::Scalar
+EclGenericProblem<GridView,FluidSystem>::
 rockReferencePressure(unsigned globalSpaceIdx) const
 {
     if (this->rockParams_.empty())
@@ -343,15 +345,17 @@ rockReferencePressure(unsigned globalSpaceIdx) const
     return this->rockParams_[tableIdx].referencePressure;
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-Scalar EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+typename EclGenericProblem<GridView,FluidSystem>::Scalar
+EclGenericProblem<GridView,FluidSystem>::
 porosity(unsigned globalSpaceIdx, unsigned timeIdx) const
 {
     return this->referencePorosity_[timeIdx][globalSpaceIdx];
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-Scalar EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+typename EclGenericProblem<GridView,FluidSystem>::Scalar
+EclGenericProblem<GridView,FluidSystem>::
 rockFraction(unsigned elementIdx, unsigned timeIdx) const
 {
     // the reference porosity is defined as the accumulated pore volume divided by the
@@ -362,9 +366,9 @@ rockFraction(unsigned elementIdx, unsigned timeIdx) const
     return referencePorosity(elementIdx, timeIdx) / porosity * (1 - porosity);
 }
 
-template<class GridView, class FluidSystem, class Scalar>
+template<class GridView, class FluidSystem>
 template<class T>
-void EclGenericProblem<GridView,FluidSystem,Scalar>::
+void EclGenericProblem<GridView,FluidSystem>::
 updateNum(const std::string& name, std::vector<T>& numbers, std::size_t num_regions)
 {
     if (!eclState_.fieldProps().has_int(name))
@@ -384,40 +388,40 @@ updateNum(const std::string& name, std::vector<T>& numbers, std::size_t num_regi
                                                                       true /*needsTranslation*/, valueCheck);
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-void EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+void EclGenericProblem<GridView,FluidSystem>::
 updatePvtnum_()
 {
     const auto num_regions = eclState_.getTableManager().getTabdims().getNumPVTTables();
     updateNum("PVTNUM", pvtnum_, num_regions);
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-void EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+void EclGenericProblem<GridView,FluidSystem>::
 updateSatnum_()
 {
     const auto num_regions = eclState_.getTableManager().getTabdims().getNumSatTables();
     updateNum("SATNUM", satnum_, num_regions);
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-void EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+void EclGenericProblem<GridView,FluidSystem>::
 updateMiscnum_()
 {
     const auto num_regions = 1; // we only support single region
     updateNum("MISCNUM", miscnum_, num_regions);
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-void EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+void EclGenericProblem<GridView,FluidSystem>::
 updatePlmixnum_()
 {
     const auto num_regions = 1; // we only support single region
     updateNum("PLMIXNUM", plmixnum_, num_regions);
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-void EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+void EclGenericProblem<GridView,FluidSystem>::
 updateKrnum_()
 {
     const auto num_regions = eclState_.getTableManager().getTabdims().getNumSatTables();
@@ -426,8 +430,8 @@ updateKrnum_()
     updateNum("KRNUMZ", krnumz_, num_regions);
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-void EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+void EclGenericProblem<GridView,FluidSystem>::
 updateImbnum_()
 {
     const auto num_regions = eclState_.getTableManager().getTabdims().getNumSatTables();
@@ -436,16 +440,16 @@ updateImbnum_()
     updateNum("IMBNUMZ", imbnumz_, num_regions);
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-bool EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+bool EclGenericProblem<GridView,FluidSystem>::
 vapparsActive(int episodeIdx) const
 {
     const auto& oilVaporizationControl = schedule_[episodeIdx].oilvap();
     return (oilVaporizationControl.getType() == OilVaporizationProperties::OilVaporization::VAPPARS);
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-bool EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+bool EclGenericProblem<GridView,FluidSystem>::
 beginEpisode_(bool enableExperiments,
               int episodeIdx)
 {
@@ -481,9 +485,8 @@ beginEpisode_(bool enableExperiments,
     return false;
 }
 
-
-template<class GridView, class FluidSystem, class Scalar>
-void EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+void EclGenericProblem<GridView,FluidSystem>::
 beginTimeStep_(bool enableExperiments,
                int episodeIdx,
                int timeStepIndex,
@@ -509,15 +512,15 @@ beginTimeStep_(bool enableExperiments,
     this->mixControls_.updateExplicitQuantities(episodeIdx, timeStepSize);
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-void EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+void EclGenericProblem<GridView,FluidSystem>::
 initFluidSystem_()
 {
     FluidSystem::initFromState(eclState_, schedule_);
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-void EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+void EclGenericProblem<GridView,FluidSystem>::
 readBlackoilExtentionsInitialConditions_(std::size_t numDof,
                                          bool enableSolvent,
                                          bool enablePolymer,
@@ -582,8 +585,9 @@ readBlackoilExtentionsInitialConditions_(std::size_t numDof,
 }
 
 
-template<class GridView, class FluidSystem, class Scalar>
-Scalar EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+typename EclGenericProblem<GridView,FluidSystem>::Scalar
+EclGenericProblem<GridView,FluidSystem>::
 maxWaterSaturation(unsigned globalDofIdx) const
 {
     if (maxWaterSaturation_.empty())
@@ -592,8 +596,9 @@ maxWaterSaturation(unsigned globalDofIdx) const
     return maxWaterSaturation_[globalDofIdx];
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-Scalar EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+typename EclGenericProblem<GridView,FluidSystem>::Scalar
+EclGenericProblem<GridView,FluidSystem>::
 minOilPressure(unsigned globalDofIdx) const
 {
     if (minRefPressure_.empty())
@@ -602,8 +607,9 @@ minOilPressure(unsigned globalDofIdx) const
     return minRefPressure_[globalDofIdx];
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-Scalar EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+typename EclGenericProblem<GridView,FluidSystem>::Scalar
+EclGenericProblem<GridView,FluidSystem>::
 overburdenPressure(unsigned elementIdx) const
 {
     if (overburdenPressure_.empty())
@@ -612,8 +618,9 @@ overburdenPressure(unsigned elementIdx) const
     return overburdenPressure_[elementIdx];
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-Scalar EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+typename EclGenericProblem<GridView,FluidSystem>::Scalar
+EclGenericProblem<GridView,FluidSystem>::
 solventSaturation(unsigned elemIdx) const
 {
     if (solventSaturation_.empty())
@@ -622,9 +629,9 @@ solventSaturation(unsigned elemIdx) const
     return solventSaturation_[elemIdx];
 }
 
-
-template<class GridView, class FluidSystem, class Scalar>
-Scalar EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+typename EclGenericProblem<GridView,FluidSystem>::Scalar
+EclGenericProblem<GridView,FluidSystem>::
 solventRsw(unsigned elemIdx) const
 {
     if (solventRsw_.empty())
@@ -633,16 +640,18 @@ solventRsw(unsigned elemIdx) const
     return solventRsw_[elemIdx];
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-Scalar EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+typename EclGenericProblem<GridView,FluidSystem>::Scalar
+EclGenericProblem<GridView,FluidSystem>::
 drsdtcon(unsigned elemIdx, int episodeIdx) const
 {
     return this->mixControls_.drsdtcon(elemIdx, episodeIdx,
                                        this->pvtRegionIndex(elemIdx));
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-Scalar EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+typename EclGenericProblem<GridView,FluidSystem>::Scalar
+EclGenericProblem<GridView,FluidSystem>::
 polymerConcentration(unsigned elemIdx) const
 {
     if (polymer_.concentration.empty()) {
@@ -652,8 +661,9 @@ polymerConcentration(unsigned elemIdx) const
     return polymer_.concentration[elemIdx];
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-Scalar EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+typename EclGenericProblem<GridView,FluidSystem>::Scalar
+EclGenericProblem<GridView,FluidSystem>::
 polymerMolecularWeight(const unsigned elemIdx) const
 {
     if (polymer_.moleWeight.empty()) {
@@ -663,8 +673,9 @@ polymerMolecularWeight(const unsigned elemIdx) const
     return polymer_.moleWeight[elemIdx];
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-Scalar EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+typename EclGenericProblem<GridView,FluidSystem>::Scalar
+EclGenericProblem<GridView,FluidSystem>::
 microbialConcentration(unsigned elemIdx) const
 {
     if (micp_.microbialConcentration.empty()) {
@@ -674,8 +685,9 @@ microbialConcentration(unsigned elemIdx) const
     return micp_.microbialConcentration[elemIdx];
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-Scalar EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+typename EclGenericProblem<GridView,FluidSystem>::Scalar
+EclGenericProblem<GridView,FluidSystem>::
 oxygenConcentration(unsigned elemIdx) const
 {
     if (micp_.oxygenConcentration.empty()) {
@@ -685,8 +697,9 @@ oxygenConcentration(unsigned elemIdx) const
     return micp_.oxygenConcentration[elemIdx];
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-Scalar EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+typename EclGenericProblem<GridView,FluidSystem>::Scalar
+EclGenericProblem<GridView,FluidSystem>::
 ureaConcentration(unsigned elemIdx) const
 {
     if (micp_.ureaConcentration.empty()) {
@@ -696,8 +709,9 @@ ureaConcentration(unsigned elemIdx) const
     return micp_.ureaConcentration[elemIdx];
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-Scalar EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+typename EclGenericProblem<GridView,FluidSystem>::Scalar
+EclGenericProblem<GridView,FluidSystem>::
 biofilmConcentration(unsigned elemIdx) const
 {
     if (micp_.biofilmConcentration.empty()) {
@@ -707,8 +721,9 @@ biofilmConcentration(unsigned elemIdx) const
     return micp_.biofilmConcentration[elemIdx];
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-Scalar EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+typename EclGenericProblem<GridView,FluidSystem>::Scalar
+EclGenericProblem<GridView,FluidSystem>::
 calciteConcentration(unsigned elemIdx) const
 {
     if (micp_.calciteConcentration.empty()) {
@@ -718,8 +733,8 @@ calciteConcentration(unsigned elemIdx) const
     return micp_.calciteConcentration[elemIdx];
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-unsigned EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+unsigned EclGenericProblem<GridView,FluidSystem>::
 pvtRegionIndex(unsigned elemIdx) const
 {
     if (pvtnum_.empty())
@@ -728,8 +743,8 @@ pvtRegionIndex(unsigned elemIdx) const
     return pvtnum_[elemIdx];
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-unsigned EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+unsigned EclGenericProblem<GridView,FluidSystem>::
 satnumRegionIndex(unsigned elemIdx) const
 {
     if (satnum_.empty())
@@ -738,8 +753,8 @@ satnumRegionIndex(unsigned elemIdx) const
     return satnum_[elemIdx];
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-unsigned EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+unsigned EclGenericProblem<GridView,FluidSystem>::
 miscnumRegionIndex(unsigned elemIdx) const
 {
     if (miscnum_.empty())
@@ -748,8 +763,8 @@ miscnumRegionIndex(unsigned elemIdx) const
     return miscnum_[elemIdx];
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-unsigned EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+unsigned EclGenericProblem<GridView,FluidSystem>::
 plmixnumRegionIndex(unsigned elemIdx) const
 {
     if (plmixnum_.empty())
@@ -758,8 +773,9 @@ plmixnumRegionIndex(unsigned elemIdx) const
     return plmixnum_[elemIdx];
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-Scalar EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+typename EclGenericProblem<GridView,FluidSystem>::Scalar
+EclGenericProblem<GridView,FluidSystem>::
 maxPolymerAdsorption(unsigned elemIdx) const
 {
     if (polymer_.maxAdsorption.empty()) {
@@ -769,8 +785,8 @@ maxPolymerAdsorption(unsigned elemIdx) const
     return polymer_.maxAdsorption[elemIdx];
 }
 
-template<class GridView, class FluidSystem, class Scalar>
-bool EclGenericProblem<GridView,FluidSystem,Scalar>::
+template<class GridView, class FluidSystem>
+bool EclGenericProblem<GridView,FluidSystem>::
 operator==(const EclGenericProblem& rhs) const
 {
     return this->maxWaterSaturation_ == rhs.maxWaterSaturation_ &&
