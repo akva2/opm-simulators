@@ -166,23 +166,23 @@ std::string EclString(const Opm::Inplace::Phase phase)
 
 namespace Opm {
 
-template<class FluidSystem, class Scalar>
-EclGenericOutputBlackoilModule<FluidSystem,Scalar>::
+template<class FluidSystem>
+EclGenericOutputBlackoilModule<FluidSystem>::
 EclGenericOutputBlackoilModule(const EclipseState& eclState,
-                           const Schedule& schedule,
-                           const SummaryConfig& summaryConfig,
-                           const SummaryState& summaryState,
-                           const std::string& moduleVersion,
-                           bool enableEnergy,
-                           bool enableTemperature,
-                           bool enableMech,
-                           bool enableSolvent,
-                           bool enablePolymer,
-                           bool enableFoam,
-                           bool enableBrine,
-                           bool enableSaltPrecipitation,
-                           bool enableExtbo,
-                           bool enableMICP)
+                               const Schedule& schedule,
+                               const SummaryConfig& summaryConfig,
+                               const SummaryState& summaryState,
+                               const std::string& moduleVersion,
+                               bool enableEnergy,
+                               bool enableTemperature,
+                               bool enableMech,
+                               bool enableSolvent,
+                               bool enablePolymer,
+                               bool enableFoam,
+                               bool enableBrine,
+                               bool enableSaltPrecipitation,
+                               bool enableExtbo,
+                               bool enableMICP)
     : eclState_(eclState)
     , schedule_(schedule)
     , summaryConfig_(summaryConfig)
@@ -249,41 +249,42 @@ EclGenericOutputBlackoilModule(const EclipseState& eclState,
     }
 }
 
-template<class FluidSystem, class Scalar>
-EclGenericOutputBlackoilModule<FluidSystem,Scalar>::
+template<class FluidSystem>
+EclGenericOutputBlackoilModule<FluidSystem>::
 ~EclGenericOutputBlackoilModule() = default;
 
-template<class FluidSystem, class Scalar>
-void EclGenericOutputBlackoilModule<FluidSystem,Scalar>::
-outputTimeStamp(const std::string& lbl, double elapsed, int rstep, boost::posix_time::ptime currentDate)
+template<class FluidSystem>
+void EclGenericOutputBlackoilModule<FluidSystem>::
+outputTimeStamp(const std::string& lbl, double elapsed,
+                int rstep, boost::posix_time::ptime currentDate)
 {
     logOutput_.timeStamp(lbl, elapsed, rstep, currentDate);
 }
 
-template<class FluidSystem, class Scalar>
-void EclGenericOutputBlackoilModule<FluidSystem,Scalar>::
+template<class FluidSystem>
+void EclGenericOutputBlackoilModule<FluidSystem>::
 outputCumLog(std::size_t reportStepNum)
 {
     this->logOutput_.cumulative(reportStepNum);
 }
 
-template<class FluidSystem,class Scalar>
-void EclGenericOutputBlackoilModule<FluidSystem,Scalar>::
+template<class FluidSystem>
+void EclGenericOutputBlackoilModule<FluidSystem>::
 outputProdLog(std::size_t reportStepNum)
 {
     this->logOutput_.production(reportStepNum);
 }
 
-template<class FluidSystem,class Scalar>
-void EclGenericOutputBlackoilModule<FluidSystem,Scalar>::
+template<class FluidSystem>
+void EclGenericOutputBlackoilModule<FluidSystem>::
 outputInjLog(std::size_t reportStepNum)
 {
     this->logOutput_.injection(reportStepNum);
 }
 
 
-template<class FluidSystem,class Scalar>
-Inplace EclGenericOutputBlackoilModule<FluidSystem,Scalar>::
+template<class FluidSystem>
+Inplace EclGenericOutputBlackoilModule<FluidSystem>::
 calc_inplace(std::map<std::string, double>& miscSummaryData,
              std::map<std::string, std::vector<double>>& regionData,
              const Parallel::Communication& comm)
@@ -301,9 +302,8 @@ calc_inplace(std::map<std::string, double>& miscSummaryData,
     return inplace;
 }
 
-
-template<class FluidSystem,class Scalar>
-void EclGenericOutputBlackoilModule<FluidSystem,Scalar>::
+template<class FluidSystem>
+void EclGenericOutputBlackoilModule<FluidSystem>::
 outputFipAndResvLog(const Inplace& inplace,
                          const std::size_t reportStepNum,
                          double elapsed,
@@ -311,7 +311,6 @@ outputFipAndResvLog(const Inplace& inplace,
                          const bool substep,
                          const Parallel::Communication& comm)
 {
-
     if (comm.rank() != 0)
         return;
 
@@ -354,9 +353,8 @@ outputFipAndResvLog(const Inplace& inplace,
     }
 }
 
-
-template<class FluidSystem,class Scalar>
-void EclGenericOutputBlackoilModule<FluidSystem,Scalar>::
+template<class FluidSystem>
+void EclGenericOutputBlackoilModule<FluidSystem>::
 addRftDataToWells(data::Wells& wellDatas, std::size_t reportStepNum)
 {
     const auto& rft_config = schedule_[reportStepNum].rft_config();
@@ -405,8 +403,8 @@ addRftDataToWells(data::Wells& wellDatas, std::size_t reportStepNum)
     gasConnectionSaturations_.clear();
 }
 
-template<class FluidSystem, class Scalar>
-void EclGenericOutputBlackoilModule<FluidSystem,Scalar>::
+template<class FluidSystem>
+void EclGenericOutputBlackoilModule<FluidSystem>::
 assignToSolution(data::Solution& sol)
 {
     using DataEntry =
@@ -676,8 +674,8 @@ assignToSolution(data::Solution& sol)
     }
 }
 
-template<class FluidSystem,class Scalar>
-void EclGenericOutputBlackoilModule<FluidSystem,Scalar>::
+template<class FluidSystem>
+void EclGenericOutputBlackoilModule<FluidSystem>::
 setRestart(const data::Solution& sol,
            unsigned elemIdx,
            unsigned globalDofIndex)
@@ -751,9 +749,9 @@ setRestart(const data::Solution& sol,
                   { assign(p.first, *p.second); });
 }
 
-template<class FluidSystem,class Scalar>
-typename EclGenericOutputBlackoilModule<FluidSystem,Scalar>::ScalarBuffer
-EclGenericOutputBlackoilModule<FluidSystem,Scalar>::
+template<class FluidSystem>
+typename EclGenericOutputBlackoilModule<FluidSystem>::ScalarBuffer
+EclGenericOutputBlackoilModule<FluidSystem>::
 regionSum(const ScalarBuffer& property,
           const std::vector<int>& regionId,
           std::size_t maxNumberOfRegions,
@@ -786,8 +784,8 @@ regionSum(const ScalarBuffer& property,
         return totals;
     }
 
-template<class FluidSystem, class Scalar>
-void EclGenericOutputBlackoilModule<FluidSystem,Scalar>::
+template<class FluidSystem>
+void EclGenericOutputBlackoilModule<FluidSystem>::
 doAllocBuffers(const unsigned bufferSize,
                const unsigned reportStepNum,
                const bool     substep,
@@ -1314,8 +1312,8 @@ doAllocBuffers(const unsigned bufferSize,
     }
 }
 
-template<class FluidSystem,class Scalar>
-bool EclGenericOutputBlackoilModule<FluidSystem,Scalar>::
+template<class FluidSystem>
+bool EclGenericOutputBlackoilModule<FluidSystem>::
 isOutputCreationDirective_(const std::string& keyword)
 {
     return (keyword == "BASIC") || (keyword == "FREQ")
@@ -1323,8 +1321,8 @@ isOutputCreationDirective_(const std::string& keyword)
         || (keyword == "SAVE")  || (keyword == "SFREQ"); // Not really supported
 }
 
-template<class FluidSystem,class Scalar>
-void EclGenericOutputBlackoilModule<FluidSystem,Scalar>::
+template<class FluidSystem>
+void EclGenericOutputBlackoilModule<FluidSystem>::
 outputErrorLog(const Parallel::Communication& comm) const
 {
     const auto root = 0;
@@ -1341,8 +1339,8 @@ outputErrorLog(const Parallel::Communication& comm) const
                      std::get<0>(globalFailedCellsPdew));
 }
 
-template<class FluidSystem,class Scalar>
-int EclGenericOutputBlackoilModule<FluidSystem,Scalar>::
+template<class FluidSystem>
+int EclGenericOutputBlackoilModule<FluidSystem>::
 regionMax(const std::vector<int>& region,
           const Parallel::Communication& comm)
 {
@@ -1350,8 +1348,8 @@ regionMax(const std::vector<int>& region,
     return comm.max(max_value);
 }
 
-template<class FluidSystem,class Scalar>
-void EclGenericOutputBlackoilModule<FluidSystem,Scalar>::
+template<class FluidSystem>
+void EclGenericOutputBlackoilModule<FluidSystem>::
 update(Inplace& inplace,
        const std::string& region_name,
        const Inplace::Phase phase,
@@ -1367,8 +1365,8 @@ update(Inplace& inplace,
     inplace.add(phase, sum);
 }
 
-template<class FluidSystem,class Scalar>
-void EclGenericOutputBlackoilModule<FluidSystem,Scalar>::
+template<class FluidSystem>
+void EclGenericOutputBlackoilModule<FluidSystem>::
 makeRegionSum(Inplace& inplace,
               const std::string& region_name,
               const Parallel::Communication& comm) const
@@ -1405,8 +1403,8 @@ makeRegionSum(Inplace& inplace,
     }
 }
 
-template<class FluidSystem,class Scalar>
-Inplace EclGenericOutputBlackoilModule<FluidSystem,Scalar>::
+template<class FluidSystem>
+Inplace EclGenericOutputBlackoilModule<FluidSystem>::
 accumulateRegionSums(const Parallel::Communication& comm)
 {
     Inplace inplace;
@@ -1427,15 +1425,16 @@ accumulateRegionSums(const Parallel::Communication& comm)
     return inplace;
 }
 
-template<class FluidSystem,class Scalar>
-Scalar EclGenericOutputBlackoilModule<FluidSystem,Scalar>::
+template<class FluidSystem>
+typename EclGenericOutputBlackoilModule<FluidSystem>::Scalar
+EclGenericOutputBlackoilModule<FluidSystem>::
 sum(const ScalarBuffer& v)
 {
     return std::accumulate(v.begin(), v.end(), Scalar{0});
 }
 
-template<class FluidSystem,class Scalar>
-void EclGenericOutputBlackoilModule<FluidSystem,Scalar>::
+template<class FluidSystem>
+void EclGenericOutputBlackoilModule<FluidSystem>::
 updateSummaryRegionValues(const Inplace& inplace,
                           std::map<std::string, double>& miscSummaryData,
                           std::map<std::string, std::vector<double>>& regionData) const
@@ -1517,8 +1516,8 @@ updateSummaryRegionValues(const Inplace& inplace,
     }
 }
 
-template<class FluidSystem,class Scalar>
-void EclGenericOutputBlackoilModule<FluidSystem,Scalar>::
+template<class FluidSystem>
+void EclGenericOutputBlackoilModule<FluidSystem>::
 setupBlockData(std::function<bool(int)> isCartIdxOnThisRank)
 {
     for (const auto& node : summaryConfig_) {
@@ -1533,8 +1532,8 @@ setupBlockData(std::function<bool(int)> isCartIdxOnThisRank)
     }
 }
 
-template<class FluidSystem, class Scalar>
-void EclGenericOutputBlackoilModule<FluidSystem,Scalar>::
+template<class FluidSystem>
+void EclGenericOutputBlackoilModule<FluidSystem>::
 assignGlobalFieldsToSolution(data::Solution& sol)
 {
     if (!this->cnvData_.empty()) {
@@ -1548,6 +1547,6 @@ assignGlobalFieldsToSolution(data::Solution& sol)
     }
 }
 
-template class EclGenericOutputBlackoilModule<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>,double>;
+template class EclGenericOutputBlackoilModule<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>>;
 
 } // namespace Opm

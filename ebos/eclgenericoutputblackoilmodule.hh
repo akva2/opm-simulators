@@ -50,9 +50,11 @@ class SummaryConfig;
 class SummaryConfigNode;
 class SummaryState;
 
-template<class FluidSystem, class Scalar>
+template<class FluidSystem>
 class EclGenericOutputBlackoilModule {
 public:
+    using Scalar = typename FluidSystem::Scalar;
+
      Scalar* getPRESSURE_ptr(void) {
         return (this->fluidPressure_.data()) ;
     };
