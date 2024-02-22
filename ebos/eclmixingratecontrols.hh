@@ -41,9 +41,11 @@ namespace Opm {
 class EclipseState;
 
 //! \brief Class handling mixing rate controls for an EclProblem.
-template<class FluidSystem, class Scalar>
+template<class FluidSystem>
 class EclMixingRateControls {
 public:
+    using Scalar = typename FluidSystem::Scalar;
+
     EclMixingRateControls(const Schedule& schedule);
     EclMixingRateControls(const EclMixingRateControls& rhs);
 

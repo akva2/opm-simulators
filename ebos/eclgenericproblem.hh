@@ -370,7 +370,7 @@ protected:
     std::vector<Scalar> solventRsw_;
     MICPSolutionContainer<Scalar> micp_;
 
-    EclMixingRateControls<FluidSystem, Scalar> mixControls_;
+    EclMixingRateControls<FluidSystem> mixControls_;
 
     // time stepping parameters
     bool enableTuning_;

@@ -109,7 +109,7 @@ serializationTestObject(const EclipseState& eclState,
     result.solventRsw_ = {18.0};
     result.polymer_ = PolymerSolutionContainer<Scalar>::serializationTestObject();
     result.micp_ = MICPSolutionContainer<Scalar>::serializationTestObject();
-    result.mixControls_ = EclMixingRateControls<FluidSystem,Scalar>::serializationTestObject(schedule);
+    result.mixControls_ = EclMixingRateControls<FluidSystem>::serializationTestObject(schedule);
 
     return result;
 }
