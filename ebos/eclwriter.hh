@@ -527,7 +527,14 @@ public:
                 Simulator& mutableSimulator = const_cast<Simulator&>(simulator_);
                 auto& thpres = mutableSimulator.problem().thresholdPressure();
                 const auto& thpresValues = restartValues.getExtra("THRESHPR");
-                thpres.setFromRestart(thpresValues);
+                if constexpr (std::is_same_v<Scalar,double>) {
+                    thpres.setFromRestart(thpresValues);
+                } else {
+                    std::vector<Scalar> thpV;
+                    thpV.reserve(thpresValues.size());
+                    std::copy(thpresValues.begin(), thpresValues.end(), std::back_inserter(thpV));
+                    thpres.setFromRestart(thpV);
+                }
             }
             restartTimeStepSize_ = restartValues.getExtra("OPMEXTRA")[0];
 

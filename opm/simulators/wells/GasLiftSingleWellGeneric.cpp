@@ -1890,4 +1890,8 @@ BasicRates(const LimitedRates& rates)
 
 template class GasLiftSingleWellGeneric<double>;
 
+#if FLOW_INSTANCE_FLOAT
+template class GasLiftSingleWellGeneric<float>;
+#endif
+
 } // namespace Opm

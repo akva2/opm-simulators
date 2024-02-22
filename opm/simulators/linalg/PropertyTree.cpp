@@ -109,6 +109,7 @@ template bool PropertyTree::get<bool>(const std::string& key, const bool& defVal
 
 template void PropertyTree::put<std::string>(const std::string& key, const std::string& value);
 template void PropertyTree::put<double>(const std::string& key, const double& value);
+template void PropertyTree::put<float>(const std::string& key, const float& value);
 template void PropertyTree::put<int>(const std::string& key, const int& value);
 
 

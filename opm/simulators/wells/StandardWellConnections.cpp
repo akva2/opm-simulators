@@ -665,39 +665,41 @@ connectionRatezFraction(Scalar& rate,
     return {well_.restrictEval(cq_s_zfrac_effective), cq_s_zfrac_effective};
 }
 
-#define INSTANCE(...) \
-template class StandardWellConnections<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>, \
-                                       __VA_ARGS__,double>;
+#define INSTANCE(T,...) \
+    template class StandardWellConnections<BlackOilFluidSystem<T,BlackOilDefaultIndexTraits>, \
+                                          __VA_ARGS__,T>;
 
-// One phase
-INSTANCE(BlackOilOnePhaseIndices<0u,0u,0u,0u,false,false,0u,1u,0u>)
-INSTANCE(BlackOilOnePhaseIndices<0u,0u,0u,1u,false,false,0u,1u,0u>)
-INSTANCE(BlackOilOnePhaseIndices<0u,0u,0u,0u,false,false,0u,1u,5u>)
+#define INSTANCE_TYPE(T) \
+    INSTANCE(T,BlackOilOnePhaseIndices<0u,0u,0u,0u,false,false,0u,1u,0u>) \
+    INSTANCE(T,BlackOilOnePhaseIndices<0u,0u,0u,1u,false,false,0u,1u,0u>) \
+    INSTANCE(T,BlackOilOnePhaseIndices<0u,0u,0u,0u,false,false,0u,1u,5u>) \
+    INSTANCE(T,BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,false,0u,0u,0u>) \
+    INSTANCE(T,BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,false,0u,1u,0u>) \
+    INSTANCE(T,BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,false,0u,2u,0u>) \
+    INSTANCE(T,BlackOilTwoPhaseIndices<0u,0u,1u,0u,false,false,0u,2u,0u>) \
+    INSTANCE(T,BlackOilTwoPhaseIndices<0u,0u,1u,0u,false,true,0u,2u,0u>)  \
+    INSTANCE(T,BlackOilTwoPhaseIndices<0u,0u,0u,1u,false,false,0u,1u,0u>) \
+    INSTANCE(T,BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,true,0u,0u,0u>)  \
+    INSTANCE(T,BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,true,0u,2u,0u>)  \
+    INSTANCE(T,BlackOilTwoPhaseIndices<0u,0u,2u,0u,false,false,0u,2u,0u>) \
+    INSTANCE(T,BlackOilTwoPhaseIndices<0u,0u,0u,1u,false,false,0u,0u,0u>) \
+    INSTANCE(T,BlackOilTwoPhaseIndices<0u,0u,0u,1u,false,true,0u,0u,0u>)  \
+    INSTANCE(T,BlackOilTwoPhaseIndices<1u,0u,0u,0u,false,false,0u,0u,0u>) \
+    INSTANCE(T,BlackOilIndices<0u,0u,0u,0u,false,false,0u,0u>)            \
+    INSTANCE(T,BlackOilIndices<1u,0u,0u,0u,false,false,0u,0u>)            \
+    INSTANCE(T,BlackOilIndices<0u,1u,0u,0u,false,false,0u,0u>)            \
+    INSTANCE(T,BlackOilIndices<0u,0u,1u,0u,false,false,0u,0u>)            \
+    INSTANCE(T,BlackOilIndices<0u,0u,0u,1u,false,false,0u,0u>)            \
+    INSTANCE(T,BlackOilIndices<0u,0u,0u,0u,true,false,0u,0u>)             \
+    INSTANCE(T,BlackOilIndices<0u,0u,0u,0u,false,true,0u,0u>)             \
+    INSTANCE(T,BlackOilIndices<0u,0u,0u,1u,false,true,0u,0u>)             \
+    INSTANCE(T,BlackOilIndices<0u,0u,0u,1u,false,false,1u,0u>)            \
+    INSTANCE(T,BlackOilIndices<1u,0u,0u,0u,true,false,0u,0u>)
 
-// Two phase
-INSTANCE(BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,false,0u,0u,0u>)
-INSTANCE(BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,false,0u,1u,0u>)
-INSTANCE(BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,false,0u,2u,0u>)
-INSTANCE(BlackOilTwoPhaseIndices<0u,0u,1u,0u,false,false,0u,2u,0u>)
-INSTANCE(BlackOilTwoPhaseIndices<0u,0u,1u,0u,false,true,0u,2u,0u>)
-INSTANCE(BlackOilTwoPhaseIndices<0u,0u,0u,1u,false,false,0u,1u,0u>)
-INSTANCE(BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,true,0u,0u,0u>)
-INSTANCE(BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,true,0u,2u,0u>)
-INSTANCE(BlackOilTwoPhaseIndices<0u,0u,2u,0u,false,false,0u,2u,0u>)
-INSTANCE(BlackOilTwoPhaseIndices<0u,0u,0u,1u,false,false,0u,0u,0u>)
-INSTANCE(BlackOilTwoPhaseIndices<0u,0u,0u,1u,false,true,0u,0u,0u>)
-INSTANCE(BlackOilTwoPhaseIndices<1u,0u,0u,0u,false,false,0u,0u,0u>)
+INSTANCE_TYPE(double)
 
-// Blackoil
-INSTANCE(BlackOilIndices<0u,0u,0u,0u,false,false,0u,0u>)
-INSTANCE(BlackOilIndices<1u,0u,0u,0u,false,false,0u,0u>)
-INSTANCE(BlackOilIndices<0u,1u,0u,0u,false,false,0u,0u>)
-INSTANCE(BlackOilIndices<0u,0u,1u,0u,false,false,0u,0u>)
-INSTANCE(BlackOilIndices<0u,0u,0u,1u,false,false,0u,0u>)
-INSTANCE(BlackOilIndices<0u,0u,0u,0u,true,false,0u,0u>)
-INSTANCE(BlackOilIndices<0u,0u,0u,0u,false,true,0u,0u>)
-INSTANCE(BlackOilIndices<0u,0u,0u,1u,false,true,0u,0u>)
-INSTANCE(BlackOilIndices<0u,0u,0u,1u,false,false,1u,0u>)
-INSTANCE(BlackOilIndices<1u,0u,0u,0u,true,false,0u,0u>)
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
 }

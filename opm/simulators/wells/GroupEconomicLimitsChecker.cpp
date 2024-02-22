@@ -406,4 +406,8 @@ throwNotImplementedError(const std::string& error) const
 
 template class GroupEconomicLimitsChecker<double>;
 
+#if FLOW_INSTANCE_FLOAT
+template class GroupEconomicLimitsChecker<float>;
+#endif
+
 } // namespace Opm

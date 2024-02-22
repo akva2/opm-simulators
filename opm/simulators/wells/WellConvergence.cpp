@@ -162,4 +162,8 @@ checkConvergencePolyMW(const std::vector<Scalar>& res,
 
 template class WellConvergence<double>;
 
+#if FLOW_INSTANCE_FLOAT
+template class WellConvergence<float>;
+#endif
+
 }

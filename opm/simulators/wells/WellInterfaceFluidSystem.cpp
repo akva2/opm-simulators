@@ -307,4 +307,8 @@ getGroupProductionTargetRate(const Group& group,
 
 template class WellInterfaceFluidSystem<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>>;
 
+#if FLOW_INSTANCE_FLOAT
+template class WellInterfaceFluidSystem<BlackOilFluidSystem<float,BlackOilDefaultIndexTraits>>;
+#endif
+
 } // namespace Opm

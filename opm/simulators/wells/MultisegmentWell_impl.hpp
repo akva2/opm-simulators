@@ -463,7 +463,7 @@ namespace Opm
             auto bhp_at_thp_limit = computeBhpAtThpLimitInj(ebos_simulator, summary_state, deferred_logger);
             if (bhp_at_thp_limit) {
                 const auto& controls = well.injectionControls(summary_state);
-                const Scalar bhp = std::min(*bhp_at_thp_limit, controls.bhp_limit);
+                const Scalar bhp = std::min(*bhp_at_thp_limit, static_cast<Scalar>(controls.bhp_limit));
                 computeWellRatesWithBhpIterations(ebos_simulator, bhp, potentials, deferred_logger);
                 deferred_logger.debug("Converged thp based potential calculation for well "
                                       + this->name() + ", at bhp = " + std::to_string(bhp));
@@ -480,7 +480,7 @@ namespace Opm
                   well_state, ebos_simulator, summary_state, deferred_logger);
             if (bhp_at_thp_limit) {
                 const auto& controls = well.productionControls(summary_state);
-                const Scalar bhp = std::max(*bhp_at_thp_limit, controls.bhp_limit);
+                const Scalar bhp = std::max(*bhp_at_thp_limit, static_cast<Scalar>(controls.bhp_limit));
                 computeWellRatesWithBhpIterations(ebos_simulator, bhp, potentials, deferred_logger);
                 deferred_logger.debug("Converged thp based potential calculation for well "
                                       + this->name() + ", at bhp = " + std::to_string(bhp));

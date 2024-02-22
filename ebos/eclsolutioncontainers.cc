@@ -80,7 +80,14 @@ operator==(const MICPSolutionContainer<Scalar>& rhs) const
            this->calciteConcentration == rhs.calciteConcentration;
 }
 
-template struct PolymerSolutionContainer<double>;
-template struct MICPSolutionContainer<double>;
+#define INSTANCE_TYPE(T) \
+    template struct PolymerSolutionContainer<T>; \
+    template struct MICPSolutionContainer<T>;
+
+INSTANCE_TYPE(double)
+
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
 } // namespace Opm

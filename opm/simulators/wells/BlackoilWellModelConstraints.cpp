@@ -597,4 +597,8 @@ updateGroupIndividualControl(const Group& group,
 
 template class BlackoilWellModelConstraints<double>;
 
+#if FLOW_INSTANCE_FLOAT
+template class BlackoilWellModelConstraints<float>;
+#endif
+
 }

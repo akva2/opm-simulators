@@ -62,4 +62,8 @@ bool WGState<Scalar>::operator==(const WGState& rhs) const
 
 template struct WGState<double>;
 
+#if FLOW_INSTANCE_FLOAT
+template struct WGState<float>;
+#endif
+
 }

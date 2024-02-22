@@ -97,6 +97,7 @@ namespace Miscibility {
 /**
  * Base class for phase mixing functions.
  */
+template<class Scalar>
 class RsFunction
 {
 public:
@@ -117,17 +118,18 @@ public:
      * \return Dissolved gas-oil ratio (RS) at depth @c
      * depth and pressure @c press.
      */
-    virtual double operator()(const double depth,
-                              const double press,
-                              const double temp,
-                              const double sat = 0.0) const = 0;
+    virtual Scalar operator()(const Scalar depth,
+                              const Scalar press,
+                              const Scalar temp,
+                              const Scalar sat = 0.0) const = 0;
 };
 
 
 /**
  * Type that implements "no phase mixing" policy.
  */
-class NoMixing : public RsFunction
+template<class Scalar>
+class NoMixing : public RsFunction<Scalar>
 {
 public:
     virtual ~NoMixing() = default;
@@ -148,11 +150,11 @@ public:
      * depth and pressure @c press.  In "no mixing
      * policy", this is identically zero.
      */
-    double
-    operator()(const double /* depth */,
-               const double /* press */,
-               const double /* temp */,
-               const double /* sat */ = 0.0) const
+    Scalar
+    operator()(const Scalar /* depth */,
+               const Scalar /* press */,
+               const Scalar /* temp */,
+               const Scalar /* sat */ = 0.0) const override
     {
         return 0.0;
     }
@@ -165,9 +167,10 @@ public:
  * typically taken from keyword 'RSVD'.
  */
 template <class FluidSystem>
-class RsVD : public RsFunction
+class RsVD : public RsFunction<typename FluidSystem::Scalar>
 {
 public:
+    using Scalar = typename FluidSystem::Scalar;
     /**
      * Constructor.
      *
@@ -176,8 +179,8 @@ public:
      * \param[in] rs Dissolved gas-oil ratio at @c depth.
      */
     RsVD(const int pvtRegionIdx,
-         const std::vector<double>& depth,
-         const std::vector<double>& rs);
+         const std::vector<Scalar>& depth,
+         const std::vector<Scalar>& rs);
 
     virtual ~RsVD() = default;
 
@@ -196,18 +199,18 @@ public:
      * \return Dissolved gas-oil ratio (RS) at depth @c
      * depth and pressure @c press.
      */
-    double operator()(const double depth,
-                      const double press,
-                      const double temp,
-                      const double satGas = 0.0) const;
+    Scalar operator()(const Scalar depth,
+                      const Scalar press,
+                      const Scalar temp,
+                      const Scalar satGas = 0.0) const override;
 
 private:
-    using RsVsDepthFunc = Tabulated1DFunction<double>;
+    using RsVsDepthFunc = Tabulated1DFunction<Scalar>;
 
     const int pvtRegionIdx_;
     RsVsDepthFunc rsVsDepth_;
 
-    double satRs(const double press, const double temp) const;
+    Scalar satRs(const Scalar press, const Scalar temp) const;
 };
 
 
@@ -217,9 +220,10 @@ private:
  * typically from keyword 'PBVD'.
  */
 template <class FluidSystem>
-class PBVD : public RsFunction
+class PBVD : public RsFunction<typename FluidSystem::Scalar>
 {
 public:
+    using Scalar = typename FluidSystem::Scalar;
     /**
      * Constructor.
      *
@@ -228,8 +232,8 @@ public:
      * \param[in] pbub Bubble-point pressure at @c depth.
      */
     PBVD(const int pvtRegionIdx,
-         const std::vector<double>& depth,
-         const std::vector<double>& pbub);
+         const std::vector<Scalar>& depth,
+         const std::vector<Scalar>& pbub);
 
     virtual ~PBVD() = default;
 
@@ -247,18 +251,18 @@ public:
      * \return Dissolved gas-oil ratio (RS) at depth @c
      * depth and pressure @c press.
      */
-    double operator()(const double depth,
-                      const double cellPress,
-                      const double temp,
-                      const double satGas = 0.0) const;
+    Scalar operator()(const Scalar depth,
+                      const Scalar cellPress,
+                      const Scalar temp,
+                      const Scalar satGas = 0.0) const override;
 
 private:
-    using PbubVsDepthFunc = Tabulated1DFunction<double>;
+    using PbubVsDepthFunc = Tabulated1DFunction<Scalar>;
 
     const int pvtRegionIdx_;
     PbubVsDepthFunc pbubVsDepth_;
 
-    double satRs(const double press, const double temp) const;
+    Scalar satRs(const Scalar press, const Scalar temp) const;
 };
 
 
@@ -268,8 +272,9 @@ private:
  * taken from keyword 'PDVD'.
  */
 template <class FluidSystem>
-class PDVD : public RsFunction
+class PDVD : public RsFunction<typename FluidSystem::Scalar>
 {
+    using Scalar = typename FluidSystem::Scalar;
 public:
     /**
      * Constructor.
@@ -279,8 +284,8 @@ public:
      * \param[in] pbub Dew-point pressure at @c depth.
      */
     PDVD(const int pvtRegionIdx,
-         const std::vector<double>& depth,
-         const std::vector<double>& pdew);
+         const std::vector<Scalar>& depth,
+         const std::vector<Scalar>& pdew);
 
     virtual ~PDVD() = default;
 
@@ -298,18 +303,18 @@ public:
      * \return Vaporized oil-gas ratio (RV) at depth @c
      * depth and pressure @c press.
      */
-    double operator()(const double depth,
-                      const double cellPress,
-                      const double temp,
-                      const double satOil = 0.0) const;
+    Scalar operator()(const Scalar depth,
+                      const Scalar cellPress,
+                      const Scalar temp,
+                      const Scalar satOil = 0.0) const override;
 
 private:
-    using PdewVsDepthFunc = Tabulated1DFunction<double>;
+    using PdewVsDepthFunc = Tabulated1DFunction<Scalar>;
 
     const int pvtRegionIdx_;
     PdewVsDepthFunc pdewVsDepth_;
 
-    double satRv(const double press, const double temp) const;
+    Scalar satRv(const Scalar press, const Scalar temp) const;
 };
 
 
@@ -319,8 +324,9 @@ private:
  * typically taken from keyword 'RVVD'.
  */
 template <class FluidSystem>
-class RvVD : public RsFunction
+class RvVD : public RsFunction<typename FluidSystem::Scalar>
 {
+    using Scalar = typename FluidSystem::Scalar;
 public:
     /**
      * Constructor.
@@ -330,8 +336,8 @@ public:
      * \param[in] rv Dissolved gas-oil ratio at @c depth.
      */
     RvVD(const int pvtRegionIdx,
-         const std::vector<double>& depth,
-         const std::vector<double>& rv);
+         const std::vector<Scalar>& depth,
+         const std::vector<Scalar>& rv);
 
     /**
      * Function call.
@@ -348,18 +354,18 @@ public:
      * \return Vaporized oil-gas ratio (RV) at depth @c
      * depth and pressure @c press.
      */
-    double operator()(const double depth,
-                      const double press,
-                      const double temp,
-                      const double satOil = 0.0) const;
+    Scalar operator()(const Scalar depth,
+                      const Scalar press,
+                      const Scalar temp,
+                      const Scalar satOil = 0.0) const override;
 
 private:
-    using RvVsDepthFunc = Tabulated1DFunction<double>;
+    using RvVsDepthFunc = Tabulated1DFunction<Scalar>;
 
     const int pvtRegionIdx_;
     RvVsDepthFunc rvVsDepth_;
 
-    double satRv(const double press, const double temp) const;
+    Scalar satRv(const Scalar press, const Scalar temp) const;
 };
 
 
@@ -369,8 +375,9 @@ private:
  * typically taken from keyword 'RVWVD'.
  */
 template <class FluidSystem>
-class RvwVD : public RsFunction
+class RvwVD : public RsFunction<typename FluidSystem::Scalar>
 {
+    using Scalar = typename FluidSystem::Scalar;
 public:
     /**
      * Constructor.
@@ -380,8 +387,8 @@ public:
      * \param[in] rvw Evaporized water-gasl ratio at @c depth.
      */
     RvwVD(const int pvtRegionIdx,
-         const std::vector<double>& depth,
-         const std::vector<double>& rvw);
+         const std::vector<Scalar>& depth,
+         const std::vector<Scalar>& rvw);
 
     /**
      * Function call.
@@ -398,18 +405,18 @@ public:
      * \return Vaporized water-gas ratio (RVW) at depth @c
      * depth and pressure @c press.
      */
-    double operator()(const double depth,
-                      const double press,
-                      const double temp,
-                      const double satWat = 0.0) const;
+    Scalar operator()(const Scalar depth,
+                      const Scalar press,
+                      const Scalar temp,
+                      const Scalar satWat = 0.0) const override;
 
 private:
-    using RvwVsDepthFunc = Tabulated1DFunction<double>;
+    using RvwVsDepthFunc = Tabulated1DFunction<Scalar>;
 
     const int pvtRegionIdx_;
     RvwVsDepthFunc rvwVsDepth_;
 
-    double satRvw(const double press, const double temp) const;
+    Scalar satRvw(const Scalar press, const Scalar temp) const;
 };
 
 
@@ -428,8 +435,9 @@ private:
  * contact, and decreasing above the contact.
  */
 template <class FluidSystem>
-class RsSatAtContact : public RsFunction
+class RsSatAtContact : public RsFunction<typename FluidSystem::Scalar>
 {
+    using Scalar = typename FluidSystem::Scalar;
 public:
     /**
      * Constructor.
@@ -438,7 +446,9 @@ public:
      * \param[in] pContact  oil pressure at the contact
      * \param[in] T_contact  temperature at the contact
      */
-    RsSatAtContact(const int pvtRegionIdx, const double pContact,  const double T_contact);
+    RsSatAtContact(const int pvtRegionIdx,
+                   const Scalar pContact,
+                   const Scalar T_contact);
 
     /**
      * Function call.
@@ -455,16 +465,16 @@ public:
      * \return Dissolved gas-oil ratio (RS) at depth @c
      * depth and pressure @c press.
      */
-    double operator()(const double /* depth */,
-                      const double press,
-                      const double temp,
-                      const double satGas = 0.0) const;
+    Scalar operator()(const Scalar /* depth */,
+                      const Scalar press,
+                      const Scalar temp,
+                      const Scalar satGas = 0.0) const override;
 
 private:
     const int pvtRegionIdx_;
-    double rsSatContact_;
+    Scalar rsSatContact_;
 
-    double satRs(const double press, const double temp) const;
+    Scalar satRs(const Scalar press, const Scalar temp) const;
 };
 
 
@@ -483,8 +493,9 @@ private:
  * contact, and decreasing above the contact.
  */
 template <class FluidSystem>
-class RvSatAtContact : public RsFunction
+class RvSatAtContact : public RsFunction<typename FluidSystem::Scalar>
 {
+    using Scalar = typename FluidSystem::Scalar;
 public:
     /**
      * Constructor.
@@ -493,7 +504,9 @@ public:
      * \param[in] pContact  oil pressure at the contact
      * \param[in] T_contact  temperature at the contact
      */
-    RvSatAtContact(const int pvtRegionIdx, const double pContact, const double T_contact);
+    RvSatAtContact(const int pvtRegionIdx,
+                   const Scalar pContact,
+                   const Scalar T_contact);
 
     /**
      * Function call.
@@ -510,16 +523,16 @@ public:
      * \return Dissolved oil-gas ratio (RV) at depth @c
      * depth and pressure @c press.
      */
-    double operator()(const double /*depth*/,
-                      const double press,
-                      const double temp,
-                      const double satOil = 0.0) const;
+    Scalar operator()(const Scalar /*depth*/,
+                      const Scalar press,
+                      const Scalar temp,
+                      const Scalar satOil = 0.0) const override;
 
 private:
     const int pvtRegionIdx_;
-    double rvSatContact_;
+    Scalar rvSatContact_;
 
-    double satRv(const double press, const double temp) const;
+    Scalar satRv(const Scalar press, const Scalar temp) const;
 };
 
 /**
@@ -537,8 +550,9 @@ private:
  * contact, and decreasing above the contact.
  */
 template <class FluidSystem>
-class RvwSatAtContact : public RsFunction
+class RvwSatAtContact : public RsFunction<typename FluidSystem::Scalar>
 {
+    using Scalar = typename FluidSystem::Scalar;
 public:
     /**
      * Constructor.
@@ -547,7 +561,9 @@ public:
      * \param[in] pContact  oil pressure at the contact
      * \param[in] T_contact  temperature at the contact
      */
-    RvwSatAtContact(const int pvtRegionIdx, const double pContact, const double T_contact);
+    RvwSatAtContact(const int pvtRegionIdx,
+                    const Scalar pContact,
+                    const Scalar T_contact);
 
     /**
      * Function call.
@@ -564,16 +580,16 @@ public:
      * \return Dissolved water-gas ratio (RVW) at depth @c
      * depth and pressure @c press.
      */
-    double operator()(const double /*depth*/,
-                      const double press,
-                      const double temp,
-                      const double satWat = 0.0) const;
+    Scalar operator()(const Scalar /*depth*/,
+                      const Scalar press,
+                      const Scalar temp,
+                      const Scalar satWat = 0.0) const override;
 
 private:
     const int pvtRegionIdx_;
-    double rvwSatContact_;
+    Scalar rvwSatContact_;
 
-    double satRvw(const double press, const double temp) const;
+    Scalar satRvw(const Scalar press, const Scalar temp) const;
 };
 
 } // namespace Miscibility
@@ -597,9 +613,10 @@ private:
  * that calculates the phase densities of all phases in @c
  * svol at fluid pressure @c press.
  */
+template<class Scalar>
 class EquilReg
 {
-    using TabulatedFunction = Tabulated1DFunction<double>;
+    using TabulatedFunction = Tabulated1DFunction<Scalar>;
 
 public:
     /**
@@ -612,9 +629,9 @@ public:
      * \param[in] pvtRegionIdx The pvt region index
      */
     EquilReg(const EquilRecord& rec,
-             std::shared_ptr<Miscibility::RsFunction> rs,
-             std::shared_ptr<Miscibility::RsFunction> rv,
-             std::shared_ptr<Miscibility::RsFunction> rvw,
+             std::shared_ptr<Miscibility::RsFunction<Scalar>> rs,
+             std::shared_ptr<Miscibility::RsFunction<Scalar>> rv,
+             std::shared_ptr<Miscibility::RsFunction<Scalar>> rvw,
              const TabulatedFunction& tempVdTable,
              const TabulatedFunction& saltVdTable,
              const int pvtIdx);
@@ -622,52 +639,52 @@ public:
     /**
      * Type of dissolved gas-oil ratio calculator.
      */
-    using CalcDissolution = Miscibility::RsFunction;
+    using CalcDissolution = Miscibility::RsFunction<Scalar>;
 
     /**
      * Type of vapourised oil-gas ratio calculator.
      */
-    using CalcEvaporation = Miscibility::RsFunction;
+    using CalcEvaporation = Miscibility::RsFunction<Scalar>;
 
      /**
      * Type of vapourised water-gas ratio calculator.
      */
-    using CalcWaterEvaporation = Miscibility::RsFunction;
+    using CalcWaterEvaporation = Miscibility::RsFunction<Scalar>;
 
 
     /**
      * Datum depth in current region
      */
-    double datum() const;
+    Scalar datum() const;
 
     /**
      * Pressure at datum depth in current region.
      */
-    double pressure() const;
+    Scalar pressure() const;
 
     /**
      * Depth of water-oil contact.
      */
-    double zwoc() const;
+    Scalar zwoc() const;
 
     /**
      * water-oil capillary pressure at water-oil contact.
      *
      * \return P_o - P_w at WOC.
      */
-    double pcowWoc() const;
+    Scalar pcowWoc() const;
 
     /**
      * Depth of gas-oil contact.
      */
-    double zgoc() const;
+    Scalar zgoc() const;
 
     /**
      * Gas-oil capillary pressure at gas-oil contact.
      *
      * \return P_g - P_o at GOC.
      */
-    double pcgoGoc() const;
+    Scalar pcgoGoc() const;
 
     /**
      * Accuracy/strategy for initial fluid-in-place calculation.
@@ -706,9 +723,9 @@ public:
 
 private:
     EquilRecord rec_;     /**< Equilibration data */
-    std::shared_ptr<Miscibility::RsFunction> rs_;      /**< RS calculator */
-    std::shared_ptr<Miscibility::RsFunction> rv_;      /**< RV calculator */
-    std::shared_ptr<Miscibility::RsFunction> rvw_;      /**< RVW calculator */
+    std::shared_ptr<Miscibility::RsFunction<Scalar>> rs_;      /**< RS calculator */
+    std::shared_ptr<Miscibility::RsFunction<Scalar>> rv_;      /**< RV calculator */
+    std::shared_ptr<Miscibility::RsFunction<Scalar>> rvw_;      /**< RVW calculator */
     const TabulatedFunction& tempVdTable_;
     const TabulatedFunction& saltVdTable_;
     const int pvtIdx_;
@@ -722,36 +739,40 @@ private:
 template <class FluidSystem, class MaterialLawManager>
 struct PcEq
 {
+    using Scalar = typename FluidSystem::Scalar;
     PcEq(const MaterialLawManager& materialLawManager,
          const int phase,
          const int cell,
-         const double targetPc);
+         const Scalar targetPc);
 
-    double operator()(double s) const;
+    Scalar operator()(Scalar s) const;
 
 private:
     const MaterialLawManager& materialLawManager_;
     const int phase_;
     const int cell_;
-    const double targetPc_;
+    const Scalar targetPc_;
 };
 
 template <class FluidSystem, class MaterialLawManager>
-double minSaturations(const MaterialLawManager& materialLawManager,
+typename FluidSystem::Scalar
+minSaturations(const MaterialLawManager& materialLawManager,
                       const int phase, const int cell);
 
 template <class FluidSystem, class MaterialLawManager>
-double maxSaturations(const MaterialLawManager& materialLawManager,
-                      const int phase, const int cell);
+typename FluidSystem::Scalar
+maxSaturations(const MaterialLawManager& materialLawManager,
+               const int phase, const int cell);
 
 /// Compute saturation of some phase corresponding to a given
 /// capillary pressure.
 template <class FluidSystem, class MaterialLawManager>
-double satFromPc(const MaterialLawManager& materialLawManager,
-                 const int phase,
-                 const int cell,
-                 const double targetPc,
-                 const bool increasing = false);
+typename FluidSystem::Scalar
+satFromPc(const MaterialLawManager& materialLawManager,
+          const int phase,
+          const int cell,
+          const typename FluidSystem::Scalar targetPc,
+          const bool increasing = false);
 
 /// Functor for inverting a sum of capillary pressure functions.
 /// Function represented is
@@ -759,40 +780,43 @@ double satFromPc(const MaterialLawManager& materialLawManager,
 template <class FluidSystem, class MaterialLawManager>
 struct PcEqSum
 {
+    using Scalar = typename FluidSystem::Scalar;
     PcEqSum(const MaterialLawManager& materialLawManager,
             const int phase1,
             const int phase2,
             const int cell,
-            const double targetPc);
+            const Scalar targetPc);
 
-    double operator()(double s) const;
+    Scalar operator()(Scalar s) const;
 
 private:
     const MaterialLawManager& materialLawManager_;
     const int phase1_;
     const int phase2_;
     const int cell_;
-    const double targetPc_;
+    const Scalar targetPc_;
 };
 
 /// Compute saturation of some phase corresponding to a given
 /// capillary pressure, where the capillary pressure function
 /// is given as a sum of two other functions.
 template <class FluidSystem, class MaterialLawManager>
-double satFromSumOfPcs(const MaterialLawManager& materialLawManager,
-                       const int phase1,
-                       const int phase2,
-                       const int cell,
-                       const double targetPc);
+typename FluidSystem::Scalar
+satFromSumOfPcs(const MaterialLawManager& materialLawManager,
+                const int phase1,
+                const int phase2,
+                const int cell,
+                const typename FluidSystem::Scalar targetPc);
 
 /// Compute saturation from depth. Used for constant capillary pressure function
 template <class FluidSystem, class MaterialLawManager>
-double satFromDepth(const MaterialLawManager& materialLawManager,
-                    const double cellDepth,
-                    const double contactDepth,
-                    const int phase,
-                    const int cell,
-                    const bool increasing = false);
+typename FluidSystem::Scalar
+satFromDepth(const MaterialLawManager& materialLawManager,
+             const typename FluidSystem::Scalar cellDepth,
+             const typename FluidSystem::Scalar contactDepth,
+             const int phase,
+             const int cell,
+             const bool increasing = false);
 
 /// Return true if capillary pressure function is constant
 template <class FluidSystem, class MaterialLawManager>

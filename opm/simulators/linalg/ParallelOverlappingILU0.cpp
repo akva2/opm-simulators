@@ -27,30 +27,37 @@
 namespace Opm
 {
 
-#define INSTANCE_PAR(Dim, ...) \
-  template class ParallelOverlappingILU0<Dune::BCRSMatrix<MatrixBlock<double,Dim,Dim>>, \
-                                         Dune::BlockVector<Dune::FieldVector<double,Dim>>, \
-                                         Dune::BlockVector<Dune::FieldVector<double,Dim>>, \
+#define INSTANCE_PAR(T, Dim, ...) \
+  template class ParallelOverlappingILU0<Dune::BCRSMatrix<MatrixBlock<T,Dim,Dim>>, \
+                                         Dune::BlockVector<Dune::FieldVector<T,Dim>>, \
+                                         Dune::BlockVector<Dune::FieldVector<T,Dim>>, \
                                          __VA_ARGS__>; \
-  template class ParallelOverlappingILU0<Dune::BCRSMatrix<Dune::FieldMatrix<double,Dim,Dim>>, \
-                                         Dune::BlockVector<Dune::FieldVector<double,Dim>>, \
-                                         Dune::BlockVector<Dune::FieldVector<double,Dim>>, \
+  template class ParallelOverlappingILU0<Dune::BCRSMatrix<Dune::FieldMatrix<T,Dim,Dim>>, \
+                                         Dune::BlockVector<Dune::FieldVector<T,Dim>>, \
+                                         Dune::BlockVector<Dune::FieldVector<T,Dim>>, \
                                          __VA_ARGS__>;
 
 #if HAVE_MPI
-#define INSTANCE(Dim) \
-    INSTANCE_PAR(Dim, Dune::Amg::SequentialInformation) \
-    INSTANCE_PAR(Dim, Dune::OwnerOverlapCopyCommunication<int,int>)
+#define INSTANCE(T, Dim) \
+    INSTANCE_PAR(T, Dim, Dune::Amg::SequentialInformation) \
+    INSTANCE_PAR(T, Dim, Dune::OwnerOverlapCopyCommunication<int,int>)
 #else
-#define INSTANCE(Dim) \
-    INSTANCE_PAR(Dim, Dune::Amg::SequentialInformation)
+#define INSTANCE(T, Dim) \
+    INSTANCE_PAR(T, Dim, Dune::Amg::SequentialInformation)
 #endif
 
-INSTANCE(1)
-INSTANCE(2)
-INSTANCE(3)
-INSTANCE(4)
-INSTANCE(5)
-INSTANCE(6)
+#define INSTANCE_TYPE(T) \
+    INSTANCE(T,1)        \
+    INSTANCE(T,2)        \
+    INSTANCE(T,3)        \
+    INSTANCE(T,4)        \
+    INSTANCE(T,5)        \
+    INSTANCE(T,6)
+
+INSTANCE_TYPE(double)
+
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
 } // end namespace Opm

@@ -1049,11 +1049,17 @@ WellState<Scalar>::parallelWellInfo(std::size_t well_index) const
     return ws.parallel_info;
 }
 
-#define INSTANCE(T) \
-    template class WellState<T>; \
-    template void WellState<T>::updateGlobalIsGrup<Parallel::Communication>(const Parallel::Communication& comm); \
-    template void WellState<T>::communicateGroupRates<Parallel::Communication>(const Parallel::Communication& comm);
+#define INSTANCE_TYPE(T)                                                                  \
+    template class WellState<T>;                                                          \
+    template void WellState<T>::                                                          \
+        updateGlobalIsGrup<Parallel::Communication>(const Parallel::Communication& comm); \
+    template void WellState<T>::                                                          \
+        communicateGroupRates<Parallel::Communication>(const Parallel::Communication& comm);
 
-INSTANCE(double)
+INSTANCE_TYPE(double)
+
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
 } // namespace Opm

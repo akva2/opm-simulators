@@ -155,4 +155,8 @@ bool PerfData<Scalar>::operator==(const PerfData& rhs) const
 
 template class PerfData<double>;
 
+#if FLOW_INSTANCE_FLOAT
+template class PerfData<float>;
+#endif
+
 } // namespace Opm

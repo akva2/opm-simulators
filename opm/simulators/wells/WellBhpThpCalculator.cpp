@@ -272,7 +272,7 @@ computeBhpAtThpLimitProd(const std::function<std::vector<Scalar>(const Scalar)>&
                                 "find bhp-point where production becomes non-zero for well " + well_.name());
         return std::nullopt;
     }
-    const std::array<Scalar, 2> range {controls.bhp_limit, *bhp_max};
+    const std::array<Scalar, 2> range {static_cast<Scalar>(controls.bhp_limit), *bhp_max};
     return this->computeBhpAtThpLimit(frates, fbhp, range, deferred_logger);
 }
 
@@ -518,10 +518,21 @@ computeBhpAtThpLimitInjImpl(const std::function<std::vector<Scalar>(const Scalar
 
     // Get the flo samples, add extra samples at low rates and bhp
     // limit point if necessary.
-    std::vector<Scalar> flo_samples = table.getFloAxis();
+    std::vector<Scalar> flo_samples;
+    if constexpr (std::is_same_v<Scalar, double>) {
+        flo_samples = table.getFloAxis();
+    } else {
+        flo_samples.resize(table.getFloAxis().size());
+        std::copy(table.getFloAxis().begin(),
+                  table.getFloAxis().end(),
+                  flo_samples.begin());
+    }
     if (flo_samples[0] > 0.0) {
         const Scalar f0 = flo_samples[0];
-        flo_samples.insert(flo_samples.begin(), { f0/20.0, f0/10.0, f0/5.0, f0/2.0 });
+        flo_samples.insert(flo_samples.begin(), {f0 / Scalar{20.0},
+                                                 f0 / Scalar{10.0},
+                                                 f0 / Scalar{5.0},
+                                                 f0 / Scalar{2.0}});
     }
     const Scalar flo_bhp_limit = flo(frates(controls.bhp_limit));
     if (flo_samples.back() < flo_bhp_limit) {
@@ -1002,33 +1013,40 @@ getFloIPR(const WellState<Scalar>& well_state,
                           detail::getFlo(table, aqua_b, liquid_b, vapour_b));
 }
 
-template class WellBhpThpCalculator<double>;
+#define INSTANCE(T, ...)                                                  \
+    template __VA_ARGS__                                                  \
+    WellBhpThpCalculator<T>::                                             \
+        calculateBhpFromThp<__VA_ARGS__>(const WellState<T>&,             \
+                                         const std::vector<__VA_ARGS__>&, \
+                                         const Well&,                     \
+                                         const SummaryState&,             \
+                                         const T,                         \
+                                         DeferredLogger&) const;
 
-#define INSTANCE(...) \
-template __VA_ARGS__ WellBhpThpCalculator<double>:: \
-calculateBhpFromThp<__VA_ARGS__>(const WellState<double>&, \
-                                 const std::vector<__VA_ARGS__>&, \
-                                 const Well&, \
-                                 const SummaryState&, \
-                                 const double, \
-                                 DeferredLogger&) const;
+#define INSTANCE_TYPE(T) \
+    template class WellBhpThpCalculator<T>; \
+    INSTANCE(T,T)                             \
+    INSTANCE(T,DenseAd::Evaluation<T,3,0u>)   \
+    INSTANCE(T,DenseAd::Evaluation<T,4,0u>)   \
+    INSTANCE(T,DenseAd::Evaluation<T,5,0u>)   \
+    INSTANCE(T,DenseAd::Evaluation<T,6,0u>)   \
+    INSTANCE(T,DenseAd::Evaluation<T,7,0u>)   \
+    INSTANCE(T,DenseAd::Evaluation<T,8,0u>)   \
+    INSTANCE(T,DenseAd::Evaluation<T,9,0u>)   \
+    INSTANCE(T,DenseAd::Evaluation<T,10,0u>)  \
+    INSTANCE(T,DenseAd::Evaluation<T,-1,4u>)  \
+    INSTANCE(T,DenseAd::Evaluation<T,-1,5u>)  \
+    INSTANCE(T,DenseAd::Evaluation<T,-1,6u>)  \
+    INSTANCE(T,DenseAd::Evaluation<T,-1,7u>)  \
+    INSTANCE(T,DenseAd::Evaluation<T,-1,8u>)  \
+    INSTANCE(T,DenseAd::Evaluation<T,-1,9u>)  \
+    INSTANCE(T,DenseAd::Evaluation<T,-1,10u>) \
+    INSTANCE(T,DenseAd::Evaluation<T,-1,11u>)
 
-INSTANCE(double)
-INSTANCE(DenseAd::Evaluation<double,3,0u>)
-INSTANCE(DenseAd::Evaluation<double,4,0u>)
-INSTANCE(DenseAd::Evaluation<double,5,0u>)
-INSTANCE(DenseAd::Evaluation<double,6,0u>)
-INSTANCE(DenseAd::Evaluation<double,7,0u>)
-INSTANCE(DenseAd::Evaluation<double,8,0u>)
-INSTANCE(DenseAd::Evaluation<double,9,0u>)
-INSTANCE(DenseAd::Evaluation<double,10,0u>)
-INSTANCE(DenseAd::Evaluation<double,-1,4u>)
-INSTANCE(DenseAd::Evaluation<double,-1,5u>)
-INSTANCE(DenseAd::Evaluation<double,-1,6u>)
-INSTANCE(DenseAd::Evaluation<double,-1,7u>)
-INSTANCE(DenseAd::Evaluation<double,-1,8u>)
-INSTANCE(DenseAd::Evaluation<double,-1,9u>)
-INSTANCE(DenseAd::Evaluation<double,-1,10u>)
-INSTANCE(DenseAd::Evaluation<double,-1,11u>)
+INSTANCE_TYPE(double)
+
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
 } // namespace Opm

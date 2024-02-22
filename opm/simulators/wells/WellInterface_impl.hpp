@@ -320,11 +320,11 @@ namespace Opm
                 std::vector<Scalar> rates(this->num_components_);
                 if (this->isInjector()){
                     const Scalar bhp_thp = WellBhpThpCalculator(*this).calculateBhpFromThp(well_state, rates, this->well_ecl_, summary_state, this->getRefDensity(), deferred_logger);
-                    inj_limit = std::min(bhp_thp, inj_controls.bhp_limit);
+                    inj_limit = std::min(bhp_thp, static_cast<Scalar>(inj_controls.bhp_limit));
                 } else {
                     // if the well can operate, it must at least be able to produce at the lowest bhp of the bhp-curve (explicit fractions)
                     const Scalar bhp_min = WellBhpThpCalculator(*this).calculateMinimumBhpFromThp(well_state, this->well_ecl_, summary_state, this->getRefDensity());
-                    prod_limit = std::max(bhp_min, prod_controls.bhp_limit);
+                    prod_limit = std::max(bhp_min, static_cast<Scalar>(prod_controls.bhp_limit));
                 }
             }
             const Scalar bhp_diff = (this->isInjector())? inj_limit - bhp: bhp - prod_limit;
@@ -405,7 +405,7 @@ namespace Opm
             }
             const int np = well_state_copy.numPhases();
             for (int p = 0; p < np; ++p) {
-                ws.well_potentials[p] = std::max(0.0, potentials[p]);
+                ws.well_potentials[p] = std::max(Scalar{0.0}, potentials[p]);
             }
             this->updateWellTestState(well_state_copy.well(this->indexOfWell()), simulation_time, /*writeMessageToOPMLog=*/ false, welltest_state_temp, deferred_logger);
             this->closeCompletions(welltest_state_temp);
@@ -504,7 +504,7 @@ namespace Opm
             } else {
                 // solve well with the estimated target bhp (or limit)
                 ws.thp = this->getTHPConstraint(summary_state);
-                const Scalar bhp = std::max(bhp_target.value(), prod_controls.bhp_limit);
+                const Scalar bhp = std::max(bhp_target.value(), static_cast<Scalar>(prod_controls.bhp_limit));
                 solveWellWithBhp(ebos_simulator, dt, bhp, well_state, deferred_logger);
             }
         }
@@ -551,7 +551,7 @@ namespace Opm
                 this->stopWell();
             } else {      
                 // solve well with the estimated target bhp (or limit)
-                const Scalar bhp = std::max(bhp_target.value(), prod_controls.bhp_limit);
+                const Scalar bhp = std::max(bhp_target.value(), static_cast<Scalar>(prod_controls.bhp_limit));
                 solveWellWithBhp(ebos_simulator, dt, bhp, well_state, deferred_logger);
                 ws.thp = this->getTHPConstraint(summary_state);
                 converged = this->iterateWellEqWithSwitching(ebos_simulator, dt, inj_controls, prod_controls, well_state, group_state, deferred_logger);
@@ -809,7 +809,7 @@ namespace Opm
             auto& ws = well_state.well(this->indexOfWell());
             const int np = well_state.numPhases();
             for (int p = 0; p < np; ++p) {
-                ws.well_potentials[p] = std::max(0.0, potentials[p]);
+                ws.well_potentials[p] = std::max(Scalar{0.0}, potentials[p]);
             }
         }
         this->changed_to_open_this_step_ = false;
@@ -1164,7 +1164,7 @@ namespace Opm
             // the zero rate target, then we can use to retain the composition information
             // within the wellbore from the previous result, and hopefully it is a good
             // initial guess for the zero rate target.
-            ws.surface_rates[phasePos] = std::max(1.e-7, ws.surface_rates[phasePos]);
+            ws.surface_rates[phasePos] = std::max(Scalar{1.e-7}, ws.surface_rates[phasePos]);
 
             if (ws.bhp == 0.) {
                 ws.bhp = controls.bhp_limit;

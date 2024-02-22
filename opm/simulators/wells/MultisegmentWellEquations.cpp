@@ -167,7 +167,7 @@ void MultisegmentWellEquations<Scalar,numWellEq,numEq>::createSolver()
         return;
     }
 
-    duneDSolver_ = std::make_shared<Dune::UMFPack<DiagMatWell>>(duneD_, 0);
+    //duneDSolver_ = std::make_shared<Dune::UMFPack<DiagMatWell>>(duneD_, 0);
 #else
     OPM_THROW(std::runtime_error, "MultisegmentWell support requires UMFPACK. "
               "Reconfigure opm-simulators with SuiteSparse/UMFPACK support and recompile.");
@@ -226,7 +226,7 @@ extract(WellContributions& wellContribs) const
 
     // duneD
     Dune::UMFPack<DiagMatWell> umfpackMatrix(duneD_, 0);
-    double* Dvals = umfpackMatrix.getInternalMatrix().getValues();
+    Scalar* Dvals = umfpackMatrix.getInternalMatrix().getValues();
     auto* Dcols = umfpackMatrix.getInternalMatrix().getColStart();
     auto* Drows = umfpackMatrix.getInternalMatrix().getRowIndex();
 
@@ -386,27 +386,34 @@ extractCPRPressureMatrix(PressureMatrix& jacobian,
     }
 }
 
-#define INSTANCE(numWellEq, numEq) \
-template class MultisegmentWellEquations<double,numWellEq,numEq>; \
-template void MultisegmentWellEquations<double,numWellEq,numEq>:: \
-    extract(Linear::IstlSparseMatrixAdapter<MatrixBlock<double,numEq,numEq>>&) const; \
-template void MultisegmentWellEquations<double,numWellEq,numEq>:: \
-    extractCPRPressureMatrix(Dune::BCRSMatrix<MatrixBlock<double,1,1>>&, \
-                             const MultisegmentWellEquations<double,numWellEq,numEq>::BVector&, \
+#define INSTANCE(T, numWellEq, numEq) \
+template class MultisegmentWellEquations<T,numWellEq,numEq>; \
+template void MultisegmentWellEquations<T,numWellEq,numEq>:: \
+    extract(Linear::IstlSparseMatrixAdapter<MatrixBlock<T,numEq,numEq>>&) const; \
+template void MultisegmentWellEquations<T,numWellEq,numEq>:: \
+    extractCPRPressureMatrix(Dune::BCRSMatrix<MatrixBlock<T,1,1>>&, \
+                             const MultisegmentWellEquations<T,numWellEq,numEq>::BVector&, \
                              const int, \
                              const bool, \
-                             const WellInterfaceGeneric<double>&, \
+                             const WellInterfaceGeneric<T>&, \
                              const int, \
-                             const WellState<double>&) const;
+                             const WellState<T>&) const;
 
-INSTANCE(2,1)
-INSTANCE(2,2)
-INSTANCE(2,6)
-INSTANCE(3,2)
-INSTANCE(3,3)
-INSTANCE(3,4)
-INSTANCE(4,3)
-INSTANCE(4,4)
-INSTANCE(4,5)
+#define INSTANCE_TYPE(T) \
+    INSTANCE(T,2,1)      \
+    INSTANCE(T,2,2)      \
+    INSTANCE(T,2,6)      \
+    INSTANCE(T,3,2)      \
+    INSTANCE(T,3,3)      \
+    INSTANCE(T,3,4)      \
+    INSTANCE(T,4,3)      \
+    INSTANCE(T,4,4)      \
+    INSTANCE(T,4,5)
+
+INSTANCE_TYPE(double)
+
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
 }

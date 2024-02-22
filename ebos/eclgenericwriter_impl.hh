@@ -542,9 +542,21 @@ doWriteOutput(const int                          reportStepNum,
                    : std::move(localAquiferData)
     };
 
+    auto getArray = [](const std::vector<Scalar>& input)
+    {
+        if constexpr (std::is_same_v<Scalar,double>) {
+            return input;
+        } else {
+            std::vector<double> output;
+            output.resize(input.size());
+            std::copy(input.begin(), input.end(), output.begin());
+            return output;
+        }
+    };
+
     if (eclState_.getSimulationConfig().useThresholdPressure()) {
         restartValue.addExtra("THRESHPR", UnitSystem::measure::pressure,
-                              thresholdPressure);
+                              getArray(thresholdPressure));
     }
 
     // Add suggested next timestep to extra data.

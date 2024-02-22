@@ -41,21 +41,29 @@
 
 namespace Opm {
 
-template class EclGenericProblem<Dune::GridView<Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>,
-                                 BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>,
-                                 double>;
+#define INSTANCE_TYPE(T) \
+    template class EclGenericProblem<Dune::GridView<Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>, \
+                                     BlackOilFluidSystem<T,BlackOilDefaultIndexTraits>,T>;
+
+INSTANCE_TYPE(double)
+
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
 #if HAVE_DUNE_FEM
-template class EclGenericProblem<Dune::GridView<Dune::Fem::GridPart2GridViewTraits<Dune::Fem::AdaptiveLeafGridPart<Dune::CpGrid, Dune::PartitionIteratorType(4), false>>>,
-                                 BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>,
-                                 double>;
-template class EclGenericProblem<Dune::Fem::GridPart2GridViewImpl<
-                                    Dune::Fem::AdaptiveLeafGridPart<
-                                        Dune::CpGrid,
-                                        Dune::PartitionIteratorType(4),
-                                        false> >,
-                                 BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>,
-                                 double>;
+#define INSTANCE_FEM_TYPE(T) \
+    template class EclGenericProblem<Dune::GridView<Dune::Fem::GridPart2GridViewTraits<Dune::Fem::AdaptiveLeafGridPart<Dune::CpGrid, Dune::PartitionIteratorType(4), false>>>, \
+                                     BlackOilFluidSystem<T,BlackOilDefaultIndexTraits>, \
+                                     T>; \
+    template class EclGenericProblem<Dune::Fem::GridPart2GridViewImpl<Dune::Fem::AdaptiveLeafGridPart<Dune::CpGrid, Dune::PartitionIteratorType(4),false>>, \
+                                     BlackOilFluidSystem<T,BlackOilDefaultIndexTraits>, \
+                                     T>;
+INSTANCE_FEM_TYPE(double)
+
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_FEM_TYPE(float)
+#endif
 #endif // HAVE_DUNE_FEM
 
 } // end namespace Opm

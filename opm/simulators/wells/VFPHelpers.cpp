@@ -487,6 +487,7 @@ getMinimumBHPCoordinate(const VFPProdTable& table,
     // the corresponding pair (-flo_at_bhp_min, bhp_min). No assumption is taken on the
     // shape of the function bhp(flo), so all points in the flo-axis is checked.
     Scalar flo_at_bhp_min = 0.0; // start by checking flo=0
+
     auto flo_i = findInterpData(flo_at_bhp_min, table.getFloAxis());
     auto thp_i = findInterpData( thp, table.getTHPAxis());
     auto wfr_i = findInterpData( wfr, table.getWFRAxis());
@@ -497,7 +498,7 @@ getMinimumBHPCoordinate(const VFPProdTable& table,
     Scalar bhp_min = bhp_i.value;
     const std::vector<double>& flos = table.getFloAxis();
     for (size_t i = 0; i < flos.size(); ++i) {
-        flo_i = findInterpData(flos[i], flos);
+        flo_i = findInterpData(flos[i], table.getFloAxis());
         bhp_i = interpolate(table, flo_i, thp_i, wfr_i, gfr_i, alq_i);
         if (bhp_i.value < bhp_min){
             bhp_min = bhp_i.value;
@@ -528,6 +529,7 @@ intersectWithIPR(const VFPProdTable& table,
     // NOTE: ipr-line is q=b*bhp - a!
     // ipr is given for negative flo, so
     // flo = -b*bhp + a, i.e., bhp = -(flo-a)/b
+
     auto thp_i = findInterpData( thp, table.getTHPAxis());
     auto wfr_i = findInterpData( wfr, table.getWFRAxis());
     auto gfr_i = findInterpData( gfr, table.getGFRAxis());
@@ -557,7 +559,7 @@ intersectWithIPR(const VFPProdTable& table,
         if (y0 < 0 && y1 >= 0){
             // crossing with positive slope
             Scalar w = -y0/(y1-y0);
-            w = std::clamp(w, 0.0, 1.0); // just to be safe (if y0~y1~0)
+            w = std::clamp(w, Scalar{0.0}, Scalar{1.0}); // just to be safe (if y0~y1~0)
             flo_x = flo0 + w*(flo1 - flo0);
         }
         flo0 = flo1;
@@ -742,35 +744,56 @@ VFPInjTable::FLO_TYPE getType(const VFPInjTable& table)
     return table.getFloType();
 }
 
-template const VFPInjTable& getTable<VFPInjTable>(const std::map<int, std::reference_wrapper<const VFPInjTable>>&, int);
-template const VFPProdTable& getTable<VFPProdTable>(const std::map<int, std::reference_wrapper<const VFPProdTable>>&, int);
+template const VFPInjTable&
+getTable<VFPInjTable>(const std::map<int, std::reference_wrapper<const VFPInjTable>>&, int);
+template const VFPProdTable&
+getTable<VFPProdTable>(const std::map<int, std::reference_wrapper<const VFPProdTable>>&, int);
 
 #define INSTANCE(...) \
-    template __VA_ARGS__ getFlo(const VFPInjTable&, const __VA_ARGS__&, const __VA_ARGS__&, const __VA_ARGS__&); \
-    template __VA_ARGS__ getFlo(const VFPProdTable&, const __VA_ARGS__&, const __VA_ARGS__&, const __VA_ARGS__&); \
-    template __VA_ARGS__ getGFR(const VFPProdTable&, const __VA_ARGS__&, const __VA_ARGS__&, const __VA_ARGS__&); \
-    template __VA_ARGS__ getWFR(const VFPProdTable&, const __VA_ARGS__&, const __VA_ARGS__&, const __VA_ARGS__&);
+    template __VA_ARGS__                                \
+        getFlo(const VFPInjTable&, const __VA_ARGS__&,  \
+               const __VA_ARGS__&, const __VA_ARGS__&); \
+    template __VA_ARGS__                                \
+        getFlo(const VFPProdTable&, const __VA_ARGS__&, \
+               const __VA_ARGS__&, const __VA_ARGS__&); \
+    template __VA_ARGS__                                \
+        getGFR(const VFPProdTable&, const __VA_ARGS__&, \
+               const __VA_ARGS__&, const __VA_ARGS__&); \
+    template __VA_ARGS__                                \
+        getWFR(const VFPProdTable&, const __VA_ARGS__&, \
+               const __VA_ARGS__&, const __VA_ARGS__&);
 
-INSTANCE(double)
-INSTANCE(DenseAd::Evaluation<double, -1, 4u>)
-INSTANCE(DenseAd::Evaluation<double, -1, 5u>)
-INSTANCE(DenseAd::Evaluation<double, -1, 6u>)
-INSTANCE(DenseAd::Evaluation<double, -1, 7u>)
-INSTANCE(DenseAd::Evaluation<double, -1, 8u>)
-INSTANCE(DenseAd::Evaluation<double, -1, 9u>)
-INSTANCE(DenseAd::Evaluation<double, -1, 10u>)
-INSTANCE(DenseAd::Evaluation<double, -1, 11u>)
-INSTANCE(DenseAd::Evaluation<double, 3, 0u>)
-INSTANCE(DenseAd::Evaluation<double, 4, 0u>)
-INSTANCE(DenseAd::Evaluation<double, 5, 0u>)
-INSTANCE(DenseAd::Evaluation<double, 6, 0u>)
-INSTANCE(DenseAd::Evaluation<double, 7, 0u>)
-INSTANCE(DenseAd::Evaluation<double, 8, 0u>)
-INSTANCE(DenseAd::Evaluation<double, 9, 0u>)
-INSTANCE(DenseAd::Evaluation<double, 10, 0u>)
+#define INSTANCE_TYPE(T) \
+    INSTANCE(T)                               \
+    INSTANCE(DenseAd::Evaluation<T, -1, 4u>)  \
+    INSTANCE(DenseAd::Evaluation<T, -1, 5u>)  \
+    INSTANCE(DenseAd::Evaluation<T, -1, 6u>)  \
+    INSTANCE(DenseAd::Evaluation<T, -1, 7u>)  \
+    INSTANCE(DenseAd::Evaluation<T, -1, 8u>)  \
+    INSTANCE(DenseAd::Evaluation<T, -1, 9u>)  \
+    INSTANCE(DenseAd::Evaluation<T, -1, 10u>) \
+    INSTANCE(DenseAd::Evaluation<T, -1, 11u>) \
+    INSTANCE(DenseAd::Evaluation<T, 3, 0u>)   \
+    INSTANCE(DenseAd::Evaluation<T, 4, 0u>)   \
+    INSTANCE(DenseAd::Evaluation<T, 5, 0u>)   \
+    INSTANCE(DenseAd::Evaluation<T, 6, 0u>)   \
+    INSTANCE(DenseAd::Evaluation<T, 7, 0u>)   \
+    INSTANCE(DenseAd::Evaluation<T, 8, 0u>)   \
+    INSTANCE(DenseAd::Evaluation<T, 9, 0u>)   \
+    INSTANCE(DenseAd::Evaluation<T, 10, 0u>)
+
+INSTANCE_TYPE(double)
+
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
 } // namespace detail
 
 template class VFPHelpers<double>;
+
+#if FLOW_INSTANCE_FLOAT
+template class VFPHelpers<float>;
+#endif
 
 } // namespace Opm

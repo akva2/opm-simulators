@@ -137,7 +137,7 @@ static std::vector<std::pair<double,double>> cellVerticalExtent(const GridView& 
     for (; elemIt != elemEndIt; ++elemIt) {
         const auto& element = *elemIt;
         const unsigned int elemIdx = elemMapper.index(element);
-        cellZMinMax[elemIdx] = Opm::EQUIL::Details::cellZMinMax(element);
+        cellZMinMax[elemIdx] = Opm::EQUIL::Details::cellZMinMax<double>(element);
     }
     return cellZMinMax;
 }
@@ -276,11 +276,11 @@ BOOST_AUTO_TEST_CASE(PhasePressure)
     auto simulator = initSimulator<TypeTag>("equil_base.DATA");
     initDefaultFluidSystem<TypeTag>();
 
-    const auto region = Opm::EQUIL::EquilReg {
+    const auto region = Opm::EQUIL::EquilReg<double> {
         record,
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
+        std::make_shared<Opm::EQUIL::Miscibility::NoMixing<double>>(),
+        std::make_shared<Opm::EQUIL::Miscibility::NoMixing<double>>(),
+        std::make_shared<Opm::EQUIL::Miscibility::NoMixing<double>>(),
         trivialTempVdTable,
         trivialSaltVdTable,
         0
@@ -291,13 +291,14 @@ BOOST_AUTO_TEST_CASE(PhasePressure)
         auto cells = std::vector<int>(simulator->vanguard().grid().size(0));
         std::iota(cells.begin(), cells.end(), 0);
 
-        Opm::EQUIL::Details::verticalExtent(cells, cellVerticalExtent(simulator->vanguard().gridView()),
+        Opm::EQUIL::Details::verticalExtent(cells,
+                                            cellVerticalExtent(simulator->vanguard().gridView()),
                                             simulator->vanguard().gridView().comm(), vspan);
     }
 
     const auto grav = 10.0;
     auto ptable = Opm::EQUIL::Details::PressureTable<
-        FluidSystem, Opm::EQUIL::EquilReg
+        FluidSystem, Opm::EQUIL::EquilReg<double>
     >{ grav };
 
     ptable.equilibrate(region, vspan);
@@ -336,36 +337,36 @@ BOOST_AUTO_TEST_CASE(CellSubset)
     std::vector<double> yT = {298.15,298.15};
     Opm::Tabulated1DFunction<double> trivialTempVdTable{2, x, yT};
 
-    const Opm::EQUIL::EquilReg region[] =
+    const Opm::EQUIL::EquilReg<double> region[] =
     {
-        Opm::EQUIL::EquilReg(record[0],
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
+        Opm::EQUIL::EquilReg<double>(record[0],
+        std::make_shared<Opm::EQUIL::Miscibility::NoMixing<double>>(),
+        std::make_shared<Opm::EQUIL::Miscibility::NoMixing<double>>(),
+        std::make_shared<Opm::EQUIL::Miscibility::NoMixing<double>>(),
         trivialTempVdTable,
         trivialSaltVdTable,
         0)
         ,
-        Opm::EQUIL::EquilReg(record[0],
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
+        Opm::EQUIL::EquilReg<double>(record[0],
+        std::make_shared<Opm::EQUIL::Miscibility::NoMixing<double>>(),
+        std::make_shared<Opm::EQUIL::Miscibility::NoMixing<double>>(),
+        std::make_shared<Opm::EQUIL::Miscibility::NoMixing<double>>(),
         trivialTempVdTable,
         trivialSaltVdTable,
         0)
         ,
-        Opm::EQUIL::EquilReg(record[1],
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
+        Opm::EQUIL::EquilReg<double>(record[1],
+        std::make_shared<Opm::EQUIL::Miscibility::NoMixing<double>>(),
+        std::make_shared<Opm::EQUIL::Miscibility::NoMixing<double>>(),
+        std::make_shared<Opm::EQUIL::Miscibility::NoMixing<double>>(),
         trivialTempVdTable,
         trivialSaltVdTable,
         0)
         ,
-        Opm::EQUIL::EquilReg(record[1],
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
+        Opm::EQUIL::EquilReg<double>(record[1],
+        std::make_shared<Opm::EQUIL::Miscibility::NoMixing<double>>(),
+        std::make_shared<Opm::EQUIL::Miscibility::NoMixing<double>>(),
+        std::make_shared<Opm::EQUIL::Miscibility::NoMixing<double>>(),
         trivialTempVdTable,
         trivialSaltVdTable,
         0)
@@ -402,7 +403,7 @@ BOOST_AUTO_TEST_CASE(CellSubset)
 
     const auto grav = 10.0;
     auto ptable = Opm::EQUIL::Details::PressureTable<
-        FluidSystem, Opm::EQUIL::EquilReg
+        FluidSystem, Opm::EQUIL::EquilReg<double>
     >{ grav };
 
     auto ppress = PPress(2, PVal(simulator->vanguard().grid().size(0), 0.0));
@@ -450,36 +451,38 @@ BOOST_AUTO_TEST_CASE(RegMapping)
     std::vector<double> yT = {298.15,298.15};
     Opm::Tabulated1DFunction<double> trivialTempVdTable{2, x, yT};
 
-    const Opm::EQUIL::EquilReg region[] =
+    using NoMix = Opm::EQUIL::Miscibility::NoMixing<double>;
+
+    const Opm::EQUIL::EquilReg<double> region[] =
     {
-        Opm::EQUIL::EquilReg(record[0],
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
+        Opm::EQUIL::EquilReg<double>(record[0],
+        std::make_shared<NoMix>(),
+        std::make_shared<NoMix>(),
+        std::make_shared<NoMix>(),
         trivialTempVdTable,
         trivialSaltVdTable,
         0)
         ,
-        Opm::EQUIL::EquilReg(record[0],
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
+        Opm::EQUIL::EquilReg<double>(record[0],
+        std::make_shared<NoMix>(),
+        std::make_shared<NoMix>(),
+        std::make_shared<NoMix>(),
         trivialTempVdTable,
         trivialSaltVdTable,
         0)
         ,
-        Opm::EQUIL::EquilReg(record[1],
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
+        Opm::EQUIL::EquilReg<double>(record[1],
+        std::make_shared<NoMix>(),
+        std::make_shared<NoMix>(),
+        std::make_shared<NoMix>(),
         trivialTempVdTable,
         trivialSaltVdTable,
         0)
         ,
-        Opm::EQUIL::EquilReg(record[1],
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
-        std::make_shared<Opm::EQUIL::Miscibility::NoMixing>(),
+        Opm::EQUIL::EquilReg<double>(record[1],
+        std::make_shared<NoMix>(),
+        std::make_shared<NoMix>(),
+        std::make_shared<NoMix>(),
         trivialTempVdTable,
         trivialSaltVdTable,
         0)
@@ -496,7 +499,7 @@ BOOST_AUTO_TEST_CASE(RegMapping)
 
     const auto grav = 10.0;
     auto ptable = Opm::EQUIL::Details::PressureTable<
-        FluidSystem, Opm::EQUIL::EquilReg
+        FluidSystem, Opm::EQUIL::EquilReg<double>
     >{ grav };
 
     std::vector<int> eqlnum(simulator->vanguard().grid().size(0));

@@ -401,4 +401,8 @@ has_gpmaint_target(const std::string& gname) const
 
 template class GroupState<double>;
 
+#if FLOW_INSTANCE_FLOAT
+template class GroupState<float>;
+#endif
+
 }

@@ -544,50 +544,56 @@ getGroupProductionTargetRate(const Group& group,
     return scale;
 }
 
-template class WellGroupControls<double>;
+#define INSTANCE(...)                                                                              \
+    template void WellGroupControls<typename __VA_ARGS__::ValueType>::                             \
+        getGroupInjectionControl<__VA_ARGS__>(const Group&,                                        \
+                                              const WellState<typename __VA_ARGS__::ValueType>&,   \
+                                              const GroupState<typename __VA_ARGS__::ValueType>&,  \
+                                              const Schedule&,                                     \
+                                              const SummaryState&,                                 \
+                                              const InjectorType&,                                 \
+                                              const __VA_ARGS__&,                                  \
+                                              const __VA_ARGS__&,                                  \
+                                              const RateConvFunc&,                                 \
+                                              typename __VA_ARGS__::ValueType,                     \
+                                              __VA_ARGS__&,                                        \
+                                              DeferredLogger&) const;                              \
+    template void WellGroupControls<typename __VA_ARGS__::ValueType>::                             \
+        getGroupProductionControl<__VA_ARGS__>(const Group&,                                       \
+                                               const WellState<typename __VA_ARGS__::ValueType>&,  \
+                                               const GroupState<typename __VA_ARGS__::ValueType>&, \
+                                               const Schedule&,                                    \
+                                               const SummaryState&,                                \
+                                               const __VA_ARGS__&,                                 \
+                                               const std::vector<__VA_ARGS__>&,                    \
+                                               const RateConvFunc&,                                \
+                                               typename __VA_ARGS__::ValueType,                    \
+                                               __VA_ARGS__&,                                       \
+                                              DeferredLogger&) const;
 
-#define INSTANCE(...) \
-template void WellGroupControls<double>:: \
-getGroupInjectionControl<__VA_ARGS__>(const Group&, \
-                                      const WellState<double>&, \
-                                      const GroupState<double>&, \
-                                      const Schedule&, \
-                                      const SummaryState&, \
-                                      const InjectorType&, \
-                                      const __VA_ARGS__& bhp, \
-                                      const __VA_ARGS__& injection_rate, \
-                                      const RateConvFunc& rateConverter, \
-                                      double efficiencyFactor, \
-                                      __VA_ARGS__& control_eq, \
-                                      DeferredLogger& deferred_logger) const; \
-template void WellGroupControls<double>:: \
-getGroupProductionControl<__VA_ARGS__>(const Group&, \
-                                       const WellState<double>&, \
-                                       const GroupState<double>&, \
-                                       const Schedule&, \
-                                       const SummaryState&, \
-                                       const __VA_ARGS__& bhp, \
-                                       const std::vector<__VA_ARGS__>&, \
-                                       const RateConvFunc& rateConverter, \
-                                       double efficiencyFactor, \
-                                       __VA_ARGS__& control_eq, \
-                                       DeferredLogger& deferred_logger) const; \
+#define INSTANCE_TYPE(T)                    \
+    template class WellGroupControls<T>;    \
+    INSTANCE(DenseAd::Evaluation<T,3,0u>)   \
+    INSTANCE(DenseAd::Evaluation<T,4,0u>)   \
+    INSTANCE(DenseAd::Evaluation<T,5,0u>)   \
+    INSTANCE(DenseAd::Evaluation<T,6,0u>)   \
+    INSTANCE(DenseAd::Evaluation<T,7,0u>)   \
+    INSTANCE(DenseAd::Evaluation<T,8,0u>)   \
+    INSTANCE(DenseAd::Evaluation<T,9,0u>)   \
+    INSTANCE(DenseAd::Evaluation<T,10,0u>)  \
+    INSTANCE(DenseAd::Evaluation<T,-1,4u>)  \
+    INSTANCE(DenseAd::Evaluation<T,-1,5u>)  \
+    INSTANCE(DenseAd::Evaluation<T,-1,6u>)  \
+    INSTANCE(DenseAd::Evaluation<T,-1,7u>)  \
+    INSTANCE(DenseAd::Evaluation<T,-1,8u>)  \
+    INSTANCE(DenseAd::Evaluation<T,-1,9u>)  \
+    INSTANCE(DenseAd::Evaluation<T,-1,10u>) \
+    INSTANCE(DenseAd::Evaluation<T,-1,11u>)
 
-INSTANCE(DenseAd::Evaluation<double,3,0u>)
-INSTANCE(DenseAd::Evaluation<double,4,0u>)
-INSTANCE(DenseAd::Evaluation<double,5,0u>)
-INSTANCE(DenseAd::Evaluation<double,6,0u>)
-INSTANCE(DenseAd::Evaluation<double,7,0u>)
-INSTANCE(DenseAd::Evaluation<double,8,0u>)
-INSTANCE(DenseAd::Evaluation<double,9,0u>)
-INSTANCE(DenseAd::Evaluation<double,10,0u>)
-INSTANCE(DenseAd::Evaluation<double,-1,4u>)
-INSTANCE(DenseAd::Evaluation<double,-1,5u>)
-INSTANCE(DenseAd::Evaluation<double,-1,6u>)
-INSTANCE(DenseAd::Evaluation<double,-1,7u>)
-INSTANCE(DenseAd::Evaluation<double,-1,8u>)
-INSTANCE(DenseAd::Evaluation<double,-1,9u>)
-INSTANCE(DenseAd::Evaluation<double,-1,10u>)
-INSTANCE(DenseAd::Evaluation<double,-1,11u>)
+INSTANCE_TYPE(double)
+
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
 } // namespace Opm

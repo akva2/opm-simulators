@@ -360,4 +360,8 @@ bool SingleWellState<Scalar>::operator==(const SingleWellState& rhs) const
 
 template class SingleWellState<double>;
 
+#if FLOW_INSTANCE_FLOAT
+template class SingleWellState<float>;
+#endif
+
 }

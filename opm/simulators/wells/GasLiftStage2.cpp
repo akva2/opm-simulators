@@ -661,8 +661,12 @@ removeSurplusALQ_(const Group& group,
         displayDebugMessage_(msg);
     }
     SurplusState state {*this, group, oil_rate, gas_rate, water_rate, alq,
-            min_eco_grad, controls.oil_target, controls.gas_target, controls.water_target,
-            controls.liquid_target, max_glift, max_totalgas };
+                        static_cast<Scalar>(min_eco_grad),
+                        static_cast<Scalar>(controls.oil_target),
+                        static_cast<Scalar>(controls.gas_target),
+                        static_cast<Scalar>(controls.water_target),
+                        static_cast<Scalar>(controls.liquid_target),
+                        max_glift, max_totalgas };
 
     while (!stop_iteration) {
         if (dec_grads.size() >= 2) {
@@ -1133,5 +1137,9 @@ updateRates(const std::array<Scalar, 4>& delta)
 }
 
 template class GasLiftStage2<double>;
+
+#if FLOW_INSTANCE_FLOAT
+template class GasLiftStage2<float>;
+#endif
 
 } // namespace Opm
