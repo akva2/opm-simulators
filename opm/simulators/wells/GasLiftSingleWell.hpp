@@ -24,15 +24,19 @@
 #include <opm/models/utils/parametersystem.hh>
 #include <opm/models/discretization/common/fvbaseproperties.hh>
 #include <opm/simulators/wells/GasLiftSingleWellGeneric.hpp>
-#include <opm/simulators/wells/GasLiftGroupInfo.hpp>
-#include <opm/simulators/wells/WellInterface.hpp>
 
 #include <optional>
-#include <vector>
-#include <utility>
 
 namespace Opm
 {
+
+class DeferredLogger;
+class GasLiftGroupInfo;
+class GroupState;
+class SummaryState;
+template<class TypeTag> class WellInterface;
+class WellState;
+
     template<class TypeTag>
     class GasLiftSingleWell : public GasLiftSingleWellGeneric
     {

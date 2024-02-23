@@ -25,7 +25,16 @@
 #endif
 
 #include <opm/input/eclipse/Schedule/GasLiftOpt.hpp>
+#include <opm/input/eclipse/Schedule/Well/Well.hpp>
+
+#include <opm/simulators/wells/WellInterfaceGeneric.hpp>
+
 #include <fmt/format.h>
+
+#include <algorithm>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 namespace Opm {
 
