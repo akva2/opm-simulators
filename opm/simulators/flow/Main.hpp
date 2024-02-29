@@ -24,7 +24,7 @@
 #define OPM_MAIN_HEADER_INCLUDED
 
 #include <flow/flow_ebos_blackoil.hpp>
-#include <flow/flow_ebos_blackoil_legacyassembly.hpp>
+//#include <flow/flow_ebos_blackoil_legacyassembly.hpp>
 
 #include <flow/flow_ebos_gasoil.hpp>
 #include <flow/flow_ebos_gasoildiffuse.hpp>
@@ -677,9 +677,10 @@ private:
     {
         const bool diffusive = eclipseState_->getSimulationConfig().isDiffusive();
         if (diffusive) {
+            return 1;
             // Use the traditional linearizer, as the TpfaLinearizer does not
             // support the diffusion module yet.
-            return flowEbosBlackoilMain(argc_, argv_, outputCout_, outputFiles_);
+//            return flowEbosBlackoilMain(argc_, argv_, outputCout_, outputFiles_);
         } else {
             return flowEbosBlackoilTpfaMain(argc_, argv_, outputCout_, outputFiles_);
         }

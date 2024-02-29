@@ -8,19 +8,24 @@
 #  https://cmake.org/cmake/help/latest/command/target_include_directories.html
 #  https://pybind11.readthedocs.io/en/stable/compiling.html
 #
+
+#add_library(pyblackoil_simulator OBJECT PyBlackOilSimulator.cpp)
+#target_link_libraries(pyblackoil_simulator PRIVATE pybind11::lto)
+#cmake_policy(SET CMP0079 NEW)
+#target_link_libraries(flow_libblackoil pybind11::lto)
+#target_include_directories(pyblackoil_simulator PUBLIC ${Python3_INCLUDE_DIRS})
+#set_target_properties(pyblackoil_simulator PROPERTIES POSITION_INDEPENDENT_CODE ON)
 pybind11_add_module(simulators ${PYBIND11_SYSTEM}
+  Pybind11Exporter.cpp
   PyBlackOilSimulator.cpp
-  Pybind11Exporter.cpp)
+  ${PROJECT_SOURCE_DIR}/flow/flow_ebos_blackoil.cpp
+ # $<TARGET_OBJECTS:pyblackoil_simulator>
+  $<TARGET_OBJECTS:moduleVersion>)
 
 set(PYTHON_OPM_SIMULATORS_PACKAGE_PATH ${PROJECT_BINARY_DIR}/python/opm/simulators)
 set_target_properties( simulators PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PYTHON_OPM_SIMULATORS_PACKAGE_PATH} )
 
-target_sources(simulators
-  PRIVATE
-  $<TARGET_OBJECTS:moduleVersion>
-  $<TARGET_OBJECTS:flow_libblackoil>)
-
-target_link_libraries( simulators PRIVATE opmsimulators )
+target_link_libraries( simulators PUBLIC opmsimulators)
 
 execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "
 import site, sys
