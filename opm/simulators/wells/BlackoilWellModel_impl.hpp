@@ -81,10 +81,10 @@ namespace Opm {
         this->wbpCalculationService_
             .localCellIndex([this](const std::size_t globalIndex)
             { return this->compressedIndexForInterior(globalIndex); })
-            .evalCellSource([this](const int                                     localCell,
-                                   PAvgDynamicSourceData::SourceDataSpan<double> sourceTerms)
+            .evalCellSource([this](const int                                             localCell,
+                                   typename PAvgDynamicSourceData<Scalar>::template SourceDataSpan<Scalar> sourceTerms)
             {
-                using Item = PAvgDynamicSourceData::SourceDataSpan<double>::Item;
+                using Item = typename PAvgDynamicSourceData<Scalar>::template SourceDataSpan<Scalar>::Item;
 
                 const auto* intQuants = this->simulator_.model()
                     .cachedIntensiveQuantities(localCell, /*timeIndex = */0);
@@ -2030,7 +2030,7 @@ namespace Opm {
     BlackoilWellModel<TypeTag>::
     makeWellSourceEvaluatorFactory(const std::vector<Well>::size_type wellIdx) const
     {
-        using Span = PAvgDynamicSourceData::SourceDataSpan<double>;
+        using Span = typename PAvgDynamicSourceData<Scalar>::template SourceDataSpan<Scalar>;
         using Item = typename Span::Item;
 
         return [wellIdx, this]() -> ParallelWBPCalculation::Evaluator
