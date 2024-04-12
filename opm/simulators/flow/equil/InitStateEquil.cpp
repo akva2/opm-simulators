@@ -63,6 +63,9 @@ namespace DeckDependent {
 using GridView = Dune::GridView<Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>;
 using Mapper = Dune::MultipleCodimMultipleGeomTypeMapper<GridView>;
 INSTANCE_COMP(double, GridView, Mapper)
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_COMP(float, GridView, Mapper)
+#endif
 
 #if HAVE_DUNE_FEM
 
@@ -74,6 +77,10 @@ using GridViewFem = Dune::Fem::GridPart2GridViewImpl<
 using MapperFem = Dune::MultipleCodimMultipleGeomTypeMapper<GridViewFem>;
 
 INSTANCE_COMP(double, GridViewFem, MapperFem)
+
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_COMP(float, GridViewFem, MapperFem)
+#endif
 
 #endif // HAVE_DUNE_FEM
 
@@ -92,6 +99,9 @@ namespace Details {
 
 INSTANCE_TYPE(double)
 
+#if FLOW_INSTANCE_FLOAT
+  INSTANCE_TYPE(float)
+#endif
 }
 
 } // namespace EQUIL
