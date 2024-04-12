@@ -255,45 +255,41 @@ void milun_decomposition(const M& A, int n, MILU_VARIANT milu, M& ILU,
     }
 }
 
+#define INSTANCE(T, ...)                                                  \
+    template void milu0_decomposition<__VA_ARGS__>                        \
+    (__VA_ARGS__&,std::function<T(const T&)>, std::function<T(const T&)>, \
+    std::vector<typename __VA_ARGS__::block_type>*);
 
-template double Opm::detail::identityFunctor(const double&);
-template double Opm::detail::oneFunctor(const double&);
-template double Opm::detail::signFunctor(const double&);
-template double Opm::detail::isPositiveFunctor(const double&);
-template double Opm::detail::absFunctor(const double&);
-
-#define INSTANCE(...)                                                   \
-    template void milu0_decomposition<__VA_ARGS__>                      \
-    (__VA_ARGS__&,std::function<double(const double&)>, std::function<double(const double&)>, \
-     std::vector<typename __VA_ARGS__::block_type>*);
-
-#define INSTANCE_ILUN(...)                                              \
+#define INSTANCE_ILUN(...)                                                   \
     template void milun_decomposition(const __VA_ARGS__&, int, MILU_VARIANT, \
                                       __VA_ARGS__&,Reorderer&,Reorderer&);
 
-#define INSTANCE_FULL(...)                      \
-    INSTANCE(__VA_ARGS__)                       \
+#define INSTANCE_FULL(T,...) \
+    INSTANCE(T,__VA_ARGS__)  \
     INSTANCE_ILUN(__VA_ARGS__)
 
-#define INSTANCE_BLOCK(Dim)                                             \
-    INSTANCE_FULL(Dune::BCRSMatrix<MatrixBlock<double,Dim,Dim>>)
+#define INSTANCE_DIM(T,Dim) \
+    INSTANCE_FULL(T,Dune::BCRSMatrix<MatrixBlock<T,Dim,Dim>>) \
+    INSTANCE_FULL(T,Dune::BCRSMatrix<Dune::FieldMatrix<T,Dim,Dim>>)
 
-#define INSTANCE_FM(Dim)                                                \
-    INSTANCE_FULL(Dune::BCRSMatrix<Dune::FieldMatrix<double,Dim,Dim>>)
+#define INSTANCE_TYPE(T)                    \
+    template T identityFunctor(const T&);   \
+    template T oneFunctor(const T&);        \
+    template T signFunctor(const T&);       \
+    template T isPositiveFunctor(const T&); \
+    template T absFunctor(const T&);        \
+    INSTANCE_DIM(T,1)                       \
+    INSTANCE_DIM(T,2)                       \
+    INSTANCE_DIM(T,3)                       \
+    INSTANCE_DIM(T,4)                       \
+    INSTANCE_DIM(T,5)                       \
+    INSTANCE_DIM(T,6)
 
-INSTANCE_FM(1)
-INSTANCE_FM(2)
-INSTANCE_FM(3)
-INSTANCE_FM(4)
-INSTANCE_FM(5)
-INSTANCE_FM(6)
+INSTANCE_TYPE(double)
 
-INSTANCE_BLOCK(1)
-INSTANCE_BLOCK(2)
-INSTANCE_BLOCK(3)
-INSTANCE_BLOCK(4)
-INSTANCE_BLOCK(5)
-INSTANCE_BLOCK(6)
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
 } // end namespace detail
 
