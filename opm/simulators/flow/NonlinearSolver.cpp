@@ -125,5 +125,9 @@ using BV = Dune::BlockVector<Dune::FieldVector<Scalar,Size>>;
 
 INSTANCE_TYPE(double)
 
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
+
 } // namespace detail
 } // namespace Opm
