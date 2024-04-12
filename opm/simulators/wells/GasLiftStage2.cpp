@@ -1134,4 +1134,8 @@ updateRates(const std::array<Scalar, 4>& delta)
 
 template class GasLiftStage2<double>;
 
+#if FLOW_INSTANCE_FLOAT
+template class GasLiftStage2<float>;
+#endif
+
 } // namespace Opm
