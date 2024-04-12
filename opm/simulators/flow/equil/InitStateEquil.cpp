@@ -75,7 +75,7 @@ INSTANCE_COMP(GridViewFem, MapperFem)
 } // namespace DeckDependent
 
 namespace Details {
-    template class PressureTable<BlackOilFluidSystem<double>,EquilReg>;
+    template class PressureTable<BlackOilFluidSystem<double>,EquilReg<double>>;
     template void verticalExtent<std::vector<int>,
                                  Dune::CollectiveCommunication<Dune::MPIHelper::MPICommunicator>>(
                                  const std::vector<int>&,
@@ -85,7 +85,7 @@ namespace Details {
 
     using MatLaw = EclMaterialLawManager<ThreePhaseMaterialTraits<double,0,1,2>>;
     template class PhaseSaturations<MatLaw,BlackOilFluidSystem<double>,
-                                    EquilReg,std::size_t>;
+                                    EquilReg<double>,std::size_t>;
 
     template std::pair<double,double> cellZMinMax(const Dune::cpgrid::Entity<0>& element);
 }
