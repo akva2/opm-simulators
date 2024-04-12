@@ -215,34 +215,42 @@ bool rateControlWithZeroInjTarget(const WellInjectionControls& controls,
     }
 }
 
-template class ParallelStandardWellB<double>;
-
-template<int Dim> using Vec = Dune::BlockVector<Dune::FieldVector<double,Dim>>;
-using DynVec = Dune::BlockVector<Dune::DynamicVector<double>>;
-
-#define INSTANCE(Dim) \
-    template void ParallelStandardWellB<double>::mv<Vec<Dim>,DynVec>(const Vec<Dim>&,DynVec&) const; \
-    template void ParallelStandardWellB<double>::mmv<Vec<Dim>,DynVec>(const Vec<Dim>&,DynVec&) const;
-
-INSTANCE(1)
-INSTANCE(2)
-INSTANCE(3)
-INSTANCE(4)
-INSTANCE(5)
-INSTANCE(6)
-
+template<class Scalar, int Dim>
+using Vec = Dune::BlockVector<Dune::FieldVector<Scalar,Dim>>;
+template<class Scalar>
+using DynVec = Dune::BlockVector<Dune::DynamicVector<Scalar>>;
+template<class Scalar>
+using DMatrix = Dune::DynamicMatrix<Scalar>;
 using Comm = Parallel::Communication;
-template void sumDistributedWellEntries<double,Comm>(Dune::DynamicMatrix<double>& mat,
-                                                     Dune::DynamicVector<double>& vec,
-                                                     const Comm& comm);
 
-using DMatrix = Dune::DynamicMatrix<double>;
-template DMatrix transposeDenseDynMatrix<DMatrix>(const DMatrix&);
+#define INSTANCE(T,Dim)                                               \
+    template void ParallelStandardWellB<T>::                          \
+        mv<Vec<T,Dim>,DynVec<T>>(const Vec<T,Dim>&,DynVec<T>&) const; \
+    template void ParallelStandardWellB<T>::                          \
+        mmv<Vec<T,Dim>,DynVec<T>>(const Vec<T,Dim>&,DynVec<T>&) const;
 
-template double computeHydrostaticCorrection<double>(const double,
-                                                     const double,
-                                                     const double,
-                                                     const double);
+#define INSTANCE_TYPE(T)                                                          \
+    template class ParallelStandardWellB<T>;                                      \
+    template void sumDistributedWellEntries<T,Comm>(Dune::DynamicMatrix<T>& mat,  \
+                                                    Dune::DynamicVector<T>& vec,  \
+                                                    const Comm& comm);            \
+    template DMatrix<T> transposeDenseDynMatrix(const DMatrix<T>&);               \
+    template T computeHydrostaticCorrection<T>(const T,                           \
+                                               const T,                           \
+                                               const T,                           \
+                                               const T);                          \
+    INSTANCE(T,1)                                                                 \
+    INSTANCE(T,2)                                                                 \
+    INSTANCE(T,3)                                                                 \
+    INSTANCE(T,4)                                                                 \
+    INSTANCE(T,5)                                                                 \
+    INSTANCE(T,6)
+
+INSTANCE_TYPE(double)
+
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
 } // namespace wellhelpers
 } // namespace Opm
