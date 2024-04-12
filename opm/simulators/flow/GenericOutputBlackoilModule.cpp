@@ -1567,6 +1567,13 @@ assignGlobalFieldsToSolution(data::Solution& sol)
     }
 }
 
-template class GenericOutputBlackoilModule<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>>;
+#define INSTANCE_TYPE(T) \
+    template class GenericOutputBlackoilModule<BlackOilFluidSystem<T,BlackOilDefaultIndexTraits>>;
+
+INSTANCE_TYPE(double)
+
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
 } // namespace Opm
