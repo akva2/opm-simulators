@@ -865,4 +865,8 @@ prepareForPotentialCalculations(const SummaryState& summary_state,
 
 template class WellInterfaceGeneric<double>;
 
+#if FLOW_INSTANCE_FLOAT
+template class WellInterfaceGeneric<float>;
+#endif
+
 } // namespace Opm
