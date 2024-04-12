@@ -272,7 +272,7 @@ computeBhpAtThpLimitProd(const std::function<std::vector<Scalar>(const Scalar)>&
                                 "find bhp-point where production becomes non-zero for well " + well_.name());
         return std::nullopt;
     }
-    const std::array<Scalar, 2> range {controls.bhp_limit, *bhp_max};
+    const std::array<Scalar, 2> range {static_cast<Scalar>(controls.bhp_limit), *bhp_max};
     return this->computeBhpAtThpLimit(frates, fbhp, range, deferred_logger);
 }
 
