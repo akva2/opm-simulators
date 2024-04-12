@@ -35,32 +35,60 @@
 
 namespace Opm {
 
-template class Transmissibility<Dune::CpGrid,
-                                Dune::GridView<Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>,
-                                Dune::MultipleCodimMultipleGeomTypeMapper<Dune::GridView<Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>>,
-                                Dune::CartesianIndexMapper<Dune::CpGrid>,
-                                double>;
+#define INSTANCE_TYPE(T)                                                                     \
+    template class Transmissibility<Dune::CpGrid,                                            \
+                                    Dune::GridView<                                          \
+                                        Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>,      \
+                                    Dune::MultipleCodimMultipleGeomTypeMapper<               \
+                                        Dune::GridView<                                      \
+                                            Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>>, \
+                                    Dune::CartesianIndexMapper<Dune::CpGrid>,                \
+                                    T>;
+
+INSTANCE_TYPE(double)
+
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
 #ifdef HAVE_DUNE_FEM
-template class Transmissibility<Dune::CpGrid,
-                                Dune::GridView<Dune::Fem::GridPart2GridViewTraits<Dune::Fem::AdaptiveLeafGridPart<Dune::CpGrid, Dune::PartitionIteratorType(4), false>>>,
-                                Dune::MultipleCodimMultipleGeomTypeMapper<Dune::GridView<Dune::Fem::GridPart2GridViewTraits<Dune::Fem::AdaptiveLeafGridPart<Dune::CpGrid, Dune::PartitionIteratorType(4), false>>>>,
-                                Dune::CartesianIndexMapper<Dune::CpGrid>,
-                                double>;
-template class Transmissibility<Dune::CpGrid,
-                                Dune::Fem::GridPart2GridViewImpl<
-                                    Dune::Fem::AdaptiveLeafGridPart<
-                                        Dune::CpGrid,
-                                        Dune::PartitionIteratorType(4),
-                                        false> >,
-                                Dune::MultipleCodimMultipleGeomTypeMapper<
-                                    Dune::Fem::GridPart2GridViewImpl<
-                                        Dune::Fem::AdaptiveLeafGridPart<
-                                            Dune::CpGrid,
-                                            Dune::PartitionIteratorType(4),
-                                            false> > >,
-                                Dune::CartesianIndexMapper<Dune::CpGrid>,
-                                double>;
+
+#define INSTANCE_FEM_TYPE(T)                                                               \
+    template class Transmissibility<Dune::CpGrid,                                          \
+                                    Dune::GridView<                                        \
+                                        Dune::Fem::GridPart2GridViewTraits<                \
+                                            Dune::Fem::AdaptiveLeafGridPart<               \
+                                                Dune::CpGrid,                              \
+                                                Dune::PartitionIteratorType(4), false>>>,  \
+                                Dune::MultipleCodimMultipleGeomTypeMapper<                 \
+                                    Dune::GridView<                                        \
+                                        Dune::Fem::GridPart2GridViewTraits<                \
+                                            Dune::Fem::AdaptiveLeafGridPart<               \
+                                                Dune::CpGrid,                              \
+                                                Dune::PartitionIteratorType(4), false>>>>, \
+                                Dune::CartesianIndexMapper<Dune::CpGrid>,                  \
+                                T>;                                                        \
+    template class Transmissibility<Dune::CpGrid,                                          \
+                                    Dune::Fem::GridPart2GridViewImpl<                      \
+                                        Dune::Fem::AdaptiveLeafGridPart<                   \
+                                            Dune::CpGrid,                                  \
+                                            Dune::PartitionIteratorType(4),                \
+                                            false> >,                                      \
+                                    Dune::MultipleCodimMultipleGeomTypeMapper<             \
+                                        Dune::Fem::GridPart2GridViewImpl<                  \
+                                            Dune::Fem::AdaptiveLeafGridPart<               \
+                                                Dune::CpGrid,                              \
+                                                Dune::PartitionIteratorType(4),            \
+                                                false> > >,                                \
+                                    Dune::CartesianIndexMapper<Dune::CpGrid>,              \
+                                    T>;
+
+INSTANCE_FEM_TYPE(double)
+
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_FEM_TYPE(float)
+#endif
+
 #endif // HAVE_DUNE_FEM
 
 } // namespace Opm
