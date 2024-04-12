@@ -35,29 +35,56 @@
 
 namespace Opm {
 
-template class GenericThresholdPressure<Dune::CpGrid,
-                                        Dune::GridView<Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>,
-                                        Dune::MultipleCodimMultipleGeomTypeMapper<Dune::GridView<Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>>,
-                                        double>;
+#define INSTANCE_TYPE(T)                                                                        \
+    template class GenericThresholdPressure<Dune::CpGrid,                                       \
+                                            Dune::GridView<                                     \
+                                              Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>,   \
+                                            Dune::MultipleCodimMultipleGeomTypeMapper<          \
+                                                Dune::GridView<Dune::DefaultLeafGridViewTraits< \
+                                                    Dune::CpGrid>>>,                            \
+                                            T>;
+
+INSTANCE_TYPE(double)
+
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
 #if HAVE_DUNE_FEM
-template class GenericThresholdPressure<Dune::CpGrid,
-                                        Dune::GridView<Dune::Fem::GridPart2GridViewTraits<Dune::Fem::AdaptiveLeafGridPart<Dune::CpGrid, Dune::PartitionIteratorType(4), false>>>,
-                                        Dune::MultipleCodimMultipleGeomTypeMapper<Dune::GridView<Dune::Fem::GridPart2GridViewTraits<Dune::Fem::AdaptiveLeafGridPart<Dune::CpGrid, Dune::PartitionIteratorType(4), false>>>>,
-                                        double>;
-template class GenericThresholdPressure<Dune::CpGrid,
-                                         Dune::Fem::GridPart2GridViewImpl<
-                                             Dune::Fem::AdaptiveLeafGridPart<
-                                                 Dune::CpGrid,
-                                                 Dune::PartitionIteratorType(4),
-                                                 false> >,
-                                         Dune::MultipleCodimMultipleGeomTypeMapper<
-                                             Dune::Fem::GridPart2GridViewImpl<
-                                                 Dune::Fem::AdaptiveLeafGridPart<
-                                                     Dune::CpGrid,
-                                                     Dune::PartitionIteratorType(4),
-                                                     false>>>,
-                                         double>;
+
+#define INSTANCE_FEM_TYPE(T)                                                                        \
+    template class GenericThresholdPressure<Dune::CpGrid,                                           \
+                                            Dune::GridView<                                         \
+                                                Dune::Fem::GridPart2GridViewTraits<                 \
+                                                    Dune::Fem::AdaptiveLeafGridPart<                \
+                                                        Dune::CpGrid,                               \
+                                                        Dune::PartitionIteratorType(4), false>>>,   \
+                                            Dune::MultipleCodimMultipleGeomTypeMapper<              \
+                                                Dune::GridView<Dune::Fem::GridPart2GridViewTraits<  \
+                                                    Dune::Fem::AdaptiveLeafGridPart<                \
+                                                        Dune::CpGrid,                               \
+                                                        Dune::PartitionIteratorType(4), false>>>>,  \
+                                            T>;                                                     \
+    template class GenericThresholdPressure<Dune::CpGrid,                                           \
+                                             Dune::Fem::GridPart2GridViewImpl<                      \
+                                                 Dune::Fem::AdaptiveLeafGridPart<                   \
+                                                     Dune::CpGrid,                                  \
+                                                     Dune::PartitionIteratorType(4),                \
+                                                     false> >,                                      \
+                                             Dune::MultipleCodimMultipleGeomTypeMapper<             \
+                                                 Dune::Fem::GridPart2GridViewImpl<                  \
+                                                     Dune::Fem::AdaptiveLeafGridPart<               \
+                                                         Dune::CpGrid,                              \
+                                                         Dune::PartitionIteratorType(4),            \
+                                                         false>>>,                                  \
+                                             T>;
+
+INSTANCE_FEM_TYPE(double)
+
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_FEM_TYPE(float)
+#endif
+
 #endif // HAVE_DUNE_FEM
 
 } // namespace Opm
