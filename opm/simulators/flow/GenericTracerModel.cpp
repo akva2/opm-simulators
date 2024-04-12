@@ -32,27 +32,70 @@
 
 namespace Opm {
 
-template class GenericTracerModel<Dune::CpGrid,
-                                  Dune::GridView<Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>,
-                                  Dune::MultipleCodimMultipleGeomTypeMapper<Dune::GridView<Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>>,
-                                  Opm::EcfvStencil<double,Dune::GridView<Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>,false,false>,
-                                  double>;
+#define INSTANCE_TYPE(T)                                                                                \
+    template class GenericTracerModel<Dune::CpGrid,                                                     \
+                                      Dune::GridView<                                                   \
+                                          Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>,               \
+                                      Dune::MultipleCodimMultipleGeomTypeMapper<                        \
+                                          Dune::GridView<                                               \
+                                              Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>>,          \
+                                      EcfvStencil<T,Dune::GridView<                                     \
+                                                        Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>, \
+                                                  false,false>,                                         \
+                                      T>;
+
+INSTANCE_TYPE(double)
+
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
 #if HAVE_DUNE_FEM
-template class GenericTracerModel<Dune::CpGrid,
-                                  Dune::GridView<Dune::Fem::GridPart2GridViewTraits<Dune::Fem::AdaptiveLeafGridPart<Dune::CpGrid, Dune::PartitionIteratorType(4), false>>>,
-                                  Dune::MultipleCodimMultipleGeomTypeMapper<Dune::GridView<Dune::Fem::GridPart2GridViewTraits<Dune::Fem::AdaptiveLeafGridPart<Dune::CpGrid, Dune::PartitionIteratorType(4), false>>>>,
-                                  EcfvStencil<double,Dune::GridView<Dune::Fem::GridPart2GridViewTraits<Dune::Fem::AdaptiveLeafGridPart<Dune::CpGrid, Dune::PartitionIteratorType(4), false>>>,false,false>,
-                                  double>;
-template class GenericTracerModel<Dune::CpGrid,
-                                  Dune::Fem::GridPart2GridViewImpl<Dune::Fem::AdaptiveLeafGridPart<Dune::CpGrid, (Dune::PartitionIteratorType)4, false> >,
-                                  Dune::MultipleCodimMultipleGeomTypeMapper<
-                                     Dune::Fem::GridPart2GridViewImpl<
-                                         Dune::Fem::AdaptiveLeafGridPart<Dune::CpGrid, Dune::PartitionIteratorType(4), false> > >,
-                                  EcfvStencil<double, Dune::Fem::GridPart2GridViewImpl<
-                                                               Dune::Fem::AdaptiveLeafGridPart<Dune::CpGrid, Dune::PartitionIteratorType(4), false> >,
-                                                   false, false>,
-                                  double>;
+
+#define INSTANCE_FEM_TYPE(T)                                                                        \
+    template class GenericTracerModel<Dune::CpGrid,                                                 \
+                                      Dune::GridView<                                               \
+                                          Dune::Fem::GridPart2GridViewTraits<                       \
+                                              Dune::Fem::AdaptiveLeafGridPart<                      \
+                                                  Dune::CpGrid,                                     \
+                                                  Dune::PartitionIteratorType(4), false>>>,         \
+                                      Dune::MultipleCodimMultipleGeomTypeMapper<                    \
+                                          Dune::GridView<                                           \
+                                              Dune::Fem::GridPart2GridViewTraits<                   \
+                                                  Dune::Fem::AdaptiveLeafGridPart<                  \
+                                                      Dune::CpGrid,                                 \
+                                                      Dune::PartitionIteratorType(4), false>>>>,    \
+                                      EcfvStencil<T,Dune::GridView<                                 \
+                                                        Dune::Fem::GridPart2GridViewTraits<         \
+                                                            Dune::Fem::AdaptiveLeafGridPart<        \
+                                                                Dune::CpGrid,                       \
+                                                                Dune::PartitionIteratorType(4),     \
+                                                                false>>>,                           \
+                                                        false,false>,                               \
+                                      T>;                                                           \
+    template class GenericTracerModel<Dune::CpGrid,                                                 \
+                                      Dune::Fem::GridPart2GridViewImpl<                             \
+                                          Dune::Fem::AdaptiveLeafGridPart<                          \
+                                              Dune::CpGrid,                                         \
+                                              (Dune::PartitionIteratorType)4, false> >,             \
+                                      Dune::MultipleCodimMultipleGeomTypeMapper<                    \
+                                         Dune::Fem::GridPart2GridViewImpl<                          \
+                                             Dune::Fem::AdaptiveLeafGridPart<                       \
+                                                Dune::CpGrid,                                       \
+                                                Dune::PartitionIteratorType(4), false> > >,         \
+                                      EcfvStencil<T, Dune::Fem::GridPart2GridViewImpl<              \
+                                                        Dune::Fem::AdaptiveLeafGridPart<            \
+                                                            Dune::CpGrid,                           \
+                                                            Dune::PartitionIteratorType(4), false>>,\
+                                                 false, false>,                                     \
+                                      T>;
+
+INSTANCE_FEM_TYPE(double)
+
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_FEM_TYPE(float)
+#endif
+
 #endif // HAVE_DUNE_FEM
 
 } // namespace Opm
