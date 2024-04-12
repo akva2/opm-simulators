@@ -305,6 +305,13 @@ getGroupProductionTargetRate(const Group& group,
                                                                  deferred_logger);
 }
 
-template class WellInterfaceFluidSystem<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>>;
+template<class Scalar>
+using FS = BlackOilFluidSystem<Scalar,BlackOilDefaultIndexTraits>;
+
+template class WellInterfaceFluidSystem<FS<double>>;
+
+#if FLOW_INSTANCE_FLOAT
+template class WellInterfaceFluidSystem<FS<float>>;
+#endif
 
 } // namespace Opm
