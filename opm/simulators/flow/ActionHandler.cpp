@@ -276,4 +276,8 @@ evalUDQAssignments(const unsigned episodeIdx,
 
 template class ActionHandler<double>;
 
+#if FLOW_INSTANCE_FLOAT
+template class ActionHandler<float>;
+#endif
+
 } // namespace Opm
