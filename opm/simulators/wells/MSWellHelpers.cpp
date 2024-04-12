@@ -299,20 +299,17 @@ ValueType emulsionViscosity(const ValueType& water_fraction,
     }
 }
 
-template<int Dim>
-using Vec = Dune::BlockVector<Dune::FieldVector<double,Dim>>;
-template<int Dim>
-using Mat = Dune::BCRSMatrix<Dune::FieldMatrix<double,Dim,Dim>>;
+template<class Scalar, int Dim>
+using Vec = Dune::BlockVector<Dune::FieldVector<Scalar,Dim>>;
+template<class Scalar, int Dim>
+using Mat = Dune::BCRSMatrix<Dune::FieldMatrix<Scalar,Dim,Dim>>;
 
-#define INSTANCE_UMF(Dim) \
-    template Vec<Dim> applyUMFPack<Mat<Dim>,Vec<Dim>>(Dune::UMFPack<Mat<Dim>>&, \
-                                                      Vec<Dim>); \
-    template Dune::Matrix<typename Mat<Dim>::block_type> \
-    invertWithUMFPack<Vec<Dim>,Mat<Dim>>(const int, const int, Dune::UMFPack<Mat<Dim>>&);
-
-INSTANCE_UMF(2)
-INSTANCE_UMF(3)
-INSTANCE_UMF(4)
+#define INSTANCE_UMF(T,Dim)                                                           \
+    template Vec<T,Dim> applyUMFPack<Mat<T,Dim>,Vec<T,Dim>>(Dune::UMFPack<Mat<T,Dim>>&, \
+                                                            Vec<T,Dim>);                \
+    template Dune::Matrix<typename Mat<T,Dim>::block_type>                            \
+    invertWithUMFPack<Vec<T,Dim>,Mat<T,Dim>>(const int, const int,                    \
+                                             Dune::UMFPack<Mat<T,Dim>>&);
 
 #define INSTANCE_IMPL(T,...) \
     template __VA_ARGS__ \
@@ -336,15 +333,25 @@ INSTANCE_UMF(4)
                                      const __VA_ARGS__&, \
                                      const SICD&);
 
-#define INSTANCE_EVAL(Dim) \
-    INSTANCE_IMPL(double, DenseAd::Evaluation<double,Dim>)
+#define INSTANCE_EVAL(T,Dim) \
+    INSTANCE_IMPL(T, DenseAd::Evaluation<T,Dim>)
 
-INSTANCE_EVAL(3)
-INSTANCE_EVAL(4)
-INSTANCE_EVAL(5)
-INSTANCE_EVAL(6)
-INSTANCE_EVAL(7)
-INSTANCE_EVAL(8)
-INSTANCE_EVAL(9)
+#define INSTANCE_TYPE(T) \
+    INSTANCE_UMF(T,2) \
+    INSTANCE_UMF(T,3) \
+    INSTANCE_UMF(T,4) \
+    INSTANCE_EVAL(T,3) \
+    INSTANCE_EVAL(T,4) \
+    INSTANCE_EVAL(T,5) \
+    INSTANCE_EVAL(T,6) \
+    INSTANCE_EVAL(T,7) \
+    INSTANCE_EVAL(T,8) \
+    INSTANCE_EVAL(T,9)
+
+INSTANCE_TYPE(double)
+
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
 } // namespace Opm::mswellhelpers
