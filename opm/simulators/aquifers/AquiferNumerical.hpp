@@ -112,7 +112,14 @@ public:
         if (const auto* aqData = xaqPos->second.typeData.template get<data::AquiferType::Numerical>();
             aqData != nullptr)
         {
-            this->init_pressure_ = aqData->initPressure;
+            if constexpr (std::is_same_v<Scalar,double>) {
+                this->init_pressure_ = aqData->initPressure;
+            } else {
+                this->init_pressure_.resize(aqData->initPressure.size());
+                std::copy(aqData->initPressure.begin(),
+                          aqData->initPressure.end(),
+                          this->init_pressure_.begin());
+            }
         }
 
         this->solution_set_from_restart_ = true;
@@ -137,7 +144,14 @@ public:
         data.volume = this->cumulative_flux_;
 
         auto* aquNum = data.typeData.template create<data::AquiferType::Numerical>();
-        aquNum->initPressure = this->init_pressure_;
+        if constexpr (std::is_same_v<Scalar,double>) {
+            aquNum->initPressure = this->init_pressure_;
+        } else {
+            aquNum->initPressure.resize(this->init_pressure_.size());
+            std::copy(this->init_pressure_.begin(),
+                      this->init_pressure_.end(),
+                      aquNum->initPressure.begin());
+        }
 
         return data;
     }
