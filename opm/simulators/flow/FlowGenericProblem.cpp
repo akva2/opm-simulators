@@ -40,18 +40,40 @@
 
 namespace Opm {
 
-template class FlowGenericProblem<Dune::GridView<Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>,
-                                  BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>>;
+#define INSTANCE_TYPE(T)                                                  \
+    template class FlowGenericProblem<                                    \
+                      Dune::GridView<                                     \
+                          Dune::DefaultLeafGridViewTraits<Dune::CpGrid>>, \
+                      BlackOilFluidSystem<T,BlackOilDefaultIndexTraits>>;
+
+INSTANCE_TYPE(double)
+
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
 #if HAVE_DUNE_FEM
-template class FlowGenericProblem<Dune::GridView<Dune::Fem::GridPart2GridViewTraits<Dune::Fem::AdaptiveLeafGridPart<Dune::CpGrid, Dune::PartitionIteratorType(4), false>>>,
-                                  BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>>;
-template class FlowGenericProblem<Dune::Fem::GridPart2GridViewImpl<
-                                     Dune::Fem::AdaptiveLeafGridPart<
-                                         Dune::CpGrid,
-                                         Dune::PartitionIteratorType(4),
-                                         false> >,
-                                  BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>>;
+
+#define INSTANCE_FEM_TYPE(T)                                                              \
+    template class FlowGenericProblem<Dune::GridView<                                     \
+                                          Dune::Fem::GridPart2GridViewTraits<             \
+                                              Dune::Fem::AdaptiveLeafGridPart<            \
+                                                Dune::CpGrid,                             \
+                                                Dune::PartitionIteratorType(4), false>>>, \
+                                      BlackOilFluidSystem<T,BlackOilDefaultIndexTraits>>; \
+    template class FlowGenericProblem<Dune::Fem::GridPart2GridViewImpl<                   \
+                                         Dune::Fem::AdaptiveLeafGridPart<                 \
+                                             Dune::CpGrid,                                \
+                                             Dune::PartitionIteratorType(4),              \
+                                             false> >,                                    \
+                                      BlackOilFluidSystem<T,BlackOilDefaultIndexTraits>>;
+
+INSTANCE_FEM_TYPE(double)
+
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_FEM_TYPE(float)
+#endif
+
 #endif // HAVE_DUNE_FEM
 
 } // end namespace Opm
