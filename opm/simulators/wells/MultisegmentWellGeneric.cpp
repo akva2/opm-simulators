@@ -200,4 +200,8 @@ MultisegmentWellGeneric<Scalar>::getSegmentDp(const int seg,
 
 template class MultisegmentWellGeneric<double>;
 
+#if FLOW_INSTANCE_FLOAT
+template class MultisegmentWellGeneric<float>;
+#endif
+
 } // namespace Opm
