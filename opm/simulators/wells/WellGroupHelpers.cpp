@@ -795,7 +795,7 @@ updateGpMaintTargetForGroups(const Group& group,
     // (i.e. error > 0) and higher for producers.
     bool activate = (injection && error > 0) || (!injection && error < 0);
     const Scalar rate = activate? gpm->rate(gpmaint_state, current_rate, error, dt) : 0.0;
-    group_state.update_gpmaint_target(group.name(), std::max(0.0, sign * rate));
+    group_state.update_gpmaint_target(group.name(), std::max(Scalar{0.0}, sign * rate));
 }
 
 template<class Scalar>
