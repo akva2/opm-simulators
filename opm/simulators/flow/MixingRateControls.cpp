@@ -298,6 +298,13 @@ updateConvectiveDRsDt_(const unsigned compressedDofIdx,
         = permz * rssat * max(0.0, deltaDensity) * gravity / (so * visc * distZ * poro);
 }
 
-template class MixingRateControls<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>>;
+#define INSTANCE_TYPE(T) \
+    template class MixingRateControls<BlackOilFluidSystem<T,BlackOilDefaultIndexTraits>>;
+
+INSTANCE_TYPE(double)
+
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
 } // namespace Opm
