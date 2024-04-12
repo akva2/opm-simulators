@@ -427,10 +427,21 @@ assignToSolution(data::Solution& sol)
             return;
         }
 
-        sol.insert(std::get<std::string>(entry),
-                   std::get<UnitSystem::measure>(entry),
-                   std::move(std::get<2>(entry)),
-                   target);
+        if constexpr (std::is_same_v<Scalar,double>) {
+            sol.insert(std::get<std::string>(entry),
+                       std::get<UnitSystem::measure>(entry),
+                       std::move(std::get<2>(entry)),
+                       target);
+        } else {
+            const auto& input = std::get<2>(entry);
+            std::vector<double> data;
+            data.resize(input.size());
+            std::copy(input.begin(), input.end(), data.begin());
+            sol.insert(std::get<std::string>(entry),
+                       std::get<UnitSystem::measure>(entry),
+                       std::move(data),
+                       target);
+        }
     };
 
     const auto baseSolutionArrays = std::array {
@@ -558,6 +569,18 @@ assignToSolution(data::Solution& sol)
         DataEntry{"UREA",     UnitSystem::measure::density,            cUrea_},
     };
 
+    auto getArray = [](const std::vector<Scalar>& input)
+    {
+        if constexpr (std::is_same_v<Scalar, double>) {
+            return input;
+        } else {
+            std::vector<double> data;
+            data.resize(input.size());
+            std::copy(input.begin(), input.end(), data.begin());
+            return data;
+        }
+    };
+
     for (const auto& array : baseSolutionArrays) {
         doInsert(array, data::TargetType::RESTART_SOLUTION);
     }
@@ -575,14 +598,14 @@ assignToSolution(data::Solution& sol)
     if (! this->temperature_.empty())
     {
         sol.insert("TEMP", UnitSystem::measure::temperature,
-                   std::move(this->temperature_), data::TargetType::RESTART_SOLUTION);
+                   std::move(getArray(this->temperature_)), data::TargetType::RESTART_SOLUTION);
     }
 
     if (FluidSystem::phaseIsActive(waterPhaseIdx) &&
         ! this->saturation_[waterPhaseIdx].empty())
     {
         sol.insert("SWAT", UnitSystem::measure::identity,
-                   std::move(this->saturation_[waterPhaseIdx]),
+                   std::move(getArray(this->saturation_[waterPhaseIdx])),
                    data::TargetType::RESTART_SOLUTION);
     }
 
@@ -590,7 +613,7 @@ assignToSolution(data::Solution& sol)
         ! this->saturation_[gasPhaseIdx].empty())
     {
         sol.insert("SGAS", UnitSystem::measure::identity,
-                   std::move(this->saturation_[gasPhaseIdx]),
+                   std::move(getArray(this->saturation_[gasPhaseIdx])),
                    data::TargetType::RESTART_SOLUTION);
     }
 
@@ -635,21 +658,21 @@ assignToSolution(data::Solution& sol)
         ! this->residual_[waterPhaseIdx].empty())
     {
         sol.insert("RES_WAT", UnitSystem::measure::liquid_surface_volume,
-                   std::move(this->residual_[waterPhaseIdx]),
+                   std::move(getArray(this->residual_[waterPhaseIdx])),
                    data::TargetType::RESTART_OPM_EXTENDED);
     }
     if (FluidSystem::phaseIsActive(gasPhaseIdx) &&
         ! this->residual_[gasPhaseIdx].empty())
     {
         sol.insert("RES_GAS", UnitSystem::measure::gas_surface_volume,
-                   std::move(this->residual_[gasPhaseIdx]),
+                   std::move(getArray(this->residual_[gasPhaseIdx])),
                    data::TargetType::RESTART_OPM_EXTENDED);
     }
     if (FluidSystem::phaseIsActive(oilPhaseIdx) &&
         ! this->residual_[oilPhaseIdx].empty())
     {
         sol.insert("RES_OIL", UnitSystem::measure::liquid_surface_volume,
-                   std::move(this->residual_[oilPhaseIdx]),
+                   std::move(getArray(this->residual_[oilPhaseIdx])),
                    data::TargetType::RESTART_OPM_EXTENDED);
     }
 
@@ -669,7 +692,7 @@ assignToSolution(data::Solution& sol)
             if (! this->fip_[phase].empty()) {
                 sol.insert(EclString(phase),
                            UnitSystem::measure::volume,
-                           this->fip_[phase],
+                           getArray(this->fip_[phase]),
                            data::TargetType::SUMMARY);
             }
         }
@@ -683,7 +706,7 @@ assignToSolution(data::Solution& sol)
         {
             sol.insert(tracers[tracerIdx].fname(),
                        UnitSystem::measure::identity,
-                       std::move(tracerConcentrations_[tracerIdx]),
+                       std::move(getArray(tracerConcentrations_[tracerIdx])),
                        data::TargetType::RESTART_TRACER_SOLUTION);
         }
 
@@ -723,7 +746,7 @@ setRestart(const data::Solution& sol,
 
     if (!rswSol_.empty()) {
         if (sol.has("RSWSOL"))
-            rswSol_[elemIdx] = sol.data<Scalar>("RSWSOL")[globalDofIndex];
+            rswSol_[elemIdx] = sol.data<double>("RSWSOL")[globalDofIndex];
 
     }
 
