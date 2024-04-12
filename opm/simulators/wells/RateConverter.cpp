@@ -49,8 +49,8 @@ dissolvedVaporisedRatio(const int    io,
     const auto Rv = surface_rates[io] / (surface_rates[ig] + eps);
 
     return {
-        std::clamp(static_cast<Scalar>(Rs), 0.0, rs),
-        std::clamp(static_cast<Scalar>(Rv), 0.0, rv)
+        std::clamp(static_cast<Scalar>(Rs), Scalar{0.0}, rs),
+        std::clamp(static_cast<Scalar>(Rv), Scalar{0.0}, rv)
     };
 }
 
@@ -107,18 +107,29 @@ calcInjCoeff(const RegionId r, const int pvtRegionIdx, Coeff& coeff) const
     if (RegionAttributeHelpers::PhaseUsed::water(pu)) {
         // q[w]_r = q[w]_s / bw
 
-        const Scalar bw = FluidSystem::waterPvt().inverseFormationVolumeFactor(pvtRegionIdx, T, p, 0.0, saltConcentration);
+        const Scalar bw = FluidSystem::waterPvt().inverseFormationVolumeFactor(pvtRegionIdx,
+                                                                               T,
+                                                                               p,
+                                                                               Scalar{0.0},
+                                                                               saltConcentration);
 
         coeff[iw] = 1.0 / bw;
     }
 
     if (RegionAttributeHelpers::PhaseUsed::oil(pu)) {
-        const Scalar bo = FluidSystem::oilPvt().inverseFormationVolumeFactor(pvtRegionIdx, T, p, 0.0);
+        const Scalar bo = FluidSystem::oilPvt().inverseFormationVolumeFactor(pvtRegionIdx,
+                                                                             T,
+                                                                             p,
+                                                                             Scalar{0.0});
         coeff[io] += 1.0 / bo;
     }
 
     if (RegionAttributeHelpers::PhaseUsed::gas(pu)) {
-        const Scalar bg = FluidSystem::gasPvt().inverseFormationVolumeFactor(pvtRegionIdx, T, p, 0.0, 0.0);
+        const Scalar bg = FluidSystem::gasPvt().inverseFormationVolumeFactor(pvtRegionIdx,
+                                                                             T,
+                                                                             p,
+                                                                             Scalar{0.0},
+                                                                             Scalar{0.0});
         coeff[ig] += 1.0 / bg;
     }
 }
