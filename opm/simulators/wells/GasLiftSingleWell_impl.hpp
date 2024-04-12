@@ -118,7 +118,7 @@ computeWellRates_(Scalar bhp, bool bhp_is_limited, bool debug_output ) const
     }
 
     for (auto& potential : potentials) {
-        potential = std::min(0.0, potential);
+        potential = std::min(Scalar{0.0}, potential);
     }
     return {-potentials[this->oil_pos_],
             -potentials[this->gas_pos_],
