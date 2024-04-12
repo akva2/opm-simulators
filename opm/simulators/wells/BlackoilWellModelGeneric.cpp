@@ -1720,4 +1720,8 @@ updateInjFCMult(DeferredLogger& deferred_logger)
 
 template class BlackoilWellModelGeneric<double>;
 
+#if FLOW_INSTANCE_FLOAT
+template class BlackoilWellModelGeneric<float>;
+#endif
+
 }
