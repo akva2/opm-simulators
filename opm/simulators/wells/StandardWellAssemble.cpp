@@ -256,37 +256,43 @@ assembleZFracEq(const EvalWell& cq_s_zfrac_effective,
     }
 }
 
-#define INSTANCE(Dim,...) \
-template class StandardWellAssemble<BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>,__VA_ARGS__>;
+template<class Scalar>
+using FS = BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>;
 
-// One phase
-INSTANCE(4u, BlackOilOnePhaseIndices<0u,0u,0u,0u,false,false,0u,1u,0u>)
-INSTANCE(5u, BlackOilOnePhaseIndices<0u,0u,0u,1u,false,false,0u,1u,0u>)
-INSTANCE(9u, BlackOilOnePhaseIndices<0u,0u,0u,0u,false,false,0u,1u,5u>)
+#define INSTANCE(T,...) \
+    template class StandardWellAssemble<FS<T>,__VA_ARGS__>;
 
-// Two phase
-INSTANCE(6u, BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,false,0u,0u,0u>)
-INSTANCE(6u, BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,false,0u,1u,0u>)
-INSTANCE(6u, BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,false,0u,2u,0u>)
-INSTANCE(7u, BlackOilTwoPhaseIndices<0u,0u,1u,0u,false,false,0u,2u,0u>)
-INSTANCE(7u, BlackOilTwoPhaseIndices<0u,0u,1u,0u,false,true,0u,2u,0u>)
-INSTANCE(7u, BlackOilTwoPhaseIndices<0u,0u,0u,1u,false,false,0u,1u,0u>)
-INSTANCE(7u, BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,true,0u,0u,0u>)
-INSTANCE(7u, BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,true,0u,2u,0u>)
-INSTANCE(8u, BlackOilTwoPhaseIndices<0u,0u,2u,0u,false,false,0u,2u,0u>)
-INSTANCE(7u, BlackOilTwoPhaseIndices<0u,0u,0u,1u,false,false,0u,0u,0u>)
-INSTANCE(8u, BlackOilTwoPhaseIndices<0u,0u,0u,1u,false,true,0u,0u,0u>)
-INSTANCE(7u, BlackOilTwoPhaseIndices<1u,0u,0u,0u,false,false,0u,0u,0u>)
-// Blackoil
-INSTANCE(8u, BlackOilIndices<0u,0u,0u,0u,false,false,0u,0u>)
-INSTANCE(9u, BlackOilIndices<0u,0u,0u,0u,true,false,0u,0u>)
-INSTANCE(9u, BlackOilIndices<0u,0u,0u,0u,false,true,0u,0u>)
-INSTANCE(9u, BlackOilIndices<0u,1u,0u,0u,false,false,0u,0u>)
-INSTANCE(9u, BlackOilIndices<0u,0u,1u,0u,false,false,0u,0u>)
-INSTANCE(9u, BlackOilIndices<0u,0u,0u,1u,false,false,0u,0u>)
-INSTANCE(10u, BlackOilIndices<1u,0u,0u,0u,false,false,0u,0u>)
-INSTANCE(10u, BlackOilIndices<0u,0u,0u,1u,false,true,0u,0u>)
-INSTANCE(10u, BlackOilIndices<0u,0u,0u,1u,false,false,1u,0u>)
-INSTANCE(11u, BlackOilIndices<1u,0u,0u,0u,true,false,0u,0u>)
+#define INSTANCE_TYPE(T)                                                  \
+    INSTANCE(T,BlackOilOnePhaseIndices<0u,0u,0u,0u,false,false,0u,1u,0u>) \
+    INSTANCE(T,BlackOilOnePhaseIndices<0u,0u,0u,1u,false,false,0u,1u,0u>) \
+    INSTANCE(T,BlackOilOnePhaseIndices<0u,0u,0u,0u,false,false,0u,1u,5u>) \
+    INSTANCE(T,BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,false,0u,0u,0u>) \
+    INSTANCE(T,BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,false,0u,1u,0u>) \
+    INSTANCE(T,BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,false,0u,2u,0u>) \
+    INSTANCE(T,BlackOilTwoPhaseIndices<0u,0u,1u,0u,false,false,0u,2u,0u>) \
+    INSTANCE(T,BlackOilTwoPhaseIndices<0u,0u,1u,0u,false,true,0u,2u,0u>)  \
+    INSTANCE(T,BlackOilTwoPhaseIndices<0u,0u,0u,1u,false,false,0u,1u,0u>) \
+    INSTANCE(T,BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,true,0u,0u,0u>)  \
+    INSTANCE(T,BlackOilTwoPhaseIndices<0u,0u,0u,0u,false,true,0u,2u,0u>)  \
+    INSTANCE(T,BlackOilTwoPhaseIndices<0u,0u,2u,0u,false,false,0u,2u,0u>) \
+    INSTANCE(T,BlackOilTwoPhaseIndices<0u,0u,0u,1u,false,false,0u,0u,0u>) \
+    INSTANCE(T,BlackOilTwoPhaseIndices<0u,0u,0u,1u,false,true,0u,0u,0u>)  \
+    INSTANCE(T,BlackOilTwoPhaseIndices<1u,0u,0u,0u,false,false,0u,0u,0u>) \
+    INSTANCE(T,BlackOilIndices<0u,0u,0u,0u,false,false,0u,0u>)            \
+    INSTANCE(T,BlackOilIndices<0u,0u,0u,0u,true,false,0u,0u>)             \
+    INSTANCE(T,BlackOilIndices<0u,0u,0u,0u,false,true,0u,0u>)             \
+    INSTANCE(T,BlackOilIndices<0u,1u,0u,0u,false,false,0u,0u>)            \
+    INSTANCE(T,BlackOilIndices<0u,0u,1u,0u,false,false,0u,0u>)            \
+    INSTANCE(T,BlackOilIndices<0u,0u,0u,1u,false,false,0u,0u>)            \
+    INSTANCE(T,BlackOilIndices<1u,0u,0u,0u,false,false,0u,0u>)            \
+    INSTANCE(T,BlackOilIndices<0u,0u,0u,1u,false,true,0u,0u>)             \
+    INSTANCE(T,BlackOilIndices<0u,0u,0u,1u,false,false,1u,0u>)            \
+    INSTANCE(T,BlackOilIndices<1u,0u,0u,0u,true,false,0u,0u>)
+
+INSTANCE_TYPE(double)
+
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
 }
