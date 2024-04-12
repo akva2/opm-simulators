@@ -225,7 +225,8 @@ assembleAccelerationPressureLoss(const int seg,
     // Subtract inlet head(s), opposite signs from above
     for (const int inlet : segments_.inlets(seg)) {
         // area used in formula is max of areas
-        const Scalar inlet_area = std::max(seg_area, segment_set[inlet].crossArea());
+        const Scalar inlet_area = std::max(seg_area,
+                                           static_cast<Scalar>(segment_set[inlet].crossArea()));
         const EvalWell signed_velocity_head_inlet = segments_.accelerationPressureLossContribution(inlet, inlet_area);
         segments.pressure_drop_accel[seg] -= signed_velocity_head_inlet.value();
 
