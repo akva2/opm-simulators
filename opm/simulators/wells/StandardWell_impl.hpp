@@ -1563,7 +1563,8 @@ namespace Opm
             const auto& controls = this->well_ecl_.injectionControls(summary_state);
             auto bhp_at_thp_limit = computeBhpAtThpLimitInj(simulator, summary_state, deferred_logger);
             if (bhp_at_thp_limit) {
-                const Scalar bhp = std::min(*bhp_at_thp_limit, controls.bhp_limit);
+                const Scalar bhp = std::min(*bhp_at_thp_limit,
+                                            static_cast<Scalar>(controls.bhp_limit));
                 computeWellRatesWithBhp(simulator, bhp, potentials, deferred_logger);
             } else {
                 deferred_logger.warning("FAILURE_GETTING_CONVERGED_POTENTIAL",
@@ -1659,7 +1660,8 @@ namespace Opm
                               simulator, summary_state, alq, deferred_logger);
         if (bhp_at_thp_limit) {
             const auto& controls = this->well_ecl_.productionControls(summary_state);
-            bhp = std::max(*bhp_at_thp_limit, controls.bhp_limit);
+            bhp = std::max(*bhp_at_thp_limit,
+                           static_cast<Scalar>(controls.bhp_limit));
             computeWellRatesWithBhp(simulator, bhp, potentials, deferred_logger);
         }
         else {
