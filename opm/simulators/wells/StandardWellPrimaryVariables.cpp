@@ -70,7 +70,7 @@ Scalar relaxationFactorFraction(const Scalar old_value,
         const std::string msg = fmt::format(" illegal fraction value {} {} is found for well {}", value_name, old_value, well_name);
         OPM_DEFLOG_PROBLEM(Opm::NumericalProblem, msg, deferred_logger);
     }
-    const Scalar& safe_old_value = std::clamp(old_value, 0.0, 1.0);
+    const Scalar& safe_old_value = std::clamp(old_value, Scalar{0.0}, Scalar{1.0});
 
     Scalar relaxation_factor = 1.;
 
@@ -287,9 +287,9 @@ updateNewton(const BVectorWell& dwells,
     } else {
         // make sure that no injector produce and no producer inject
         if (well_.isInjector()) {
-            value_[WQTotal] = std::max(value_[WQTotal], 0.0);
+            value_[WQTotal] = std::max(value_[WQTotal], Scalar{0.0});
         } else {
-            value_[WQTotal] = std::min(value_[WQTotal], 0.0);
+            value_[WQTotal] = std::min(value_[WQTotal], Scalar{0.0});
         }
     }
 
