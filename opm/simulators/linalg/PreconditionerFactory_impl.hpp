@@ -237,7 +237,7 @@ struct StandardPreconditioners
           {
             OPM_THROW(std::logic_error, "Pressure index out of bounds. It needs to specified for CPR");
           }
-          using LevelTransferPolicy = Opm::PressureTransferPolicy<O, Comm, false>;
+          using LevelTransferPolicy = Opm::PressureTransferPolicy<O, Comm, double, false>;
           return std::make_shared<OwningTwoLevelPreconditioner<O, V, LevelTransferPolicy, Comm>>(op, prm, weightsCalculator, pressureIndex, comm);
         });
         F::addCreator("cprt", [](const O& op, const P& prm, const std::function<V()> weightsCalculator, std::size_t pressureIndex, const C& comm) {
@@ -246,7 +246,7 @@ struct StandardPreconditioners
           {
             OPM_THROW(std::logic_error, "Pressure index out of bounds. It needs to specified for CPR");
           }
-          using LevelTransferPolicy = Opm::PressureTransferPolicy<O, Comm, true>;
+          using LevelTransferPolicy = Opm::PressureTransferPolicy<O, Comm, double, true>;
           return std::make_shared<OwningTwoLevelPreconditioner<O, V, LevelTransferPolicy, Comm>>(op, prm, weightsCalculator, pressureIndex, comm);
         });
 
@@ -257,7 +257,7 @@ struct StandardPreconditioners
             if (pressureIndex == std::numeric_limits<std::size_t>::max()) {
               OPM_THROW(std::logic_error, "Pressure index out of bounds. It needs to specified for CPR");
             }
-            using LevelTransferPolicy = Opm::PressureBhpTransferPolicy<O, Comm, false>;
+            using LevelTransferPolicy = Opm::PressureBhpTransferPolicy<O, Comm, double, false>;
             return std::make_shared<OwningTwoLevelPreconditioner<O, V, LevelTransferPolicy, Comm>>(op, prm, weightsCalculator, pressureIndex, comm);
           });
         }
@@ -463,7 +463,7 @@ struct StandardPreconditioners<Operator,Dune::Amg::SequentialInformation>
                 if (pressureIndex == std::numeric_limits<std::size_t>::max()) {
                     OPM_THROW(std::logic_error, "Pressure index out of bounds. It needs to specified for CPR");
                 }
-                using LevelTransferPolicy = Opm::PressureBhpTransferPolicy<O, Dune::Amg::SequentialInformation, false>;
+                using LevelTransferPolicy = Opm::PressureBhpTransferPolicy<O, Dune::Amg::SequentialInformation, double, false>;
                 return std::make_shared<OwningTwoLevelPreconditioner<O, V, LevelTransferPolicy>>(op, prm, weightsCalculator, pressureIndex);
             });
             }
@@ -473,7 +473,7 @@ struct StandardPreconditioners<Operator,Dune::Amg::SequentialInformation>
                                 {
                                     OPM_THROW(std::logic_error, "Pressure index out of bounds. It needs to specified for CPR");
                                 }
-                                using LevelTransferPolicy = Opm::PressureTransferPolicy<O, Dune::Amg::SequentialInformation, false>;
+                                using LevelTransferPolicy = Opm::PressureTransferPolicy<O, Dune::Amg::SequentialInformation, double, false>;
                                 return std::make_shared<OwningTwoLevelPreconditioner<O, V, LevelTransferPolicy>>(op, prm, weightsCalculator, pressureIndex);
         });
         F::addCreator("cprt", [](const O& op, const P& prm, const std::function<V()>& weightsCalculator, std::size_t pressureIndex) {
@@ -481,7 +481,7 @@ struct StandardPreconditioners<Operator,Dune::Amg::SequentialInformation>
                                 {
                                     OPM_THROW(std::logic_error, "Pressure index out of bounds. It needs to specified for CPR");
                                 }
-                                using LevelTransferPolicy = Opm::PressureTransferPolicy<O, Dune::Amg::SequentialInformation, true>;
+                                using LevelTransferPolicy = Opm::PressureTransferPolicy<O, Dune::Amg::SequentialInformation, double, true>;
                                 return std::make_shared<OwningTwoLevelPreconditioner<O, V, LevelTransferPolicy>>(op, prm, weightsCalculator, pressureIndex);
         });
 
