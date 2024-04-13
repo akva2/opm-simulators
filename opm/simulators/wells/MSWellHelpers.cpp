@@ -110,7 +110,9 @@ applyUMFPack(Dune::UMFPack<MatrixType>& linsolver,
 
     // Object storing some statistics about the solving process
     Dune::InverseOperatorResult res;
-
+    if constexpr (std::is_same_v<typename VectorType::field_type,float>) {
+        OPM_THROW(std::runtime_error, "Cannot use applyUMFPack() with floats.");
+    } else {
     // Solve
     linsolver.apply(y, x, res);
 
@@ -124,6 +126,7 @@ applyUMFPack(Dune::UMFPack<MatrixType>& linsolver,
                 OPM_THROW_NOLOG(NumericalProblem, msg);
             }
         }
+    }
     }
     return y;
 #else
@@ -146,6 +149,9 @@ invertWithUMFPack(const int size,
     // Make a full block matrix.
     Dune::Matrix<typename MatrixType::block_type> inv(size, size);
 
+    if constexpr (std::is_same_v<typename VectorType::field_type,float>) {
+        OPM_THROW(std::runtime_error, "Cannot use invertWithUMFPack() with floats.");
+    } else {
     // Create inverse by passing basis vectors to the solver.
     for (int ii = 0; ii < size; ++ii) {
         for (int jj = 0; jj < bsize; ++jj) {
@@ -158,6 +164,7 @@ invertWithUMFPack(const int size,
             }
             e[ii][jj] = 0.0;
         }
+    }
     }
 
     return inv;
