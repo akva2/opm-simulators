@@ -1653,7 +1653,7 @@ using AvgPMap = std::map<std::string, std::unique_ptr<AvgP<Scalar>>>;
                                                  const Schedule&,             \
                                                  const AvgPMap<T>&,           \
                                                  int,                         \
-                                                 T,                           \
+                                                 double,                      \
                                                  const WellState<T>&,         \
                                                  GroupState<T>&);             \
     template void WellGroupHelpers<T>::                                       \

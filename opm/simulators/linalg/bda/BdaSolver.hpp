@@ -29,7 +29,7 @@
 
 namespace Opm {
 
-class WellContributions;
+template<class Scalar> class WellContributions;
 
 namespace Accelerator {
     enum class SolverStatus {
@@ -41,10 +41,9 @@ namespace Accelerator {
 
     /// This class serves to simplify choosing between different backend solvers, such as cusparseSolver and openclSolver
     /// This class is abstract, no instantiations can of it can be made, only of its children
-    template <unsigned int block_size>
+    template<class Scalar, unsigned int block_size>
     class BdaSolver
     {
-
     protected:
 
         // verbosity
@@ -83,10 +82,13 @@ namespace Accelerator {
         virtual ~BdaSolver() {};
 
         /// Define as pure virtual functions, so derivedclass must implement them
-        virtual SolverStatus solve_system(std::shared_ptr<BlockedMatrix> matrix, double *b,
-            std::shared_ptr<BlockedMatrix> jacMatrix, WellContributions& wellContribs, BdaResult &res) = 0;
+        virtual SolverStatus solve_system(std::shared_ptr<BlockedMatrix<Scalar>> matrix,
+                                          Scalar* b,
+                                          std::shared_ptr<BlockedMatrix<Scalar>> jacMatrix,
+                                          WellContributions<Scalar>& wellContribs,
+                                          BdaResult &res) = 0;
 
-        virtual void get_result(double *x) = 0;
+        virtual void get_result(Scalar* x) = 0;
 
     }; // end class BdaSolver
 

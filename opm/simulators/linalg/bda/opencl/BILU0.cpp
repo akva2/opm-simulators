@@ -39,25 +39,27 @@ namespace Accelerator
 using Opm::OpmLog;
 using Dune::Timer;
 
-template <unsigned int block_size>
-BILU0<block_size>::BILU0(bool opencl_ilu_parallel_, int verbosity_) :
-    Preconditioner<block_size>(verbosity_), opencl_ilu_parallel(opencl_ilu_parallel_)
+template<class Scalar, unsigned int block_size>
+BILU0<Scalar,block_size>::
+BILU0(bool opencl_ilu_parallel_, int verbosity_)
+    : Preconditioner<Scalar,block_size>(verbosity_)
+    , opencl_ilu_parallel(opencl_ilu_parallel_)
 {
 #if CHOW_PATEL
     chowPatelIlu.setVerbosity(verbosity);
 #endif
 }
 
-
-template <unsigned int block_size>
-bool BILU0<block_size>::analyze_matrix(BlockedMatrix *mat)
+template<class Scalar, unsigned int block_size>
+bool BILU0<Scalar,block_size>::analyze_matrix(BlockedMatrix<Scalar>* mat)
 {
     return analyze_matrix(mat, nullptr);
 }
 
-
-template <unsigned int block_size>
-bool BILU0<block_size>::analyze_matrix(BlockedMatrix *mat, BlockedMatrix *jacMat)
+template<class Scalar, unsigned int block_size>
+bool BILU0<Scalar,block_size>::
+analyze_matrix(BlockedMatrix<Scalar> *mat,
+               BlockedMatrix<Scalar>* jacMat)
 {
     const unsigned int bs = block_size;
 
@@ -77,7 +79,7 @@ bool BILU0<block_size>::analyze_matrix(BlockedMatrix *mat, BlockedMatrix *jacMat
         CSCRowIndices.resize(matToDecompose->nnzbs);
         CSCColPointers.resize(Nb + 1);
 
-        LUmat = std::make_unique<BlockedMatrix>(*matToDecompose);
+        LUmat = std::make_unique<BlockedMatrix<Scalar>>(*matToDecompose);
 
         Timer t_convert;
         csrPatternToCsc(matToDecompose->colIndices, matToDecompose->rowPointers, CSCRowIndices.data(), CSCColPointers.data(), Nb);
@@ -87,7 +89,7 @@ bool BILU0<block_size>::analyze_matrix(BlockedMatrix *mat, BlockedMatrix *jacMat
             OpmLog::info(out.str());
         }
     } else {
-        LUmat = std::make_unique<BlockedMatrix>(*matToDecompose);
+        LUmat = std::make_unique<BlockedMatrix<Scalar>>(*matToDecompose);
     }
 
     Timer t_analysis;
@@ -122,25 +124,25 @@ bool BILU0<block_size>::analyze_matrix(BlockedMatrix *mat, BlockedMatrix *jacMat
     Umat = std::make_unique<BlockedMatrix>(mat->Nb, (mat->nnzbs - mat->Nb) / 2, block_size);
 #endif
 
-    s.invDiagVals = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(double) * bs * bs * mat->Nb);
+    s.invDiagVals = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(Scalar) * bs * bs * mat->Nb);
     s.rowsPerColor = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(int) * (numColors + 1));
     s.diagIndex = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(int) * LUmat->Nb);
     s.rowIndices = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(unsigned) * LUmat->Nb);
 #if CHOW_PATEL
-    s.Lvals = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(double) * bs * bs * Lmat->nnzbs);
+    s.Lvals = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(Scalar) * bs * bs * Lmat->nnzbs);
     s.Lcols = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(int) * Lmat->nnzbs);
     s.Lrows = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(int) * (Lmat->Nb + 1));
-    s.Uvals = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(double) * bs * bs * Lmat->nnzbs);
+    s.Uvals = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(Scalar) * bs * bs * Lmat->nnzbs);
     s.Ucols = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(int) * Lmat->nnzbs);
     s.Urows = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(int) * (Lmat->Nb + 1));
 #else
-    s.LUvals = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(double) * bs * bs * LUmat->nnzbs);
+    s.LUvals = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(Scalar) * bs * bs * LUmat->nnzbs);
     s.LUcols = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(int) * LUmat->nnzbs);
     s.LUrows = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(int) * (LUmat->Nb + 1));
 #endif
 
     events.resize(3);
-    err = queue->enqueueWriteBuffer(s.invDiagVals, CL_FALSE, 0, mat->Nb * sizeof(double) * bs * bs, invDiagVals.data(), nullptr, &events[0]);
+    err = queue->enqueueWriteBuffer(s.invDiagVals, CL_FALSE, 0, mat->Nb * sizeof(Scalar) * bs * bs, invDiagVals.data(), nullptr, &events[0]);
 
     rowsPerColorPrefix.resize(numColors + 1); // resize initializes value 0.0
     for (int i = 0; i < numColors; ++i) {
@@ -168,17 +170,17 @@ bool BILU0<block_size>::analyze_matrix(BlockedMatrix *mat, BlockedMatrix *jacMat
     return true;
 }
 
-
-
-template <unsigned int block_size>
-bool BILU0<block_size>::create_preconditioner(BlockedMatrix *mat)
+template<class Scalar, unsigned int block_size>
+bool BILU0<Scalar,block_size>::
+create_preconditioner(BlockedMatrix<Scalar>* mat)
 {
     return create_preconditioner(mat, nullptr);
 }
 
-
-template <unsigned int block_size>
-bool BILU0<block_size>::create_preconditioner(BlockedMatrix *mat, BlockedMatrix *jacMat)
+template<class Scalar, unsigned int block_size>
+bool BILU0<Scalar,block_size>::
+create_preconditioner(BlockedMatrix<Scalar>* mat,
+                      BlockedMatrix<Scalar>* jacMat)
 {
     const unsigned int bs = block_size;
 
@@ -186,7 +188,7 @@ bool BILU0<block_size>::create_preconditioner(BlockedMatrix *mat, BlockedMatrix 
 
     // TODO: remove this copy by replacing inplace ilu decomp by out-of-place ilu decomp
     Timer t_copy;
-    memcpy(LUmat->nnzValues, matToDecompose->nnzValues, sizeof(double) * bs * bs * matToDecompose->nnzbs);
+    memcpy(LUmat->nnzValues, matToDecompose->nnzValues, sizeof(Scalar) * bs * bs * matToDecompose->nnzbs);
 
     if (verbosity >= 3){
         std::ostringstream out;
@@ -205,7 +207,7 @@ bool BILU0<block_size>::create_preconditioner(BlockedMatrix *mat, BlockedMatrix 
     Timer t_copyToGpu;
 
     events.resize(1);
-    queue->enqueueWriteBuffer(s.LUvals, CL_FALSE, 0, LUmat->nnzbs * bs * bs * sizeof(double), LUmat->nnzValues, nullptr, &events[0]);
+    queue->enqueueWriteBuffer(s.LUvals, CL_FALSE, 0, LUmat->nnzbs * bs * bs * sizeof(Scalar), LUmat->nnzValues, nullptr, &events[0]);
 
     std::call_once(pattern_uploaded, [&](){
         // find the positions of each diagonal block
@@ -244,9 +246,9 @@ bool BILU0<block_size>::create_preconditioner(BlockedMatrix *mat, BlockedMatrix 
         if (verbosity >= 5) {
             out << "color " << color << ": " << firstRow << " - " << lastRow << " = " << lastRow - firstRow << "\n";
         }
-        OpenclKernels::ILU_decomp(firstRow, lastRow, s.rowIndices,
-                                  s.LUvals, s.LUcols, s.LUrows, s.diagIndex,
-                                  s.invDiagVals, rowsPerColor[color], block_size);
+        OpenclKernels<Scalar>::ILU_decomp(firstRow, lastRow, s.rowIndices,
+                                          s.LUvals, s.LUcols, s.LUrows, s.diagIndex,
+                                          s.invDiagVals, rowsPerColor[color], block_size);
     }
 
     if (verbosity >= 3) {
@@ -259,43 +261,42 @@ bool BILU0<block_size>::create_preconditioner(BlockedMatrix *mat, BlockedMatrix 
     return true;
 } // end create_preconditioner()
 
-
 // kernels are blocking on an NVIDIA GPU, so waiting for events is not needed
 // however, if individual kernel calls are timed, waiting for events is needed
 // behavior on other GPUs is untested
-template <unsigned int block_size>
-void BILU0<block_size>::apply(const cl::Buffer& y, cl::Buffer& x)
+template<class Scalar, unsigned int block_size>
+void BILU0<Scalar,block_size>::apply(const cl::Buffer& y, cl::Buffer& x)
 {
-    const double relaxation = 0.9;
+    const Scalar relaxation = 0.9;
     cl::Event event;
     Timer t_apply;
 
     for (int color = 0; color < numColors; ++color) {
 #if CHOW_PATEL
-        OpenclKernels::ILU_apply1(s.rowIndices, s.Lvals, s.Lcols, s.Lrows,
-                                  s.diagIndex, y, x, s.rowsPerColor,
-                                  color, rowsPerColor[color], block_size);
+        OpenclKernels<Scalar>::ILU_apply1(s.rowIndices, s.Lvals, s.Lcols, s.Lrows,
+                                          s.diagIndex, y, x, s.rowsPerColor,
+                                          color, rowsPerColor[color], block_size);
 #else
-        OpenclKernels::ILU_apply1(s.rowIndices, s.LUvals, s.LUcols, s.LUrows,
-                                  s.diagIndex, y, x, s.rowsPerColor,
-                                  color, rowsPerColor[color], block_size);
+        OpenclKernels<Scalar>::ILU_apply1(s.rowIndices, s.LUvals, s.LUcols, s.LUrows,
+                                          s.diagIndex, y, x, s.rowsPerColor,
+                                          color, rowsPerColor[color], block_size);
 #endif
     }
 
     for (int color = numColors - 1; color >= 0; --color) {
 #if CHOW_PATEL
-        OpenclKernels::ILU_apply2(s.rowIndices, s.Uvals, s.Ucols, s.Urows,
-                                  s.diagIndex, s.invDiagVals, x, s.rowsPerColor,
-                                  color, rowsPerColor[color], block_size);
+        OpenclKernels<Scalar>::ILU_apply2(s.rowIndices, s.Uvals, s.Ucols, s.Urows,
+                                          s.diagIndex, s.invDiagVals, x, s.rowsPerColor,
+                                          color, rowsPerColor[color], block_size);
 #else
-        OpenclKernels::ILU_apply2(s.rowIndices, s.LUvals, s.LUcols, s.LUrows,
-                                  s.diagIndex, s.invDiagVals, x, s.rowsPerColor,
-                                  color, rowsPerColor[color], block_size);
+        OpenclKernels<Scalar>::ILU_apply2(s.rowIndices, s.LUvals, s.LUcols, s.LUrows,
+                                          s.diagIndex, s.invDiagVals, x, s.rowsPerColor,
+                                          color, rowsPerColor[color], block_size);
 #endif
     }
 
     // apply relaxation
-    OpenclKernels::scale(x, relaxation, N);
+    OpenclKernels<Scalar>::scale(x, relaxation, N);
 
     if (verbosity >= 4) {
         std::ostringstream out;
@@ -304,20 +305,22 @@ void BILU0<block_size>::apply(const cl::Buffer& y, cl::Buffer& x)
     }
 }
 
+#define INSTANTIATE_BDA_FUNCTIONS(T,n) \
+    template class BILU0<T,n>;
 
+#define INSTANCE_TYPE(T)           \
+    INSTANTIATE_BDA_FUNCTIONS(T,1) \
+    INSTANTIATE_BDA_FUNCTIONS(T,2) \
+    INSTANTIATE_BDA_FUNCTIONS(T,3) \
+    INSTANTIATE_BDA_FUNCTIONS(T,4) \
+    INSTANTIATE_BDA_FUNCTIONS(T,5) \
+    INSTANTIATE_BDA_FUNCTIONS(T,6)
 
-#define INSTANTIATE_BDA_FUNCTIONS(n) \
-template class BILU0<n>;
+INSTANCE_TYPE(double)
 
-
-INSTANTIATE_BDA_FUNCTIONS(1);
-INSTANTIATE_BDA_FUNCTIONS(2);
-INSTANTIATE_BDA_FUNCTIONS(3);
-INSTANTIATE_BDA_FUNCTIONS(4);
-INSTANTIATE_BDA_FUNCTIONS(5);
-INSTANTIATE_BDA_FUNCTIONS(6);
-
-#undef INSTANTIATE_BDA_FUNCTIONS
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
 } // namespace Accelerator
 } // namespace Opm

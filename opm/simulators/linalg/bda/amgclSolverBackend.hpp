@@ -47,10 +47,10 @@ namespace Accelerator
 
 /// This class does not implement a solver, but converts the BCSR format to normal CSR and uses amgcl for solving
 /// Note amgcl also implements blocked solvers, but looks like it needs unblocked input data
-template <unsigned int block_size>
-class amgclSolverBackend : public BdaSolver<block_size>
+template<class Scalar, unsigned int block_size>
+class amgclSolverBackend : public BdaSolver<Scalar,block_size>
 {
-    typedef BdaSolver<block_size> Base;
+    using Base = BdaSolver<Scalar,block_size>;
 
     using Base::N;
     using Base::Nb;
@@ -63,11 +63,12 @@ class amgclSolverBackend : public BdaSolver<block_size>
     using Base::tolerance;
     using Base::initialized;
 
-    typedef amgcl::static_matrix<double, block_size, block_size> dmat_type; // matrix value type in double precision
-    typedef amgcl::static_matrix<double, block_size, 1> dvec_type; // the corresponding vector value type
-    typedef amgcl::backend::builtin<dmat_type> CPU_Backend;
+    using dmat_type = amgcl::static_matrix<Scalar, block_size, block_size>; // matrix value type
+    using dvec_type = amgcl::static_matrix<Scalar, block_size, 1>; // the corresponding vector value type
+    using CPU_Backend = amgcl::backend::builtin<dmat_type>;
 
-    typedef amgcl::make_solver<amgcl::runtime::preconditioner<CPU_Backend>, amgcl::runtime::solver::wrapper<CPU_Backend> > CPU_Solver;
+    using CPU_Solver = amgcl::make_solver<amgcl::runtime::preconditioner<CPU_Backend>,
+                                          amgcl::runtime::solver::wrapper<CPU_Backend>>;
 
 private:
 
@@ -80,18 +81,18 @@ private:
 
     // store matrix in CSR format
     std::vector<unsigned> A_rows, A_cols;
-    std::vector<double> A_vals, rhs;
-    std::vector<double> x;
+    std::vector<Scalar> A_vals, rhs;
+    std::vector<Scalar> x;
     std::once_flag print_info;
     Amgcl_backend_type backend_type = cpu;
 
     boost::property_tree::ptree prm;         // amgcl parameters
     int iters = 0;
-    double error = 0.0;
+    Scalar error = 0.0;
 
 #if HAVE_CUDA
     std::once_flag cuda_initialize;
-    void solve_cuda(double *b);
+    void solve_cuda(Scalar* b);
 #endif
 
 #if HAVE_VEXCL
@@ -110,12 +111,12 @@ private:
     /// Convert the BCSR nonzero data to a CSR format
     /// \param[in] vals           array of nonzeroes, each block is stored row-wise and contiguous, contains nnz values
     /// \param[in] rows           array of rowPointers, contains N/dim+1 values
-    void convert_data(double *vals, int *rows);
+    void convert_data(Scalar* vals, int *rows);
 
     /// Solve linear system
     /// \param[in] b              pointer to b vector
     /// \param[inout] res         summary of solver result
-    void solve_system(double *b, BdaResult &res);
+    void solve_system(Scalar* b, BdaResult& res);
 
 public:
     /// Construct a openclSolver
@@ -136,12 +137,15 @@ public:
     /// \param[in] wellContribs   WellContributions, to apply them separately, instead of adding them to matrix A
     /// \param[inout] res         summary of solver result
     /// \return                   status code
-    SolverStatus solve_system(std::shared_ptr<BlockedMatrix> matrix, double *b,
-        std::shared_ptr<BlockedMatrix> jacMatrix, WellContributions& wellContribs, BdaResult &res) override;
+    SolverStatus solve_system(std::shared_ptr<BlockedMatrix<Scalar>> matrix,
+                              Scalar* b,
+                              std::shared_ptr<BlockedMatrix<Scalar>> jacMatrix,
+                              WellContributions<Scalar>& wellContribs,
+                              BdaResult& res) override;
     
     /// Get result after linear solve, and peform postprocessing if necessary
     /// \param[inout] x          resulting x vector, caller must guarantee that x points to a valid array
-    void get_result(double *x) override;
+    void get_result(Scalar* x) override;
 
 }; // end class amgclSolverBackend
 

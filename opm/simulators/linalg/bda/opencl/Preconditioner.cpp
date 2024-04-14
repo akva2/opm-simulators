@@ -18,66 +18,72 @@
 */
 
 #include <config.h>
-#include <memory>
+#include <opm/simulators/linalg/bda/opencl/Preconditioner.hpp>
+
 #include <opm/common/TimingMacros.hpp>
 #include <opm/common/ErrorMacros.hpp>
 
 #include <opm/simulators/linalg/bda/opencl/BILU0.hpp>
 #include <opm/simulators/linalg/bda/opencl/BISAI.hpp>
 #include <opm/simulators/linalg/bda/opencl/CPR.hpp>
-#include <opm/simulators/linalg/bda/opencl/Preconditioner.hpp>
 
-namespace Opm
+namespace Opm::Accelerator {
+
+template<class Scalar, unsigned int block_size>
+void Preconditioner<Scalar,block_size>::
+ setOpencl(std::shared_ptr<cl::Context>& context_, std::shared_ptr<cl::CommandQueue>& queue_)
 {
-namespace Accelerator
-{
-
-
-template <unsigned int block_size>
-void Preconditioner<block_size>::setOpencl(std::shared_ptr<cl::Context>& context_, std::shared_ptr<cl::CommandQueue>& queue_) {
     context = context_;
     queue = queue_;
 }
 
-template <unsigned int block_size>
-std::unique_ptr<Preconditioner<block_size> > Preconditioner<block_size>::create(PreconditionerType type, int verbosity, bool opencl_ilu_parallel) {
+template<class Scalar, unsigned int block_size>
+std::unique_ptr<Preconditioner<Scalar,block_size>>
+Preconditioner<Scalar,block_size>::
+create(PreconditionerType type, int verbosity, bool opencl_ilu_parallel)
+{
     if (type == PreconditionerType::BILU0) {
-        return std::make_unique<Opm::Accelerator::BILU0<block_size> >(opencl_ilu_parallel, verbosity);
+        return std::make_unique<Opm::Accelerator::BILU0<Scalar,block_size>>(opencl_ilu_parallel, verbosity);
     } else if (type == PreconditionerType::CPR) {
-        return std::make_unique<Opm::Accelerator::CPR<block_size> >(verbosity, opencl_ilu_parallel);
+        return std::make_unique<Opm::Accelerator::CPR<Scalar,block_size>>(verbosity, opencl_ilu_parallel);
     } else if (type == PreconditionerType::BISAI) {
-        return std::make_unique<Opm::Accelerator::BISAI<block_size> >(opencl_ilu_parallel, verbosity);
+        return std::make_unique<Opm::Accelerator::BISAI<Scalar,block_size>>(opencl_ilu_parallel, verbosity);
     } else {
         OPM_THROW(std::logic_error, "Invalid PreconditionerType");
     }
 }
 
-template <unsigned int block_size>
-bool Preconditioner<block_size>::analyze_matrix(BlockedMatrix *mat, [[maybe_unused]] BlockedMatrix *jacMat) {
+template<class Scalar, unsigned int block_size>
+bool Preconditioner<Scalar,block_size>::
+analyze_matrix(BlockedMatrix<Scalar>* mat,
+              [[maybe_unused]] BlockedMatrix<Scalar>* jacMat)
+{
     return analyze_matrix(mat);
 }
 
-template <unsigned int block_size>
-bool Preconditioner<block_size>::create_preconditioner(BlockedMatrix *mat, [[maybe_unused]] BlockedMatrix *jacMat) {
+template<class Scalar, unsigned int block_size>
+bool Preconditioner<Scalar,block_size>::
+create_preconditioner(BlockedMatrix<Scalar>* mat,
+                      [[maybe_unused]] BlockedMatrix<Scalar>* jacMat)
+{
     return create_preconditioner(mat);
 }
 
-#define INSTANTIATE_BDA_FUNCTIONS(n)  \
-template std::unique_ptr<Preconditioner<n> > Preconditioner<n>::create(PreconditionerType, int, bool);         \
-template void Preconditioner<n>::setOpencl(std::shared_ptr<cl::Context>&, std::shared_ptr<cl::CommandQueue>&); \
-template bool Preconditioner<n>::analyze_matrix(BlockedMatrix *, BlockedMatrix *);                             \
-template bool Preconditioner<n>::create_preconditioner(BlockedMatrix *, BlockedMatrix *);
+#define INSTANTIATE_BDA_FUNCTIONS(T,n)\
+    template class Preconditioner<T,n>;
 
+#define INSTANCE_TYPE(T) \
+    INSTANTIATE_BDA_FUNCTIONS(T,1) \
+    INSTANTIATE_BDA_FUNCTIONS(T,2) \
+    INSTANTIATE_BDA_FUNCTIONS(T,3) \
+    INSTANTIATE_BDA_FUNCTIONS(T,4) \
+    INSTANTIATE_BDA_FUNCTIONS(T,5) \
+    INSTANTIATE_BDA_FUNCTIONS(T,6)
 
-INSTANTIATE_BDA_FUNCTIONS(1);
-INSTANTIATE_BDA_FUNCTIONS(2);
-INSTANTIATE_BDA_FUNCTIONS(3);
-INSTANTIATE_BDA_FUNCTIONS(4);
-INSTANTIATE_BDA_FUNCTIONS(5);
-INSTANTIATE_BDA_FUNCTIONS(6);
+INSTANCE_TYPE(double)
 
-#undef INSTANTIATE_BDA_FUNCTIONS
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
-} //namespace Accelerator
-} //namespace Opm
-
+} // namespace Opm::Accelerator

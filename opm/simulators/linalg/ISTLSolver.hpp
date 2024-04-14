@@ -225,7 +225,7 @@ std::unique_ptr<Matrix> blockJacobiAdjacency(const Grid& grid,
                     parameters_.push_back(para);
                     prm_.push_back(setupPropertyTree(parameters_[0],
                                                      Parameters::isSet<TypeTag,int>("LinearSolverMaxIter"),
-                                                     Parameters::isSet<TypeTag,double>("LinearSolverReduction")));
+                                                     Parameters::isSet<TypeTag,Scalar>("LinearSolverReduction")));
                 }
                 {
                     FlowLinearSolverParameters para;
@@ -234,7 +234,7 @@ std::unique_ptr<Matrix> blockJacobiAdjacency(const Grid& grid,
                     parameters_.push_back(para);
                     prm_.push_back(setupPropertyTree(parameters_[1],
                                                      Parameters::isSet<TypeTag,int>("LinearSolverMaxIter"),
-                                                     Parameters::isSet<TypeTag,double>("LinearSolverReduction")));
+                                                     Parameters::isSet<TypeTag,Scalar>("LinearSolverReduction")));
                 }
                 // ------------
             } else {
@@ -243,7 +243,7 @@ std::unique_ptr<Matrix> blockJacobiAdjacency(const Grid& grid,
                 assert(prm_.empty());
                 prm_.push_back(setupPropertyTree(parameters_[0],
                                                  Parameters::isSet<TypeTag,int>("LinearSolverMaxIter"),
-                                                 Parameters::isSet<TypeTag,double>("LinearSolverReduction")));
+                                                 Parameters::isSet<TypeTag,Scalar>("LinearSolverReduction")));
             }
             flexibleSolver_.resize(prm_.size());
 

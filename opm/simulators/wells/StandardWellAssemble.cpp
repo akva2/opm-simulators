@@ -257,7 +257,7 @@ assembleZFracEq(const EvalWell& cq_s_zfrac_effective,
 }
 
 template<class Scalar>
-using FS = BlackOilFluidSystem<double,BlackOilDefaultIndexTraits>;
+using FS = BlackOilFluidSystem<Scalar,BlackOilDefaultIndexTraits>;
 
 #define INSTANCE(T,...) \
     template class StandardWellAssemble<FS<T>,__VA_ARGS__>;

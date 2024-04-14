@@ -56,14 +56,15 @@ namespace Opm
 
 #ifdef __HIP__
 /// HIP kernel to apply the standard wellcontributions
+template<class Scalar>
 __global__ void stdwell_apply(
-            const double *Cnnzs,
-            const double *Dnnzs,
-            const double *Bnnzs,
+            const Scalar* Cnnzs,
+            const Scalar* Dnnzs,
+            const Scalar* Bnnzs,
             const unsigned *Ccols,
             const unsigned *Bcols,
-            const double *x,
-            double *y,
+            const Scalar* x,
+            Scalar* y,
             const unsigned dim,
             const unsigned dim_wells,
             const unsigned *val_pointers)
@@ -76,11 +77,11 @@ __global__ void stdwell_apply(
     unsigned numBlocksPerWarp = blockDim.x/valsPerBlock;
     unsigned c = wiId % dim;
     unsigned r = (wiId/dim) % dim_wells;
-    double temp;
+    Scalar temp;
 
-    extern __shared__ double localSum[];
-    double *z1 = localSum + gridDim.x;
-    double *z2 = z1 + dim_wells;
+    extern __shared__ Scalar localSum[];
+    Scalar* z1 = localSum + gridDim.x;
+    Scalar* z2 = z1 + dim_wells;
 
     localSum[wiId] = 0;
     if(wiId < numActiveWorkItems){
@@ -138,9 +139,10 @@ __global__ void stdwell_apply(
 }
 #endif
 
-
-void WellContributionsRocsparse::apply_stdwells([[maybe_unused]] double *d_x,
-                                                [[maybe_unused]] double *d_y){
+template<class Scalar>
+void WellContributionsRocsparse<Scalar>::apply_stdwells([[maybe_unused]] Scalar* d_x,
+                                                [[maybe_unused]] Scalar* d_y)
+{
 #ifdef __HIP__
     unsigned gridDim = num_std_wells;
     unsigned blockDim = 64;
@@ -156,67 +158,84 @@ void WellContributionsRocsparse::apply_stdwells([[maybe_unused]] double *d_x,
 #endif
 }
 
-void WellContributionsRocsparse::apply_mswells(double *d_x, double *d_y){
+template<class Scalar>
+void WellContributionsRocsparse<Scalar>::apply_mswells(Scalar* d_x, Scalar* d_y)
+{
     if (h_x.empty()) {
-        h_x.resize(N);
-        h_y.resize(N);
+        h_x.resize(this->N);
+        h_y.resize(this->N);
     }
 
-    HIP_CHECK(hipMemcpyAsync(h_x.data(), d_x, sizeof(double) * N, hipMemcpyDeviceToHost, stream));
-    HIP_CHECK(hipMemcpyAsync(h_y.data(), d_y, sizeof(double) * N, hipMemcpyDeviceToHost, stream));
+    HIP_CHECK(hipMemcpyAsync(h_x.data(), d_x, sizeof(Scalar) * this->N, hipMemcpyDeviceToHost, stream));
+    HIP_CHECK(hipMemcpyAsync(h_y.data(), d_y, sizeof(Scalar) * this->N, hipMemcpyDeviceToHost, stream));
     HIP_CHECK(hipStreamSynchronize(stream));
 
     // actually apply MultisegmentWells
-    for (auto& well : multisegments) {
+    for (auto& well : this->multisegments) {
         well->apply(h_x.data(), h_y.data());
     }
 
     // copy vector y from CPU to GPU
-    HIP_CHECK(hipMemcpyAsync(d_y, h_y.data(), sizeof(double) * N, hipMemcpyHostToDevice, stream));
+    HIP_CHECK(hipMemcpyAsync(d_y, h_y.data(), sizeof(Scalar) * this->N, hipMemcpyHostToDevice, stream));
     HIP_CHECK(hipStreamSynchronize(stream));
 }
 
-void WellContributionsRocsparse::apply(double *d_x, double *d_y){
-    if(num_std_wells > 0){
+template<class Scalar>
+void WellContributionsRocsparse<Scalar>::apply(Scalar* d_x, Scalar*d_y)
+{
+    if (this->num_std_wells > 0) {
         apply_stdwells(d_x, d_y);
     }
 
-    if(num_ms_wells > 0){
+    if (this->num_ms_wells > 0) {
         apply_mswells(d_x, d_y);
     }
 }
 
-void WellContributionsRocsparse::setStream(hipStream_t stream_){
+template<class Scalar>
+void WellContributionsRocsparse<Scalar>::setStream(hipStream_t stream_)
+{
     stream = stream_;
 }
 
-void WellContributionsRocsparse::APIaddMatrix(MatrixType type,
-                                              int* colIndices,
-                                              double* values,
-                                              unsigned int val_size)
+template<class Scalar>
+void WellContributionsRocsparse<Scalar>::APIaddMatrix(MatrixType type,
+                                                      int* colIndices,
+                                                      Scalar* values,
+                                                      unsigned int val_size)
 {
-    if (!allocated) {
+    if (!this->allocated) {
         OPM_THROW(std::logic_error, "Error cannot add wellcontribution before allocating memory in WellContributions");
     }
 
     switch (type) {
     case MatrixType::C:
-        HIP_CHECK(hipMemcpyAsync(d_Cnnzs_hip + num_blocks_so_far * dim * dim_wells, values, sizeof(d_Cnnzs_hip) * val_size * dim * dim_wells, hipMemcpyHostToDevice, stream));
-        HIP_CHECK(hipMemcpyAsync(d_Ccols_hip + num_blocks_so_far, colIndices, sizeof(d_Ccols_hip) * val_size, hipMemcpyHostToDevice, stream));
+        HIP_CHECK(hipMemcpyAsync(d_Cnnzs_hip + this->num_blocks_so_far * this->dim * this->dim_wells,
+                                 values, sizeof(d_Cnnzs_hip) * val_size * this->dim * this->dim_wells,
+                                 hipMemcpyHostToDevice, stream));
+        HIP_CHECK(hipMemcpyAsync(d_Ccols_hip + this->num_blocks_so_far, colIndices,
+                                 sizeof(d_Ccols_hip) * val_size, hipMemcpyHostToDevice, stream));
         break;
 
     case MatrixType::D:
-        HIP_CHECK(hipMemcpyAsync(d_Dnnzs_hip + num_std_wells_so_far * dim_wells * dim_wells, values, sizeof(d_Dnnzs_hip) * dim_wells * dim_wells, hipMemcpyHostToDevice, stream));
+        HIP_CHECK(hipMemcpyAsync(d_Dnnzs_hip + this->num_std_wells_so_far * this->dim_wells * this->dim_wells,
+                                 values, sizeof(d_Dnnzs_hip) * this->dim_wells * this->dim_wells,
+                                 hipMemcpyHostToDevice, stream));
         break;
 
     case MatrixType::B:
-        HIP_CHECK(hipMemcpyAsync(d_Bnnzs_hip + num_blocks_so_far * dim * dim_wells, values, sizeof(d_Bnnzs_hip) * val_size * dim * dim_wells, hipMemcpyHostToDevice, stream));
-        HIP_CHECK(hipMemcpyAsync(d_Bcols_hip + num_blocks_so_far, colIndices, sizeof(d_Bcols_hip) * val_size, hipMemcpyHostToDevice, stream));
+        HIP_CHECK(hipMemcpyAsync(d_Bnnzs_hip + this->num_blocks_so_far * this->dim * this->dim_wells,
+                                 values, sizeof(d_Bnnzs_hip) * val_size * this->dim * this->dim_wells,
+                                 hipMemcpyHostToDevice, stream));
+        HIP_CHECK(hipMemcpyAsync(d_Bcols_hip + this->num_blocks_so_far, colIndices,
+                                 sizeof(d_Bcols_hip) * val_size, hipMemcpyHostToDevice, stream));
 
-        val_pointers[num_std_wells_so_far] = num_blocks_so_far;
-        if (num_std_wells_so_far == num_std_wells - 1) {
-            val_pointers[num_std_wells] = num_blocks;
-            HIP_CHECK(hipMemcpyAsync(d_val_pointers_hip, val_pointers.data(), sizeof(d_val_pointers_hip) * (num_std_wells + 1), hipMemcpyHostToDevice, stream));
+        this->val_pointers[this->num_std_wells_so_far] = this->num_blocks_so_far;
+        if (this->num_std_wells_so_far == this->num_std_wells - 1) {
+            this->val_pointers[this->num_std_wells] = this->num_blocks;
+            HIP_CHECK(hipMemcpyAsync(d_val_pointers_hip, this->val_pointers.data(),
+                                     sizeof(d_val_pointers_hip) * (this->num_std_wells + 1),
+                                     hipMemcpyHostToDevice, stream));
         }
         break;
 
@@ -226,14 +245,21 @@ void WellContributionsRocsparse::APIaddMatrix(MatrixType type,
     HIP_CHECK(hipStreamSynchronize(stream));
 }
 
-void WellContributionsRocsparse::APIalloc()
+template<class Scalar>
+void WellContributionsRocsparse<Scalar>::APIalloc()
 {
-    HIP_CHECK(hipMalloc((void**)&d_Cnnzs_hip, sizeof(d_Cnnzs_hip) * num_blocks * dim * dim_wells));
-    HIP_CHECK(hipMalloc((void**)&d_Dnnzs_hip, sizeof(d_Dnnzs_hip) * num_std_wells * dim_wells * dim_wells));
-    HIP_CHECK(hipMalloc((void**)&d_Bnnzs_hip, sizeof(d_Bnnzs_hip) * num_blocks * dim * dim_wells));
-    HIP_CHECK(hipMalloc((void**)&d_Ccols_hip, sizeof(d_Ccols_hip) * num_blocks));
-    HIP_CHECK(hipMalloc((void**)&d_Bcols_hip, sizeof(d_Bcols_hip) * num_blocks));
-    HIP_CHECK(hipMalloc((void**)&d_val_pointers_hip, sizeof(d_val_pointers_hip) * (num_std_wells + 1)));
+    HIP_CHECK(hipMalloc((void**)&d_Cnnzs_hip, sizeof(d_Cnnzs_hip) * this->num_blocks * this->dim * this->dim_wells));
+    HIP_CHECK(hipMalloc((void**)&d_Dnnzs_hip, sizeof(d_Dnnzs_hip) * this->num_std_wells * this->dim_wells * this->dim_wells));
+    HIP_CHECK(hipMalloc((void**)&d_Bnnzs_hip, sizeof(d_Bnnzs_hip) * this->num_blocks * this->dim * this->dim_wells));
+    HIP_CHECK(hipMalloc((void**)&d_Ccols_hip, sizeof(d_Ccols_hip) * this->num_blocks));
+    HIP_CHECK(hipMalloc((void**)&d_Bcols_hip, sizeof(d_Bcols_hip) * this->num_blocks));
+    HIP_CHECK(hipMalloc((void**)&d_val_pointers_hip, sizeof(d_val_pointers_hip) * (this->num_std_wells + 1)));
 }
+
+template class WellContributionsRocsparse<double>;
+
+#if FLOW_INSTANCE_FLOAT
+template class WellContributionsRocsparse<float>;
+#endif
 
 } //namespace Opm

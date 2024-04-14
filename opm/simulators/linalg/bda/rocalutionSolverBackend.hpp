@@ -31,17 +31,14 @@ template<class Scalar> class LocalMatrix;
 template<class Scalar> class LocalVector;
 }
 
-namespace Opm
-{
-namespace Accelerator
-{
+namespace Opm::Accelerator {
 
 /// This class implements a rocalution based linear solver solver on GPU
 /// It uses ilu0-bicgstab
-template <unsigned int block_size>
-class rocalutionSolverBackend : public BdaSolver<block_size>
+template<class Scalar, unsigned int block_size>
+class rocalutionSolverBackend : public BdaSolver<Scalar,block_size>
 {
-    typedef BdaSolver<block_size> Base;
+    using Base = BdaSolver<Scalar,block_size>;
 
     using Base::N;
     using Base::Nb;
@@ -55,25 +52,24 @@ class rocalutionSolverBackend : public BdaSolver<block_size>
     using Base::initialized;
 
 private:
-    std::vector<double> h_x; // store solution vector on host
+    std::vector<Scalar> h_x; // store solution vector on host
     int *tmp_rowpointers;    // store matrix on host, this pointer is given to and freed by rocalution
     int *tmp_colindices;     // store matrix on host, this pointer is given to and freed by rocalution
-    double *tmp_nnzvalues;   // store matrix on host, this pointer is given to and freed by rocalution
+    Scalar* tmp_nnzvalues;   // store matrix on host, this pointer is given to and freed by rocalution
 
-    std::unique_ptr<rocalution::ILU<rocalution::LocalMatrix<double>, rocalution::LocalVector<double>, double> > roc_prec;
-    std::unique_ptr<rocalution::BiCGStab<rocalution::LocalMatrix<double>, rocalution::LocalVector<double>, double> > roc_solver;
+    std::unique_ptr<rocalution::ILU<rocalution::LocalMatrix<Scalar>, rocalution::LocalVector<Scalar>, Scalar> > roc_prec;
+    std::unique_ptr<rocalution::BiCGStab<rocalution::LocalMatrix<Scalar>, rocalution::LocalVector<Scalar>, Scalar> > roc_solver;
 
     /// Initialize sizes and allocate memory
     /// \param[in] matrix     matrix A
-    void initialize(BlockedMatrix *matrix);
+    void initialize(BlockedMatrix<Scalar>* matrix);
 
     /// Convert matrix to rocalution format
     /// copy matrix to raw pointers, which are given to and freed by rocalution
     /// \param[in] matrix     matrix A
-    void convert_matrix(BlockedMatrix *matrix);
+    void convert_matrix(BlockedMatrix<Scalar>* matrix);
 
 public:
-
     /// Construct a rocalutionSolver
     /// also initialize rocalution library and rocalution variables
     /// \param[in] linear_solver_verbosity    verbosity of rocalutionSolver
@@ -91,18 +87,18 @@ public:
     /// \param[in] wellContribs   WellContributions, to apply them separately, instead of adding them to matrix A
     /// \param[inout] res         summary of solver result
     /// \return                   status code
-    SolverStatus solve_system(std::shared_ptr<BlockedMatrix> matrix, double *b,
-        std::shared_ptr<BlockedMatrix> jacMatrix, WellContributions& wellContribs, BdaResult &res) override;
+    SolverStatus solve_system(std::shared_ptr<BlockedMatrix<Scalar>> matrix,
+                              Scalar* b,
+                              std::shared_ptr<BlockedMatrix<Scalar>> jacMatrix,
+                              WellContributions<Scalar>& wellContribs,
+                              BdaResult& res) override;
 
     /// Get result after linear solve, and peform postprocessing if necessary
     /// \param[inout] x          resulting x vector, caller must guarantee that x points to a valid array
-    void get_result(double *x) override;
+    void get_result(Scalar* x) override;
     
 }; // end class rocalutionSolverBackend
 
-} // namespace Accelerator
-} // namespace Opm
+} // namespace Opm::Accelerator
 
 #endif
-
-

@@ -147,7 +147,8 @@ readRockParameters_(const std::vector<Scalar>& cellCenterDepths,
         const auto& comp = rock_config.comp();
         rockParams_.clear();
         for (const auto& c : comp) {
-            rockParams_.push_back({Scalar{c.pref}, Scalar{c.compressibility}});
+            rockParams_.push_back({static_cast<Scalar>(c.pref),
+                                   static_cast<Scalar>(c.compressibility)});
         }
     }
 

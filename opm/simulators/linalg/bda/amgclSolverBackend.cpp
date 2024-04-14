@@ -54,21 +54,23 @@ namespace Accelerator
 using Opm::OpmLog;
 using Dune::Timer;
 
-template <unsigned int block_size>
-amgclSolverBackend<block_size>::amgclSolverBackend(const int          verbosity_,
-                                                   const int          maxit_,
-                                                   const double       tolerance_,
-                                                   const unsigned int platformID_,
-                                                   const unsigned int deviceID_)
-    : BdaSolver<block_size>(verbosity_, maxit_, tolerance_, platformID_, deviceID_)
+template<class Scalar, unsigned int block_size>
+amgclSolverBackend<Scalar,block_size>::
+amgclSolverBackend(const int          verbosity_,
+                   const int          maxit_,
+                   const double       tolerance_,
+                   const unsigned int platformID_,
+                   const unsigned int deviceID_)
+    : BdaSolver<Scalar,block_size>(verbosity_, maxit_, tolerance_, platformID_, deviceID_)
 {}
 
-template <unsigned int block_size>
-amgclSolverBackend<block_size>::~amgclSolverBackend() {}
+template<class Scalar, unsigned int block_size>
+amgclSolverBackend<Scalar,block_size>::~amgclSolverBackend() {}
 
-
-template <unsigned int block_size>
-void amgclSolverBackend<block_size>::initialize(int Nb_, int nnzbs) {
+template<class Scalar, unsigned int block_size>
+void amgclSolverBackend<Scalar,block_size>::
+initialize(int Nb_, int nnzbs)
+{
     this->Nb = Nb_;
     this->N = Nb * block_size;
     this->nnzb = nnzbs;
@@ -160,9 +162,10 @@ void amgclSolverBackend<block_size>::initialize(int Nb_, int nnzbs) {
     initialized = true;
 } // end initialize()
 
-
-template <unsigned int block_size>
-void amgclSolverBackend<block_size>::convert_sparsity_pattern(int *rows, int *cols) {
+template<class Scalar, unsigned int block_size>
+void amgclSolverBackend<Scalar,block_size>::
+convert_sparsity_pattern(int *rows, int *cols)
+{
     Timer t;
     const unsigned int bs = block_size;
     int idx = 0; // indicates the unblocked write index
@@ -189,9 +192,10 @@ void amgclSolverBackend<block_size>::convert_sparsity_pattern(int *rows, int *co
     }
 } // end convert_sparsity_pattern()
 
-
-template <unsigned int block_size>
-void amgclSolverBackend<block_size>::convert_data(double *vals, int *rows) {
+template<class Scalar, unsigned int block_size>
+void amgclSolverBackend<Scalar,block_size>::
+convert_data(Scalar* vals, int* rows)
+{
     Timer t;
     const unsigned int bs = block_size;
     int idx = 0; // indicates the unblocked write index
@@ -217,7 +221,8 @@ void amgclSolverBackend<block_size>::convert_data(double *vals, int *rows) {
 } // end convert_data()
 
 #if HAVE_VEXCL
-void initialize_vexcl(std::vector<cl::CommandQueue>& ctx, unsigned int platformID, unsigned int deviceID) {
+void initialize_vexcl(std::vector<cl::CommandQueue>& ctx, unsigned int platformID, unsigned int deviceID)
+{
     std::vector<cl::Platform> platforms;
     std::vector<cl::Device> devices;
     cl::Platform::get(&platforms);
@@ -245,19 +250,19 @@ void initialize_vexcl(std::vector<cl::CommandQueue>& ctx, unsigned int platformI
     OpmLog::info(out.str());
 }
 
-template <typename vexcl_matrix_type, typename vexcl_vector_type, unsigned int block_size, typename AIJInfo>
+template <typename vexcl_matrix_type, typename vexcl_vector_type, unsigned int block_size, typename Scalar, typename AIJInfo>
 void solve_vexcl(
     const AIJInfo& A,
     const boost::property_tree::ptree prm,
     const std::vector<cl::CommandQueue>& ctx,
-    double *b,
-    std::vector<double>& x,
+    Scalar* b,
+    std::vector<Scalar>& x,
     const int N,
     int& iters,
-    double& error)
+    Scalar& error)
 {
-    typedef amgcl::backend::vexcl<vexcl_matrix_type> Backend;
-    typedef amgcl::make_solver<amgcl::runtime::preconditioner<Backend>, amgcl::runtime::solver::wrapper<Backend> > Solver;
+    using Backend = amgcl::backend::vexcl<vexcl_matrix_type>;
+    using Solver = amgcl::make_solver<amgcl::runtime::preconditioner<Backend>, amgcl::runtime::solver::wrapper<Backend>> ;
 
     typename Solver::backend_params bprm;
     bprm.q = ctx;  // set vexcl context
@@ -275,8 +280,10 @@ void solve_vexcl(
 }
 #endif
 
-template <unsigned int block_size>
-void amgclSolverBackend<block_size>::solve_system(double *b, BdaResult &res) {
+template<class Scalar, unsigned int block_size>
+void amgclSolverBackend<Scalar,block_size>::
+solve_system(Scalar* b, BdaResult& res)
+{
     Timer t;
 
     try {
@@ -285,7 +292,7 @@ void amgclSolverBackend<block_size>::solve_system(double *b, BdaResult &res) {
             solve_cuda(b);
 #endif
         } else if (backend_type == Amgcl_backend_type::cpu) { // use builtin backend (CPU)
-            // create matrix object
+/*            // create matrix object
             auto Atmp = std::tie(N, A_rows, A_cols, A_vals);
             auto A = amgcl::adapter::block_matrix<dmat_type>(Atmp);
 
@@ -311,6 +318,7 @@ void amgclSolverBackend<block_size>::solve_system(double *b, BdaResult &res) {
 
             // actually solve
             std::tie(iters, error) = solve(B, X);
+            */
         } else if (backend_type == Amgcl_backend_type::vexcl) {
 #if HAVE_VEXCL
             static std::vector<cl::CommandQueue> ctx; // using CommandQueue directly instead of vex::Context
@@ -320,15 +328,15 @@ void amgclSolverBackend<block_size>::solve_system(double *b, BdaResult &res) {
             if constexpr(block_size == 1){
                 auto A = std::tie(N, A_rows, A_cols, A_vals);
 
-                solve_vexcl<double, double, block_size>(A, prm, ctx, b, x, N, iters, error);
+                solve_vexcl<Scalar, Scalar, block_size, Scalar>(A, prm, ctx, b, x, N, iters, error);
             } else {
                 // allow vexcl to use blocked matrices
-                vex::scoped_program_header h1(ctx, amgcl::backend::vexcl_static_matrix_declaration<double, block_size>());
+                vex::scoped_program_header h1(ctx, amgcl::backend::vexcl_static_matrix_declaration<Scalar, block_size>());
 
                 auto Atmp = std::tie(N, A_rows, A_cols, A_vals);
                 auto A = amgcl::adapter::block_matrix<dmat_type>(Atmp);
 
-                solve_vexcl<dmat_type, dvec_type, block_size>(A, prm, ctx, b, x, N, iters, error);
+                solve_vexcl<dmat_type, dvec_type, block_size, Scalar>(A, prm, ctx, b, x, N, iters, error);
             }
 #endif
         }
@@ -361,8 +369,9 @@ void amgclSolverBackend<block_size>::solve_system(double *b, BdaResult &res) {
 
 // copy result to host memory
 // caller must be sure that x is a valid array
-template <unsigned int block_size>
-void amgclSolverBackend<block_size>::get_result(double *x_) {
+template<class Scalar, unsigned int block_size>
+void amgclSolverBackend<Scalar,block_size>::get_result(Scalar* x_)
+{
     Timer t;
 
     std::copy(x.begin(), x.end(), x_);
@@ -374,13 +383,13 @@ void amgclSolverBackend<block_size>::get_result(double *x_) {
     }
 } // end get_result()
 
-
-template <unsigned int block_size>
-SolverStatus amgclSolverBackend<block_size>::solve_system(std::shared_ptr<BlockedMatrix> matrix,
-                                                          double *b,
-                                                          [[maybe_unused]] std::shared_ptr<BlockedMatrix> jacMatrix,
-                                                          [[maybe_unused]] WellContributions& wellContribs,
-                                                          BdaResult &res)
+template<class Scalar, unsigned int block_size>
+SolverStatus amgclSolverBackend<Scalar,block_size>::
+solve_system(std::shared_ptr<BlockedMatrix<Scalar>> matrix,
+             Scalar* b,
+             [[maybe_unused]] std::shared_ptr<BlockedMatrix<Scalar>> jacMatrix,
+             [[maybe_unused]] WellContributions<Scalar>& wellContribs,
+             BdaResult& res)
 {
     if (initialized == false) {
         initialize(matrix->Nb, matrix->nnzbs);
@@ -391,28 +400,44 @@ SolverStatus amgclSolverBackend<block_size>::solve_system(std::shared_ptr<Blocke
     return SolverStatus::BDA_SOLVER_SUCCESS;
 }
 
-template <>
-SolverStatus amgclSolverBackend<1>::solve_system([[maybe_unused]] std::shared_ptr<BlockedMatrix> matrix,
-                                                 [[maybe_unused]] double *b,
-                                                 [[maybe_unused]] std::shared_ptr<BlockedMatrix> jacMatrix,
-                                                 [[maybe_unused]] WellContributions& wellContribs,
-                                                 [[maybe_unused]] BdaResult &res)
+template<>
+SolverStatus amgclSolverBackend<double,1>::
+solve_system([[maybe_unused]] std::shared_ptr<BlockedMatrix<double>> matrix,
+             [[maybe_unused]] double* b,
+             [[maybe_unused]] std::shared_ptr<BlockedMatrix<double>> jacMatrix,
+             [[maybe_unused]] WellContributions<double>& wellContribs,
+             [[maybe_unused]] BdaResult &res)
 {
     OPM_THROW(std::logic_error, "amgclSolverBackend not implemented for sz 1");
 }
 
+template<>
+SolverStatus amgclSolverBackend<float,1>::
+solve_system([[maybe_unused]] std::shared_ptr<BlockedMatrix<float>> matrix,
+             [[maybe_unused]] float* b,
+             [[maybe_unused]] std::shared_ptr<BlockedMatrix<float>> jacMatrix,
+             [[maybe_unused]] WellContributions<float>& wellContribs,
+             [[maybe_unused]] BdaResult &res)
+{
+    OPM_THROW(std::logic_error, "amgclSolverBackend not implemented for sz 1");
+}
 
-#define INSTANTIATE_BDA_FUNCTIONS(n)                                                                \
-template amgclSolverBackend<n>::amgclSolverBackend(int, int, double, unsigned int, unsigned int);   \
+#define INSTANTIATE_BDA_FUNCTIONS(T,n) \
+    template class amgclSolverBackend<T,n>;
 
-INSTANTIATE_BDA_FUNCTIONS(1);
-INSTANTIATE_BDA_FUNCTIONS(2);
-INSTANTIATE_BDA_FUNCTIONS(3);
-INSTANTIATE_BDA_FUNCTIONS(4);
-INSTANTIATE_BDA_FUNCTIONS(5);
-INSTANTIATE_BDA_FUNCTIONS(6);
+#define INSTANCE_TYPE(T) \
+    INSTANTIATE_BDA_FUNCTIONS(T,1) \
+    INSTANTIATE_BDA_FUNCTIONS(T,2) \
+    INSTANTIATE_BDA_FUNCTIONS(T,3) \
+    INSTANTIATE_BDA_FUNCTIONS(T,4) \
+    INSTANTIATE_BDA_FUNCTIONS(T,5) \
+    INSTANTIATE_BDA_FUNCTIONS(T,6)
 
-#undef INSTANTIATE_BDA_FUNCTIONS
+INSTANCE_TYPE(double)
+
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
 } // namespace Accelerator
 } // namespace Opm

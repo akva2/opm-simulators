@@ -45,9 +45,14 @@ namespace Accelerator
 using Opm::OpmLog;
 using Dune::Timer;
 
-template <unsigned int block_size>
-openclSolverBackend<block_size>::openclSolverBackend(int verbosity_, int maxit_, double tolerance_, unsigned int platformID_, unsigned int deviceID_, bool opencl_ilu_parallel_, std::string linsolver) : BdaSolver<block_size>(verbosity_, maxit_, tolerance_, platformID_, deviceID_), opencl_ilu_parallel(opencl_ilu_parallel_) {
-
+template<class Scalar, unsigned int block_size>
+openclSolverBackend<Scalar,block_size>::
+openclSolverBackend(int verbosity_, int maxit_, double tolerance_,
+                    unsigned int platformID_, unsigned int deviceID_,
+                    bool opencl_ilu_parallel_, std::string linsolver)
+    : BdaSolver<Scalar,block_size>(verbosity_, maxit_, tolerance_, platformID_, deviceID_)
+    , opencl_ilu_parallel(opencl_ilu_parallel_)
+{
     bool use_cpr, use_isai;
 
     if (linsolver.compare("ilu0") == 0) {
@@ -60,18 +65,18 @@ openclSolverBackend<block_size>::openclSolverBackend(int verbosity_, int maxit_,
         use_cpr = false;
         use_isai = true;
     } else if (linsolver.compare("cpr_trueimpes") == 0) {
-        OPM_THROW(std::logic_error, "Error openclSolver does not support --linerar-solver=cpr_trueimpes");
+        OPM_THROW(std::logic_error, "Error openclSolver does not support --linear-solver=cpr_trueimpes");
     } else {
         OPM_THROW(std::logic_error, "Error unknown value for argument --linear-solver, " + linsolver);
     }
 
-    using PreconditionerType = typename Preconditioner<block_size>::PreconditionerType;
+    using PreconditionerType = typename Preconditioner<Scalar,block_size>::PreconditionerType;
     if (use_cpr) {
-        prec = Preconditioner<block_size>::create(PreconditionerType::CPR, verbosity, opencl_ilu_parallel);
+        prec = Preconditioner<Scalar,block_size>::create(PreconditionerType::CPR, verbosity, opencl_ilu_parallel);
     } else if (use_isai) {
-        prec = Preconditioner<block_size>::create(PreconditionerType::BISAI, verbosity, opencl_ilu_parallel);
+        prec = Preconditioner<Scalar,block_size>::create(PreconditionerType::BISAI, verbosity, opencl_ilu_parallel);
     } else {
-        prec = Preconditioner<block_size>::create(PreconditionerType::BILU0, verbosity, opencl_ilu_parallel);
+        prec = Preconditioner<Scalar,block_size>::create(PreconditionerType::BILU0, verbosity, opencl_ilu_parallel);
     }
 
     std::ostringstream out;
@@ -203,8 +208,7 @@ openclSolverBackend<block_size>::openclSolverBackend(int verbosity_, int maxit_,
         context = std::make_shared<cl::Context>(devices[0]);
         queue.reset(new cl::CommandQueue(*context, devices[0], 0, &err));
 
-        OpenclKernels::init(context.get(), queue.get(), devices, verbosity);
-
+        OpenclKernels<Scalar>::init(context.get(), queue.get(), devices, verbosity);
     } catch (const cl::Error& error) {
         std::ostringstream oss;
         oss << "OpenCL Error: " << error.what() << "(" << error.err() << ")\n";
@@ -217,26 +221,31 @@ openclSolverBackend<block_size>::openclSolverBackend(int verbosity_, int maxit_,
     }
 }
 
-template <unsigned int block_size>
-openclSolverBackend<block_size>::openclSolverBackend(int verbosity_, int maxit_, double tolerance_, bool opencl_ilu_parallel_) :
-    BdaSolver<block_size>(verbosity_, maxit_, tolerance_), opencl_ilu_parallel(opencl_ilu_parallel_)
+template<class Scalar, unsigned int block_size>
+openclSolverBackend<Scalar,block_size>::
+openclSolverBackend(int verbosity_, int maxit_, double tolerance_, bool opencl_ilu_parallel_)
+    : BdaSolver<Scalar,block_size>(verbosity_, maxit_, tolerance_)
+    , opencl_ilu_parallel(opencl_ilu_parallel_)
 {
     // prec = std::make_unique<BILU0<block_size> >(opencl_ilu_parallel, verbosity_);
     // cpr = std::make_unique<CPR<block_size> >(verbosity_, opencl_ilu_parallel, /*use_amg=*/false);
 }
 
-template <unsigned int block_size>
-void openclSolverBackend<block_size>::setOpencl(std::shared_ptr<cl::Context>& context_, std::shared_ptr<cl::CommandQueue>& queue_) {
+template<class Scalar, unsigned int block_size>
+void openclSolverBackend<Scalar,block_size>::
+setOpencl(std::shared_ptr<cl::Context>& context_, std::shared_ptr<cl::CommandQueue>& queue_)
+{
     context = context_;
     queue = queue_;
 }
 
-
-template <unsigned int block_size>
-void openclSolverBackend<block_size>::gpu_pbicgstab(WellContributions& wellContribs, BdaResult& res) {
+template<class Scalar, unsigned int block_size>
+void openclSolverBackend<Scalar,block_size>::
+gpu_pbicgstab(WellContributions<Scalar>& wellContribs, BdaResult& res)
+{
     float it;
-    double rho, rhop, beta, alpha, omega, tmp1, tmp2;
-    double norm, norm_0;
+    Scalar rho, rhop, beta, alpha, omega, tmp1, tmp2;
+    Scalar norm, norm_0;
 
     Timer t_total, t_prec(false), t_spmv(false), t_well(false), t_rest(false);
 
@@ -246,15 +255,15 @@ void openclSolverBackend<block_size>::gpu_pbicgstab(WellContributions& wellContr
 
     // set initial values
     events.resize(5);
-    queue->enqueueFillBuffer(d_p, 0, 0, sizeof(double) * N, nullptr, &events[0]);
-    queue->enqueueFillBuffer(d_v, 0, 0, sizeof(double) * N, nullptr, &events[1]);
+    queue->enqueueFillBuffer(d_p, 0, 0, sizeof(Scalar) * N, nullptr, &events[0]);
+    queue->enqueueFillBuffer(d_v, 0, 0, sizeof(Scalar) * N, nullptr, &events[1]);
     rho = 1.0;
     alpha = 1.0;
     omega = 1.0;
 
-    queue->enqueueCopyBuffer(d_b, d_r, 0, 0, sizeof(double) * N, nullptr, &events[2]);
-    queue->enqueueCopyBuffer(d_r, d_rw, 0, 0, sizeof(double) * N, nullptr, &events[3]);
-    queue->enqueueCopyBuffer(d_r, d_p, 0, 0, sizeof(double) * N, nullptr, &events[4]);
+    queue->enqueueCopyBuffer(d_b, d_r, 0, 0, sizeof(Scalar) * N, nullptr, &events[2]);
+    queue->enqueueCopyBuffer(d_r, d_rw, 0, 0, sizeof(Scalar) * N, nullptr, &events[3]);
+    queue->enqueueCopyBuffer(d_r, d_p, 0, 0, sizeof(Scalar) * N, nullptr, &events[4]);
 
     cl::WaitForEvents(events);
     events.clear();
@@ -263,7 +272,7 @@ void openclSolverBackend<block_size>::gpu_pbicgstab(WellContributions& wellContr
         OPM_THROW(std::logic_error, "openclSolverBackend OpenCL enqueue[Fill|Copy]Buffer error");
     }
 
-    norm = OpenclKernels::norm(d_r, d_tmp, N);
+    norm = OpenclKernels<Scalar>::norm(d_r, d_tmp, N);
     norm_0 = norm;
 
     if (verbosity > 1) {
@@ -277,11 +286,11 @@ void openclSolverBackend<block_size>::gpu_pbicgstab(WellContributions& wellContr
     }
     for (it = 0.5; it < maxit; it += 0.5) {
         rhop = rho;
-        rho = OpenclKernels::dot(d_rw, d_r, d_tmp, N);
+        rho = OpenclKernels<Scalar>::dot(d_rw, d_r, d_tmp, N);
 
         if (it > 1) {
             beta = (rho / rhop) * (alpha / omega);
-            OpenclKernels::custom(d_p, d_v, d_r, omega, beta, N);
+            OpenclKernels<Scalar>::custom(d_p, d_v, d_r, omega, beta, N);
         }
         if (verbosity >= 3) {
             queue->finish();
@@ -298,7 +307,7 @@ void openclSolverBackend<block_size>::gpu_pbicgstab(WellContributions& wellContr
         }
 
         // v = A * pw
-        OpenclKernels::spmv(d_Avals, d_Acols, d_Arows, d_pw, d_v, Nb, block_size);
+        OpenclKernels<Scalar>::spmv(d_Avals, d_Acols, d_Arows, d_pw, d_v, Nb, block_size);
         if (verbosity >= 3) {
             queue->finish();
             t_spmv.stop();
@@ -306,8 +315,8 @@ void openclSolverBackend<block_size>::gpu_pbicgstab(WellContributions& wellContr
         }
 
         // apply wellContributions
-        if(wellContribs.getNumWells() > 0){
-            static_cast<WellContributionsOCL&>(wellContribs).apply(d_pw, d_v);
+        if (wellContribs.getNumWells() > 0){
+            static_cast<WellContributionsOCL<Scalar>&>(wellContribs).apply(d_pw, d_v);
         }
         if(verbosity >= 3) {
             queue->finish();
@@ -315,11 +324,11 @@ void openclSolverBackend<block_size>::gpu_pbicgstab(WellContributions& wellContr
             t_rest.start();
         }
 
-        tmp1 = OpenclKernels::dot(d_rw, d_v, d_tmp, N);
+        tmp1 = OpenclKernels<Scalar>::dot(d_rw, d_v, d_tmp, N);
         alpha = rho / tmp1;
-        OpenclKernels::axpy(d_v, -alpha, d_r, N);      // r = r - alpha * v
-        OpenclKernels::axpy(d_pw, alpha, d_x, N);      // x = x + alpha * pw
-        norm = OpenclKernels::norm(d_r, d_tmp, N);
+        OpenclKernels<Scalar>::axpy(d_v, -alpha, d_r, N);      // r = r - alpha * v
+        OpenclKernels<Scalar>::axpy(d_pw, alpha, d_x, N);      // x = x + alpha * pw
+        norm = OpenclKernels<Scalar>::norm(d_r, d_tmp, N);
         if (verbosity >= 3) {
             queue->finish();
             t_rest.stop();
@@ -343,7 +352,7 @@ void openclSolverBackend<block_size>::gpu_pbicgstab(WellContributions& wellContr
         }
 
         // t = A * s
-        OpenclKernels::spmv(d_Avals, d_Acols, d_Arows, d_s, d_t, Nb, block_size);
+        OpenclKernels<Scalar>::spmv(d_Avals, d_Acols, d_Arows, d_s, d_t, Nb, block_size);
         if(verbosity >= 3){
             queue->finish();
             t_spmv.stop();
@@ -351,8 +360,8 @@ void openclSolverBackend<block_size>::gpu_pbicgstab(WellContributions& wellContr
         }
 
         // apply wellContributions
-        if(wellContribs.getNumWells() > 0){
-            static_cast<WellContributionsOCL&>(wellContribs).apply(d_s, d_t);
+        if (wellContribs.getNumWells() > 0){
+            static_cast<WellContributionsOCL<Scalar>&>(wellContribs).apply(d_s, d_t);
         }
         if (verbosity >= 3) {
             queue->finish();
@@ -360,12 +369,12 @@ void openclSolverBackend<block_size>::gpu_pbicgstab(WellContributions& wellContr
             t_rest.start();
         }
 
-        tmp1 = OpenclKernels::dot(d_t, d_r, d_tmp, N);
-        tmp2 = OpenclKernels::dot(d_t, d_t, d_tmp, N);
+        tmp1 = OpenclKernels<Scalar>::dot(d_t, d_r, d_tmp, N);
+        tmp2 = OpenclKernels<Scalar>::dot(d_t, d_t, d_tmp, N);
         omega = tmp1 / tmp2;
-        OpenclKernels::axpy(d_s, omega, d_x, N);     // x = x + omega * s
-        OpenclKernels::axpy(d_t, -omega, d_r, N);    // r = r - omega * t
-        norm = OpenclKernels::norm(d_r, d_tmp, N);
+        OpenclKernels<Scalar>::axpy(d_s, omega, d_x, N);     // x = x + omega * s
+        OpenclKernels<Scalar>::axpy(d_t, -omega, d_r, N);    // r = r - omega * t
+        norm = OpenclKernels<Scalar>::norm(d_r, d_tmp, N);
         if (verbosity >= 3) {
             queue->finish();
             t_rest.stop();
@@ -382,9 +391,9 @@ void openclSolverBackend<block_size>::gpu_pbicgstab(WellContributions& wellContr
         }
     }
 
-    res.iterations = std::min(it, (float)maxit);
+    res.iterations = std::min(it, static_cast<float>(maxit));
     res.reduction = norm / norm_0;
-    res.conv_rate  = static_cast<double>(pow(res.reduction, 1.0 / it));
+    res.conv_rate  = static_cast<Scalar>(pow(res.reduction, 1.0 / it));
     res.elapsed = t_total.stop();
     res.converged = (it != (maxit + 0.5));
 
@@ -405,9 +414,11 @@ void openclSolverBackend<block_size>::gpu_pbicgstab(WellContributions& wellContr
     }
 }
 
-
-template <unsigned int block_size>
-void openclSolverBackend<block_size>::initialize(std::shared_ptr<BlockedMatrix> matrix, std::shared_ptr<BlockedMatrix> jacMatrix) {
+template<class Scalar, unsigned int block_size>
+void openclSolverBackend<Scalar,block_size>::
+initialize(std::shared_ptr<BlockedMatrix<Scalar>> matrix,
+           std::shared_ptr<BlockedMatrix<Scalar>> jacMatrix)
+{
     this->Nb = matrix->Nb;
     this->N = Nb * block_size;
     this->nnzb = matrix->nnzbs;
@@ -437,19 +448,19 @@ void openclSolverBackend<block_size>::initialize(std::shared_ptr<BlockedMatrix> 
         mat = matrix;
         jacMat = jacMatrix;
 
-        d_x = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(double) * N);
-        d_b = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(double) * N);
-        d_rb = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(double) * N);
-        d_r = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(double) * N);
-        d_rw = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(double) * N);
-        d_p = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(double) * N);
-        d_pw = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(double) * N);
-        d_s = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(double) * N);
-        d_t = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(double) * N);
-        d_v = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(double) * N);
-        d_tmp = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(double) * N);
+        d_x = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(Scalar) * N);
+        d_b = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(Scalar) * N);
+        d_rb = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(Scalar) * N);
+        d_r = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(Scalar) * N);
+        d_rw = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(Scalar) * N);
+        d_p = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(Scalar) * N);
+        d_pw = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(Scalar) * N);
+        d_s = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(Scalar) * N);
+        d_t = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(Scalar) * N);
+        d_v = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(Scalar) * N);
+        d_tmp = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(Scalar) * N);
 
-        d_Avals = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(double) * nnz);
+        d_Avals = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(Scalar) * nnz);
         d_Acols = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(int) * nnzb);
         d_Arows = cl::Buffer(*context, CL_MEM_READ_WRITE, sizeof(int) * (Nb + 1));
 
@@ -467,8 +478,10 @@ void openclSolverBackend<block_size>::initialize(std::shared_ptr<BlockedMatrix> 
     initialized = true;
 } // end initialize()
 
-template <unsigned int block_size>
-void openclSolverBackend<block_size>::copy_system_to_gpu() {
+template<class Scalar, unsigned int block_size>
+void openclSolverBackend<Scalar,block_size>::
+copy_system_to_gpu()
+{
     Timer t;
     events.resize(5);
 
@@ -476,18 +489,18 @@ void openclSolverBackend<block_size>::copy_system_to_gpu() {
     int sum = 0;
     for (int i = 0; i < Nb; ++i) {
         int size_row = mat->rowPointers[i + 1] - mat->rowPointers[i];
-        memcpy(vals_contiguous.data() + sum, mat->nnzValues + sum, size_row * sizeof(double) * block_size * block_size);
+        memcpy(vals_contiguous.data() + sum, mat->nnzValues + sum, size_row * sizeof(Scalar) * block_size * block_size);
         sum += size_row * block_size * block_size;
     }
-    err = queue->enqueueWriteBuffer(d_Avals, CL_TRUE, 0, sizeof(double) * nnz, vals_contiguous.data(), nullptr, &events[0]);
+    err = queue->enqueueWriteBuffer(d_Avals, CL_TRUE, 0, sizeof(Scalar) * nnz, vals_contiguous.data(), nullptr, &events[0]);
 #else
-    err = queue->enqueueWriteBuffer(d_Avals, CL_TRUE, 0, sizeof(double) * nnz, mat->nnzValues, nullptr, &events[0]);
+    err = queue->enqueueWriteBuffer(d_Avals, CL_TRUE, 0, sizeof(Scalar) * nnz, mat->nnzValues, nullptr, &events[0]);
 #endif
 
     err |= queue->enqueueWriteBuffer(d_Acols, CL_TRUE, 0, sizeof(int) * nnzb, mat->colIndices, nullptr, &events[1]);
     err |= queue->enqueueWriteBuffer(d_Arows, CL_TRUE, 0, sizeof(int) * (Nb + 1), mat->rowPointers, nullptr, &events[2]);
-    err |= queue->enqueueWriteBuffer(d_b, CL_TRUE, 0, sizeof(double) * N, h_b, nullptr, &events[3]);
-    err |= queue->enqueueFillBuffer(d_x, 0, 0, sizeof(double) * N, nullptr, &events[4]);
+    err |= queue->enqueueWriteBuffer(d_b, CL_TRUE, 0, sizeof(Scalar) * N, h_b, nullptr, &events[3]);
+    err |= queue->enqueueFillBuffer(d_x, 0, 0, sizeof(Scalar) * N, nullptr, &events[4]);
 
     cl::WaitForEvents(events);
     events.clear();
@@ -504,8 +517,10 @@ void openclSolverBackend<block_size>::copy_system_to_gpu() {
 } // end copy_system_to_gpu()
 
 // don't copy rowpointers and colindices, they stay the same
-template <unsigned int block_size>
-void openclSolverBackend<block_size>::update_system_on_gpu() {
+template<class Scalar, unsigned int block_size>
+void openclSolverBackend<Scalar,block_size>::
+update_system_on_gpu()
+{
     Timer t;
     events.resize(3);
 
@@ -513,16 +528,16 @@ void openclSolverBackend<block_size>::update_system_on_gpu() {
     int sum = 0;
     for (int i = 0; i < Nb; ++i) {
         int size_row = mat->rowPointers[i + 1] - mat->rowPointers[i];
-        memcpy(vals_contiguous.data() + sum, mat->nnzValues + sum, size_row * sizeof(double) * block_size * block_size);
+        memcpy(vals_contiguous.data() + sum, mat->nnzValues + sum, size_row * sizeof(Scalar) * block_size * block_size);
         sum += size_row * block_size * block_size;
     }
-    err = queue->enqueueWriteBuffer(d_Avals, CL_TRUE, 0, sizeof(double) * nnz, vals_contiguous.data(), nullptr, &events[0]);
+    err = queue->enqueueWriteBuffer(d_Avals, CL_TRUE, 0, sizeof(Scalar) * nnz, vals_contiguous.data(), nullptr, &events[0]);
 #else
-    err = queue->enqueueWriteBuffer(d_Avals, CL_TRUE, 0, sizeof(double) * nnz, mat->nnzValues, nullptr, &events[0]);
+    err = queue->enqueueWriteBuffer(d_Avals, CL_TRUE, 0, sizeof(Scalar) * nnz, mat->nnzValues, nullptr, &events[0]);
 #endif
 
-    err |= queue->enqueueWriteBuffer(d_b, CL_TRUE, 0, sizeof(double) * N, h_b, nullptr, &events[1]);
-    err |= queue->enqueueFillBuffer(d_x, 0, 0, sizeof(double) * N, nullptr, &events[2]);
+    err |= queue->enqueueWriteBuffer(d_b, CL_TRUE, 0, sizeof(Scalar) * N, h_b, nullptr, &events[1]);
+    err |= queue->enqueueFillBuffer(d_x, 0, 0, sizeof(Scalar) * N, nullptr, &events[2]);
 
     cl::WaitForEvents(events);
     events.clear();
@@ -538,9 +553,10 @@ void openclSolverBackend<block_size>::update_system_on_gpu() {
     }
 } // end update_system_on_gpu()
 
-
-template <unsigned int block_size>
-bool openclSolverBackend<block_size>::analyze_matrix() {
+template<class Scalar, unsigned int block_size>
+bool openclSolverBackend<Scalar,block_size>::
+analyze_matrix()
+{
     Timer t;
 
     bool success;
@@ -560,9 +576,10 @@ bool openclSolverBackend<block_size>::analyze_matrix() {
     return success;
 } // end analyze_matrix()
 
-
-template <unsigned int block_size>
-void openclSolverBackend<block_size>::update_system(double *vals, double *b) {
+template<class Scalar, unsigned int block_size>
+void openclSolverBackend<Scalar,block_size>::
+update_system(Scalar* vals, Scalar* b)
+{
     Timer t;
 
     mat->nnzValues = vals;
@@ -575,9 +592,10 @@ void openclSolverBackend<block_size>::update_system(double *vals, double *b) {
     }
 } // end update_system()
 
-
-template <unsigned int block_size>
-bool openclSolverBackend<block_size>::create_preconditioner() {
+template<class Scalar, unsigned int block_size>
+bool openclSolverBackend<Scalar,block_size>::
+create_preconditioner()
+{
     Timer t;
 
     bool result;
@@ -594,9 +612,10 @@ bool openclSolverBackend<block_size>::create_preconditioner() {
     return result;
 } // end create_preconditioner()
 
-
-template <unsigned int block_size>
-void openclSolverBackend<block_size>::solve_system(WellContributions &wellContribs, BdaResult &res) {
+template<class Scalar, unsigned int block_size>
+void openclSolverBackend<Scalar,block_size>::
+solve_system(WellContributions<Scalar>& wellContribs, BdaResult& res)
+{
     Timer t;
 
     // actually solve
@@ -621,14 +640,15 @@ void openclSolverBackend<block_size>::solve_system(WellContributions &wellContri
 
 } // end solve_system()
 
-
 // copy result to host memory
 // caller must be sure that x is a valid array
-template <unsigned int block_size>
-void openclSolverBackend<block_size>::get_result(double *x) {
+template<class Scalar, unsigned int block_size>
+void openclSolverBackend<Scalar,block_size>::
+get_result(Scalar* x)
+{
     Timer t;
 
-    queue->enqueueReadBuffer(d_x, CL_TRUE, 0, sizeof(double) * N, x);
+    queue->enqueueReadBuffer(d_x, CL_TRUE, 0, sizeof(Scalar) * N, x);
 
     if (verbosity > 2) {
         std::ostringstream out;
@@ -637,13 +657,13 @@ void openclSolverBackend<block_size>::get_result(double *x) {
     }
 } // end get_result()
 
-
-template <unsigned int block_size>
-SolverStatus openclSolverBackend<block_size>::solve_system(std::shared_ptr<BlockedMatrix> matrix,
-                                                           double *b,
-                                                           std::shared_ptr<BlockedMatrix> jacMatrix,
-                                                           WellContributions& wellContribs,
-                                                           BdaResult &res)
+template<class Scalar, unsigned int block_size>
+SolverStatus openclSolverBackend<Scalar,block_size>::
+solve_system(std::shared_ptr<BlockedMatrix<Scalar>> matrix,
+             Scalar* b,
+             std::shared_ptr<BlockedMatrix<Scalar>> jacMatrix,
+             WellContributions<Scalar>& wellContribs,
+             BdaResult &res)
 {
     if (initialized == false) {
         initialize(matrix, jacMatrix);
@@ -668,21 +688,22 @@ SolverStatus openclSolverBackend<block_size>::solve_system(std::shared_ptr<Block
     return SolverStatus::BDA_SOLVER_SUCCESS;
 }
 
+#define INSTANTIATE_BDA_FUNCTIONS(T,n) \
+    template class openclSolverBackend<T,n>;
 
-#define INSTANTIATE_BDA_FUNCTIONS(n)                                        \
-template openclSolverBackend<n>::openclSolverBackend(                       \
-    int, int, double, unsigned int, unsigned int, bool, std::string); \
-template openclSolverBackend<n>::openclSolverBackend(int, int, double, bool); \
-template void openclSolverBackend<n>::setOpencl(std::shared_ptr<cl::Context>&, std::shared_ptr<cl::CommandQueue>&);
+#define INSTANCE_TYPE(T)           \
+    INSTANTIATE_BDA_FUNCTIONS(T,1) \
+    INSTANTIATE_BDA_FUNCTIONS(T,2) \
+    INSTANTIATE_BDA_FUNCTIONS(T,3) \
+    INSTANTIATE_BDA_FUNCTIONS(T,4) \
+    INSTANTIATE_BDA_FUNCTIONS(T,5) \
+    INSTANTIATE_BDA_FUNCTIONS(T,6)
 
-INSTANTIATE_BDA_FUNCTIONS(1);
-INSTANTIATE_BDA_FUNCTIONS(2);
-INSTANTIATE_BDA_FUNCTIONS(3);
-INSTANTIATE_BDA_FUNCTIONS(4);
-INSTANTIATE_BDA_FUNCTIONS(5);
-INSTANTIATE_BDA_FUNCTIONS(6);
+INSTANCE_TYPE(double)
 
-#undef INSTANTIATE_BDA_FUNCTIONS
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
 } // namespace Accelerator
 } // namespace Opm

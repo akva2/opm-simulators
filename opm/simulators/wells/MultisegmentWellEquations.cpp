@@ -20,9 +20,11 @@
 */
 
 #include <config.h>
+#include <opm/simulators/wells/MultisegmentWellEquations.hpp>
+
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/common/TimingMacros.hpp>
 
-#include <opm/simulators/wells/MultisegmentWellEquations.hpp>
 #include <dune/istl/umfpack.hh>
 
 #include <opm/input/eclipse/Schedule/MSW/WellSegments.hpp>
@@ -167,7 +169,11 @@ void MultisegmentWellEquations<Scalar,numWellEq,numEq>::createSolver()
         return;
     }
 
+    if constexpr (std::is_same_v<Scalar,float>) {
+        OPM_THROW(std::logic_error, "UMFPack cannot be used with floats");
+    } else {
     duneDSolver_ = std::make_shared<Dune::UMFPack<DiagMatWell>>(duneD_, 0);
+    }
 #else
     OPM_THROW(std::runtime_error, "MultisegmentWell support requires UMFPACK. "
               "Reconfigure opm-simulators with SuiteSparse/UMFPACK support and recompile.");
@@ -202,7 +208,7 @@ recoverSolutionWell(const BVector& x, BVectorWell& xw) const
 #if COMPILE_BDA_BRIDGE
 template<class Scalar, int numWellEq, int numEq>
 void MultisegmentWellEquations<Scalar,numWellEq,numEq>::
-extract(WellContributions& wellContribs) const
+extract(WellContributions<Scalar>& wellContribs) const
 {
     unsigned int Mb = duneB_.N();       // number of blockrows in duneB_, duneC_ and duneD_
     unsigned int BnumBlocks = duneB_.nonzeroes();
@@ -210,7 +216,7 @@ extract(WellContributions& wellContribs) const
 
     // duneC
     std::vector<unsigned int> Ccols;
-    std::vector<double> Cvals;
+    std::vector<Scalar> Cvals;
     Ccols.reserve(BnumBlocks);
     Cvals.reserve(BnumBlocks * numEq * numWellEq);
     for (auto rowC = duneC_.begin(); rowC != duneC_.end(); ++rowC) {
@@ -225,6 +231,9 @@ extract(WellContributions& wellContribs) const
     }
 
     // duneD
+    if constexpr (std::is_same_v<Scalar,float>) {
+        OPM_THROW(std::logic_error, "Cannot use UMFPack with floats");
+    } else {
     Dune::UMFPack<DiagMatWell> umfpackMatrix(duneD_, 0);
     double* Dvals = umfpackMatrix.getInternalMatrix().getValues();
     auto* Dcols = umfpackMatrix.getInternalMatrix().getColStart();
@@ -265,6 +274,7 @@ extract(WellContributions& wellContribs) const
                                                  Dcols,
                                                  Drows,
                                                  Cvals);
+    }
 }
 #endif
 

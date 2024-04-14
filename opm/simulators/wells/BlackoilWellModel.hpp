@@ -282,7 +282,7 @@ namespace Opm {
             void apply(const BVector& x, BVector& Ax) const;
 
             // accumulate the contributions of all Wells in the WellContributions object
-            void getWellContributions(WellContributions& x) const;
+            void getWellContributions(WellContributions<Scalar>& x) const;
 
             // apply well model with scaling of alpha
             void applyScaleAdd(const Scalar alpha, const BVector& x, BVector& Ax) const;

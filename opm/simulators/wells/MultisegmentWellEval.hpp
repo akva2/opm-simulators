@@ -36,7 +36,7 @@ namespace Opm {
 
 class ConvergenceReport;
 class Schedule;
-class WellContributions;
+template<class Scalar> class WellContributions;
 class SummaryState;
 
 template<class FluidSystem, class Indices> class WellInterfaceIndices;

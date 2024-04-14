@@ -97,7 +97,7 @@ apply(Vector& rhs,
 {
     bool use_gpu = bridge_->getUseGpu();
     if (use_gpu) {
-        auto wellContribs = WellContributions::create(accelerator_mode_, useWellConn);
+        auto wellContribs = WellContributions<typename Vector::field_type>::create(accelerator_mode_, useWellConn);
         bridge_->initWellContributions(*wellContribs, x.N() * x[0].N());
 
          // the WellContributions can only be applied separately with CUDA, OpenCL or rocsparse, not with amgcl or rocalution
@@ -207,14 +207,14 @@ copyMatToBlockJac(const Matrix& mat, Matrix& blockJac)
     }
 }
 
-template<int Dim>
-using BM = Dune::BCRSMatrix<MatrixBlock<double,Dim,Dim>>;
-template<int Dim>
-using BV = Dune::BlockVector<Dune::FieldVector<double,Dim>>;
+template<class Scalar, int Dim>
+using BM = Dune::BCRSMatrix<MatrixBlock<Scalar,Dim,Dim>>;
+template<class Scalar, int Dim>
+using BV = Dune::BlockVector<Dune::FieldVector<Scalar,Dim>>;
 
 
-#define INSTANCE_GRID(Dim, Grid)                   \
-    template void BdaSolverInfo<BM<Dim>,BV<Dim>>:: \
+#define INSTANCE_GRID(T, Dim, Grid)                   \
+    template void BdaSolverInfo<BM<T,Dim>,BV<T,Dim>>:: \
     prepare(const Grid&, \
             const Dune::CartesianIndexMapper<Grid>&, \
             const std::vector<Well>&, \
@@ -227,23 +227,31 @@ using PolyHedralGrid3D = Dune::PolyhedralGrid<3, 3>;
 #else
     using ALUGrid3CN = Dune::ALUGrid<3, 3, Dune::cube, Dune::nonconforming, Dune::ALUGridNoComm>;
 #endif //HAVE_MPI
-#define INSTANCE(Dim) \
-    template struct BdaSolverInfo<BM<Dim>,BV<Dim>>; \
-    INSTANCE_GRID(Dim,Dune::CpGrid) \
-    INSTANCE_GRID(Dim,ALUGrid3CN) \
-    INSTANCE_GRID(Dim,PolyHedralGrid3D)
+#define INSTANCE(T,Dim) \
+    template struct BdaSolverInfo<BM<T,Dim>,BV<T,Dim>>; \
+    INSTANCE_GRID(T,Dim,Dune::CpGrid) \
+    INSTANCE_GRID(T,Dim,ALUGrid3CN) \
+    INSTANCE_GRID(T,Dim,PolyHedralGrid3D)
 #else
-#define INSTANCE(Dim) \
-    template struct BdaSolverInfo<BM<Dim>,BV<Dim>>; \
-    INSTANCE_GRID(Dim,Dune::CpGrid) \
-    INSTANCE_GRID(Dim,PolyHedralGrid3D)
+#define INSTANCE(T,Dim) \
+    template struct BdaSolverInfo<BM<T,Dim>,BV<T,Dim>>; \
+    INSTANCE_GRID(T,Dim,Dune::CpGrid) \
+    INSTANCE_GRID(T,Dim,PolyHedralGrid3D)
 #endif
-INSTANCE(1)
-INSTANCE(2)
-INSTANCE(3)
-INSTANCE(4)
-INSTANCE(5)
-INSTANCE(6)
+
+#define INSTANCE_TYPE(T) \
+    INSTANCE(T,1)        \
+    INSTANCE(T,2)        \
+    INSTANCE(T,3)        \
+    INSTANCE(T,4)        \
+    INSTANCE(T,5)        \
+    INSTANCE(T,6)
+
+INSTANCE_TYPE(double)
+
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
 } // namespace detail
 } // namespace Opm

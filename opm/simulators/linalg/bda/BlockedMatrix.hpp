@@ -27,17 +27,16 @@ namespace Accelerator
 
 /// This struct resembles a blocked csr matrix, like Dune::BCRSMatrix.
 /// The data is stored in contiguous memory, such that they can be copied to a device in one transfer.
+template<class Scalar>
 class BlockedMatrix
 {
-
 public:
-
     /// Allocate BlockedMatrix and data arrays with given sizes
     /// \param[in] Nb               number of blockrows
     /// \param[in] nnzbs            number of nonzero blocks
     /// \param[in] block_size       the number of rows and columns for each block
     BlockedMatrix(int Nb_, int nnzbs_, unsigned int block_size_)
-    : nnzValues(new double[nnzbs_*block_size_*block_size_]),
+    : nnzValues(new Scalar[nnzbs_*block_size_*block_size_]),
       colIndices(new int[nnzbs_*block_size_*block_size_]),
       rowPointers(new int[Nb_+1]),
       Nb(Nb_),
@@ -50,7 +49,7 @@ public:
     /// Allocate BlockedMatrix, but copy sparsity pattern instead of allocating new memory
     /// \param[in] M              matrix to be copied
     BlockedMatrix(const BlockedMatrix& M)
-    : nnzValues(new double[M.nnzbs*M.block_size*M.block_size]),
+    : nnzValues(new Scalar[M.nnzbs*M.block_size*M.block_size]),
       colIndices(M.colIndices),
       rowPointers(M.rowPointers),
       Nb(M.Nb),
@@ -67,7 +66,7 @@ public:
     /// \param[in] nnzValues      array of nonzero values, contains nnzb*block_size*block_size scalars
     /// \param[in] colIndices     array of column indices, contains nnzb entries
     /// \param[in] rowPointers    array of row pointers, contains Nb+1 entries
-    BlockedMatrix(int Nb_, int nnzbs_, unsigned int block_size_, double *nnzValues_, int *colIndices_, int *rowPointers_)
+    BlockedMatrix(int Nb_, int nnzbs_, unsigned int block_size_, Scalar* nnzValues_, int *colIndices_, int *rowPointers_)
     : nnzValues(nnzValues_),
       colIndices(colIndices_),
       rowPointers(rowPointers_),
@@ -89,7 +88,7 @@ public:
     }
 
 
-    double *nnzValues;
+    Scalar* nnzValues;
     int *colIndices;
     int *rowPointers;
     int Nb;

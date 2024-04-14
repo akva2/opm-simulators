@@ -95,8 +95,12 @@ namespace Accelerator
 using Opm::OpmLog;
 using Dune::Timer;
 
-template <unsigned int block_size>
-rocsparseSolverBackend<block_size>::rocsparseSolverBackend(int verbosity_, int maxit_, double tolerance_, unsigned int platformID_, unsigned int deviceID_) : BdaSolver<block_size>(verbosity_, maxit_, tolerance_, platformID_, deviceID_) {
+template<class Scalar, unsigned int block_size>
+rocsparseSolverBackend<Scalar,block_size>::
+rocsparseSolverBackend(int verbosity_, int maxit_, double tolerance_,
+                       unsigned int platformID_, unsigned int deviceID_)
+    : BdaSolver<Scalar,block_size>(verbosity_, maxit_, tolerance_, platformID_, deviceID_)
+{
     int numDevices = 0;
     HIP_CHECK(hipGetDeviceCount(&numDevices));
     if (static_cast<int>(deviceID) >= numDevices) {
@@ -120,9 +124,9 @@ rocsparseSolverBackend<block_size>::rocsparseSolverBackend(int verbosity_, int m
     ROCBLAS_CHECK(rocblas_set_stream(blas_handle, stream));
 }
 
-
-template <unsigned int block_size>
-rocsparseSolverBackend<block_size>::~rocsparseSolverBackend() {
+template<class Scalar, unsigned int block_size>
+rocsparseSolverBackend<Scalar,block_size>::~rocsparseSolverBackend()
+{
     hipError_t hipstatus = hipStreamSynchronize(stream);
     if(hipstatus != hipSuccess){
         OpmLog::error("Could not synchronize with hipStream");
@@ -141,48 +145,77 @@ rocsparseSolverBackend<block_size>::~rocsparseSolverBackend() {
     }
 }
 
-
-template <unsigned int block_size>
-void rocsparseSolverBackend<block_size>::gpu_pbicgstab([[maybe_unused]] WellContributions& wellContribs,
-                                                       BdaResult& res)
+template<class Scalar, unsigned int block_size>
+void rocsparseSolverBackend<Scalar,block_size>::
+gpu_pbicgstab([[maybe_unused]] WellContributions<Scalar>& wellContribs,
+              BdaResult& res)
 {
     float it = 0.5;
-    double rho, rhop, beta, alpha, nalpha, omega, nomega, tmp1, tmp2;
-    double norm, norm_0;
-    double zero = 0.0;
-    double one  = 1.0;
-    double mone = -1.0;
+    Scalar rho, rhop, beta, alpha, nalpha, omega, nomega, tmp1, tmp2;
+    Scalar norm, norm_0;
+    Scalar zero = 0.0;
+    Scalar one  = 1.0;
+    Scalar mone = -1.0;
 
     Timer t_total, t_prec(false), t_spmv(false), t_well(false), t_rest(false);
 
     // set stream here, the WellContributions object is destroyed every linear solve
     // the number of wells can change every linear solve
-    if(wellContribs.getNumWells() > 0){
-        static_cast<WellContributionsRocsparse&>(wellContribs).setStream(stream);
+    if (wellContribs.getNumWells() > 0) {
+        static_cast<WellContributionsRocsparse<Scalar>&>(wellContribs).setStream(stream);
     }
 
 // HIP_VERSION is defined as (HIP_VERSION_MAJOR * 10000000 + HIP_VERSION_MINOR * 100000 + HIP_VERSION_PATCH)
 #if HIP_VERSION >= 60000000
-    ROCSPARSE_CHECK(rocsparse_dbsrmv(handle, dir, operation,
-                                     Nb, Nb, nnzb, &one, descr_M,
-                                     d_Avals, d_Arows, d_Acols, block_size,
-                                     spmv_info, d_x, &zero, d_r));
+    if constexpr (std::is_same_v<Scalar,float>) {
+        ROCSPARSE_CHECK(rocsparse_sbsrmv(handle, dir, operation,
+                                         Nb, Nb, nnzb, &one, descr_M,
+                                         d_Avals, d_Arows, d_Acols, block_size,
+                                         spmv_info, d_x, &zero, d_r));
+    } else {
+        ROCSPARSE_CHECK(rocsparse_dbsrmv(handle, dir, operation,
+                                         Nb, Nb, nnzb, &one, descr_M,
+                                         d_Avals, d_Arows, d_Acols, block_size,
+                                         spmv_info, d_x, &zero, d_r));
+    }
 #elif HIP_VERSION >= 50400000
-    ROCSPARSE_CHECK(rocsparse_dbsrmv_ex(handle, dir, operation,
-                                        Nb, Nb, nnzb, &one, descr_M,
-                                        d_Avals, d_Arows, d_Acols, block_size,
-                                        spmv_info, d_x, &zero, d_r));
+    if constexpr (std::is_same_v<Scalar,float>) {
+        ROCSPARSE_CHECK(rocsparse_sbsrmv_ex(handle, dir, operation,
+                                            Nb, Nb, nnzb, &one, descr_M,
+                                            d_Avals, d_Arows, d_Acols, block_size,
+                                            spmv_info, d_x, &zero, d_r));
+    } else  {
+        ROCSPARSE_CHECK(rocsparse_dbsrmv_ex(handle, dir, operation,
+                                            Nb, Nb, nnzb, &one, descr_M,
+                                            d_Avals, d_Arows, d_Acols, block_size,
+                                            spmv_info, d_x, &zero, d_r));
+    }
 #else
-    ROCSPARSE_CHECK(rocsparse_dbsrmv(handle, dir, operation,
-                                        Nb, Nb, nnzb, &one, descr_M,
-                                        d_Avals, d_Arows, d_Acols, block_size,
-                                        d_x, &zero, d_r));
+    if constexpr (std::is_same_v<Scalar,float>) {
+        ROCSPARSE_CHECK(rocsparse_sbsrmv(handle, dir, operation,
+                                            Nb, Nb, nnzb, &one, descr_M,
+                                            d_Avals, d_Arows, d_Acols, block_size,
+                                            d_x, &zero, d_r));
+    } else {
+        ROCSPARSE_CHECK(rocsparse_dbsrmv(handle, dir, operation,
+                                            Nb, Nb, nnzb, &one, descr_M,
+                                            d_Avals, d_Arows, d_Acols, block_size,
+                                            d_x, &zero, d_r));
+    }
 #endif
-    ROCBLAS_CHECK(rocblas_dscal(blas_handle, N, &mone, d_r, 1));
-    ROCBLAS_CHECK(rocblas_daxpy(blas_handle, N, &one, d_b, 1, d_r, 1));
-    ROCBLAS_CHECK(rocblas_dcopy(blas_handle, N, d_r, 1, d_rw, 1));
-    ROCBLAS_CHECK(rocblas_dcopy(blas_handle, N, d_r, 1, d_p, 1));
-    ROCBLAS_CHECK(rocblas_dnrm2(blas_handle, N, d_r, 1, &norm_0));
+    if constexpr (std::is_same_v<Scalar,float>) {
+        ROCBLAS_CHECK(rocblas_sscal(blas_handle, N, &mone, d_r, 1));
+        ROCBLAS_CHECK(rocblas_saxpy(blas_handle, N, &one, d_b, 1, d_r, 1));
+        ROCBLAS_CHECK(rocblas_scopy(blas_handle, N, d_r, 1, d_rw, 1));
+        ROCBLAS_CHECK(rocblas_scopy(blas_handle, N, d_r, 1, d_p, 1));
+        ROCBLAS_CHECK(rocblas_snrm2(blas_handle, N, d_r, 1, &norm_0));
+    } else {
+        ROCBLAS_CHECK(rocblas_dscal(blas_handle, N, &mone, d_r, 1));
+        ROCBLAS_CHECK(rocblas_daxpy(blas_handle, N, &one, d_b, 1, d_r, 1));
+        ROCBLAS_CHECK(rocblas_dcopy(blas_handle, N, d_r, 1, d_rw, 1));
+        ROCBLAS_CHECK(rocblas_dcopy(blas_handle, N, d_r, 1, d_p, 1));
+        ROCBLAS_CHECK(rocblas_dnrm2(blas_handle, N, d_r, 1, &norm_0));
+    }
 
     if (verbosity >= 2) {
         std::ostringstream out;
@@ -195,14 +228,24 @@ void rocsparseSolverBackend<block_size>::gpu_pbicgstab([[maybe_unused]] WellCont
     }
     for (it = 0.5; it < maxit; it += 0.5) {
         rhop = rho;
-        ROCBLAS_CHECK(rocblas_ddot(blas_handle, N, d_rw, 1, d_r, 1, &rho));
+        if constexpr (std::is_same_v<Scalar,float>) {
+            ROCBLAS_CHECK(rocblas_sdot(blas_handle, N, d_rw, 1, d_r, 1, &rho));
+        } else {
+            ROCBLAS_CHECK(rocblas_ddot(blas_handle, N, d_rw, 1, d_r, 1, &rho));
+        }
 
         if (it > 1) {
             beta = (rho / rhop) * (alpha / omega);
             nomega = -omega;
-            ROCBLAS_CHECK(rocblas_daxpy(blas_handle, N, &nomega, d_v, 1, d_p, 1));
-            ROCBLAS_CHECK(rocblas_dscal(blas_handle, N, &beta, d_p, 1));
-            ROCBLAS_CHECK(rocblas_daxpy(blas_handle, N, &one, d_r, 1, d_p, 1));
+            if constexpr (std::is_same_v<Scalar,float>) {
+                ROCBLAS_CHECK(rocblas_saxpy(blas_handle, N, &nomega, d_v, 1, d_p, 1));
+                ROCBLAS_CHECK(rocblas_sscal(blas_handle, N, &beta, d_p, 1));
+                ROCBLAS_CHECK(rocblas_saxpy(blas_handle, N, &one, d_r, 1, d_p, 1));
+            } else {
+                ROCBLAS_CHECK(rocblas_daxpy(blas_handle, N, &nomega, d_v, 1, d_p, 1));
+                ROCBLAS_CHECK(rocblas_dscal(blas_handle, N, &beta, d_p, 1));
+                ROCBLAS_CHECK(rocblas_daxpy(blas_handle, N, &one, d_r, 1, d_p, 1));
+            }
         }
         if (verbosity >= 3) {
             HIP_CHECK(hipStreamSynchronize(stream));
@@ -211,12 +254,21 @@ void rocsparseSolverBackend<block_size>::gpu_pbicgstab([[maybe_unused]] WellCont
         }
 
         // apply ilu0
-        ROCSPARSE_CHECK(rocsparse_dbsrsv_solve(handle, dir, \
-                              operation, Nb, nnzbs_prec, &one, \
-                              descr_L, d_Mvals, d_Mrows, d_Mcols, block_size, ilu_info, d_p, d_t, rocsparse_solve_policy_auto, d_buffer));
-        ROCSPARSE_CHECK(rocsparse_dbsrsv_solve(handle, dir, \
-                              operation, Nb, nnzbs_prec, &one, \
-                              descr_U, d_Mvals, d_Mrows, d_Mcols, block_size, ilu_info, d_t, d_pw, rocsparse_solve_policy_auto, d_buffer));
+        if constexpr (std::is_same_v<Scalar,float>) {
+            ROCSPARSE_CHECK(rocsparse_sbsrsv_solve(handle, dir, \
+                                  operation, Nb, nnzbs_prec, &one, \
+                                  descr_L, d_Mvals, d_Mrows, d_Mcols, block_size, ilu_info, d_p, d_t, rocsparse_solve_policy_auto, d_buffer));
+            ROCSPARSE_CHECK(rocsparse_sbsrsv_solve(handle, dir, \
+                                  operation, Nb, nnzbs_prec, &one, \
+                                  descr_U, d_Mvals, d_Mrows, d_Mcols, block_size, ilu_info, d_t, d_pw, rocsparse_solve_policy_auto, d_buffer));
+        } else {
+            ROCSPARSE_CHECK(rocsparse_dbsrsv_solve(handle, dir, \
+                                  operation, Nb, nnzbs_prec, &one, \
+                                  descr_L, d_Mvals, d_Mrows, d_Mcols, block_size, ilu_info, d_p, d_t, rocsparse_solve_policy_auto, d_buffer));
+            ROCSPARSE_CHECK(rocsparse_dbsrsv_solve(handle, dir, \
+                                  operation, Nb, nnzbs_prec, &one, \
+                                  descr_U, d_Mvals, d_Mrows, d_Mcols, block_size, ilu_info, d_t, d_pw, rocsparse_solve_policy_auto, d_buffer));
+        }
         if (verbosity >= 3) {
             HIP_CHECK(hipStreamSynchronize(stream));
             t_prec.stop();
@@ -225,20 +277,42 @@ void rocsparseSolverBackend<block_size>::gpu_pbicgstab([[maybe_unused]] WellCont
 
         // spmv
 #if HIP_VERSION >= 60000000
-        ROCSPARSE_CHECK(rocsparse_dbsrmv(handle, dir, operation,
-                                          Nb, Nb, nnzb, &one, descr_M,
-                                          d_Avals, d_Arows, d_Acols, block_size,
-                                          spmv_info, d_pw, &zero, d_v));
+        if constexpr (std::is_same_v<Scalar,float>) {
+            ROCSPARSE_CHECK(rocsparse_sbsrmv(handle, dir, operation,
+                                              Nb, Nb, nnzb, &one, descr_M,
+                                              d_Avals, d_Arows, d_Acols, block_size,
+                                              spmv_info, d_pw, &zero, d_v));
+        } else {
+            ROCSPARSE_CHECK(rocsparse_dbsrmv(handle, dir, operation,
+                                              Nb, Nb, nnzb, &one, descr_M,
+                                              d_Avals, d_Arows, d_Acols, block_size,
+                                              spmv_info, d_pw, &zero, d_v));
+
+        }
 #elif HIP_VERSION >= 50400000
-        ROCSPARSE_CHECK(rocsparse_dbsrmv_ex(handle, dir, operation,
-                                            Nb, Nb, nnzb, &one, descr_M,
-                                            d_Avals, d_Arows, d_Acols, block_size,
-                                            spmv_info, d_pw, &zero, d_v));
+        if constexpr (std::is_same_v<Scalar,float>) {
+            ROCSPARSE_CHECK(rocsparse_sbsrmv_ex(handle, dir, operation,
+                                                Nb, Nb, nnzb, &one, descr_M,
+                                                d_Avals, d_Arows, d_Acols, block_size,
+                                                spmv_info, d_pw, &zero, d_v));
+        } else {
+            ROCSPARSE_CHECK(rocsparse_dbsrmv_ex(handle, dir, operation,
+                                                Nb, Nb, nnzb, &one, descr_M,
+                                                d_Avals, d_Arows, d_Acols, block_size,
+                                                spmv_info, d_pw, &zero, d_v));
+        }
 #else
-        ROCSPARSE_CHECK(rocsparse_dbsrmv(handle, dir, operation,
-                                            Nb, Nb, nnzb, &one, descr_M,
-                                            d_Avals, d_Arows, d_Acols, block_size,
-                                            d_pw, &zero, d_v));
+        if constexpr (std::is_same_v<Scalar,float>) {
+            ROCSPARSE_CHECK(rocsparse_sbsrmv(handle, dir, operation,
+                                                Nb, Nb, nnzb, &one, descr_M,
+                                                d_Avals, d_Arows, d_Acols, block_size,
+                                                d_pw, &zero, d_v));
+        } else {
+            ROCSPARSE_CHECK(rocsparse_dbsrmv(handle, dir, operation,
+                                                Nb, Nb, nnzb, &one, descr_M,
+                                                d_Avals, d_Arows, d_Acols, block_size,
+                                                d_pw, &zero, d_v));
+        }
 #endif
         if (verbosity >= 3) {
             HIP_CHECK(hipStreamSynchronize(stream));
@@ -247,8 +321,8 @@ void rocsparseSolverBackend<block_size>::gpu_pbicgstab([[maybe_unused]] WellCont
         }
 
         // apply wellContributions
-        if(wellContribs.getNumWells() > 0){
-            static_cast<WellContributionsRocsparse&>(wellContribs).apply(d_pw, d_v);
+        if (wellContribs.getNumWells() > 0) {
+            static_cast<WellContributionsRocsparse<Scalar>&>(wellContribs).apply(d_pw, d_v);
         }
         if (verbosity >= 3) {
             HIP_CHECK(hipStreamSynchronize(stream));
@@ -256,12 +330,22 @@ void rocsparseSolverBackend<block_size>::gpu_pbicgstab([[maybe_unused]] WellCont
             t_rest.start();
         }
 
-        ROCBLAS_CHECK(rocblas_ddot(blas_handle, N, d_rw, 1, d_v, 1, &tmp1));
+        if constexpr (std::is_same_v<Scalar,float>) {
+            ROCBLAS_CHECK(rocblas_sdot(blas_handle, N, d_rw, 1, d_v, 1, &tmp1));
+        } else {
+            ROCBLAS_CHECK(rocblas_ddot(blas_handle, N, d_rw, 1, d_v, 1, &tmp1));
+        }
         alpha = rho / tmp1;
         nalpha = -alpha;
-        ROCBLAS_CHECK(rocblas_daxpy(blas_handle, N, &nalpha, d_v, 1, d_r, 1));
-        ROCBLAS_CHECK(rocblas_daxpy(blas_handle, N, &alpha, d_pw, 1, d_x, 1));
-        ROCBLAS_CHECK(rocblas_dnrm2(blas_handle, N, d_r, 1, &norm));
+        if constexpr (std::is_same_v<Scalar,float>) {
+            ROCBLAS_CHECK(rocblas_saxpy(blas_handle, N, &nalpha, d_v, 1, d_r, 1));
+            ROCBLAS_CHECK(rocblas_saxpy(blas_handle, N, &alpha, d_pw, 1, d_x, 1));
+            ROCBLAS_CHECK(rocblas_snrm2(blas_handle, N, d_r, 1, &norm));
+        } else {
+            ROCBLAS_CHECK(rocblas_daxpy(blas_handle, N, &nalpha, d_v, 1, d_r, 1));
+            ROCBLAS_CHECK(rocblas_daxpy(blas_handle, N, &alpha, d_pw, 1, d_x, 1));
+            ROCBLAS_CHECK(rocblas_dnrm2(blas_handle, N, d_r, 1, &norm));
+        }
         if (verbosity >= 3) {
             HIP_CHECK(hipStreamSynchronize(stream));
             t_rest.stop();
@@ -277,12 +361,23 @@ void rocsparseSolverBackend<block_size>::gpu_pbicgstab([[maybe_unused]] WellCont
         if (verbosity >= 3) {
             t_prec.start();
         }
-        ROCSPARSE_CHECK(rocsparse_dbsrsv_solve(handle, dir, \
-                              operation, Nb, nnzbs_prec, &one, \
-                              descr_L, d_Mvals, d_Mrows, d_Mcols, block_size, ilu_info, d_r, d_t, rocsparse_solve_policy_auto, d_buffer));
-        ROCSPARSE_CHECK(rocsparse_dbsrsv_solve(handle, dir, \
-                              operation, Nb, nnzbs_prec, &one, \
-                              descr_U, d_Mvals, d_Mrows, d_Mcols, block_size, ilu_info, d_t, d_s, rocsparse_solve_policy_auto, d_buffer));
+
+        if constexpr (std::is_same_v<Scalar,float>) {
+            ROCSPARSE_CHECK(rocsparse_sbsrsv_solve(handle, dir, \
+                                  operation, Nb, nnzbs_prec, &one, \
+                                  descr_L, d_Mvals, d_Mrows, d_Mcols, block_size, ilu_info, d_r, d_t, rocsparse_solve_policy_auto, d_buffer));
+            ROCSPARSE_CHECK(rocsparse_sbsrsv_solve(handle, dir, \
+                                  operation, Nb, nnzbs_prec, &one, \
+                                  descr_U, d_Mvals, d_Mrows, d_Mcols, block_size, ilu_info, d_t, d_s, rocsparse_solve_policy_auto, d_buffer));
+        } else {
+            ROCSPARSE_CHECK(rocsparse_dbsrsv_solve(handle, dir, \
+                                  operation, Nb, nnzbs_prec, &one, \
+                                  descr_L, d_Mvals, d_Mrows, d_Mcols, block_size, ilu_info, d_r, d_t, rocsparse_solve_policy_auto, d_buffer));
+            ROCSPARSE_CHECK(rocsparse_dbsrsv_solve(handle, dir, \
+                                  operation, Nb, nnzbs_prec, &one, \
+                                  descr_U, d_Mvals, d_Mrows, d_Mcols, block_size, ilu_info, d_t, d_s, rocsparse_solve_policy_auto, d_buffer));
+        }
+
         if (verbosity >= 3) {
             HIP_CHECK(hipStreamSynchronize(stream));
             t_prec.stop();
@@ -291,20 +386,41 @@ void rocsparseSolverBackend<block_size>::gpu_pbicgstab([[maybe_unused]] WellCont
 
         // spmv
 #if HIP_VERSION >= 60000000
-        ROCSPARSE_CHECK(rocsparse_dbsrmv(handle, dir, operation,
-                                         Nb, Nb, nnzb, &one, descr_M,
-                                         d_Avals, d_Arows, d_Acols, block_size,
-                                         spmv_info, d_s, &zero, d_t));
+        if constexpr (std::is_same_v<Scalar,float>) {
+            ROCSPARSE_CHECK(rocsparse_sbsrmv(handle, dir, operation,
+                                             Nb, Nb, nnzb, &one, descr_M,
+                                             d_Avals, d_Arows, d_Acols, block_size,
+                                             spmv_info, d_s, &zero, d_t));
+        } else {
+            ROCSPARSE_CHECK(rocsparse_dbsrmv(handle, dir, operation,
+                                             Nb, Nb, nnzb, &one, descr_M,
+                                             d_Avals, d_Arows, d_Acols, block_size,
+                                             spmv_info, d_s, &zero, d_t));
+        }
 #elif HIP_VERSION >= 50400000
-        ROCSPARSE_CHECK(rocsparse_dbsrmv_ex(handle, dir, operation,
-                                            Nb, Nb, nnzb, &one, descr_M,
-                                            d_Avals, d_Arows, d_Acols, block_size,
-                                            spmv_info, d_s, &zero, d_t));
+        if constexpr (std::is_same_v<Scalar,float>) {
+            ROCSPARSE_CHECK(rocsparse_sbsrmv_ex(handle, dir, operation,
+                                                Nb, Nb, nnzb, &one, descr_M,
+                                                d_Avals, d_Arows, d_Acols, block_size,
+                                                spmv_info, d_s, &zero, d_t));
+        } else {
+            ROCSPARSE_CHECK(rocsparse_dbsrmv_ex(handle, dir, operation,
+                                                Nb, Nb, nnzb, &one, descr_M,
+                                                d_Avals, d_Arows, d_Acols, block_size,
+                                                spmv_info, d_s, &zero, d_t));
+        }
 #else
-        ROCSPARSE_CHECK(rocsparse_dbsrmv(handle, dir, operation,
-                                            Nb, Nb, nnzb, &one, descr_M,
-                                            d_Avals, d_Arows, d_Acols, block_size,
-                                            d_s, &zero, d_t));
+        if constexpr (std::is_same_v<Scalar,float>) {
+            ROCSPARSE_CHECK(rocsparse_sbsrmv(handle, dir, operation,
+                                                Nb, Nb, nnzb, &one, descr_M,
+                                                d_Avals, d_Arows, d_Acols, block_size,
+                                                d_s, &zero, d_t));
+        } else {
+            ROCSPARSE_CHECK(rocsparse_dbsrmv(handle, dir, operation,
+                                                Nb, Nb, nnzb, &one, descr_M,
+                                                d_Avals, d_Arows, d_Acols, block_size,
+                                                d_s, &zero, d_t));
+        }
 #endif
         if(verbosity >= 3){
             HIP_CHECK(hipStreamSynchronize(stream));
@@ -313,8 +429,8 @@ void rocsparseSolverBackend<block_size>::gpu_pbicgstab([[maybe_unused]] WellCont
         }
 
         // apply wellContributions
-        if(wellContribs.getNumWells() > 0){
-            static_cast<WellContributionsRocsparse&>(wellContribs).apply(d_s, d_t);
+        if (wellContribs.getNumWells() > 0){
+            static_cast<WellContributionsRocsparse<Scalar>&>(wellContribs).apply(d_s, d_t);
         }
         if (verbosity >= 3) {
             HIP_CHECK(hipStreamSynchronize(stream));
@@ -322,14 +438,25 @@ void rocsparseSolverBackend<block_size>::gpu_pbicgstab([[maybe_unused]] WellCont
             t_rest.start();
         }
 
-        ROCBLAS_CHECK(rocblas_ddot(blas_handle, N, d_t, 1, d_r, 1, &tmp1));
-        ROCBLAS_CHECK(rocblas_ddot(blas_handle, N, d_t, 1, d_t, 1, &tmp2));
+        if constexpr (std::is_same_v<Scalar,float>) {
+            ROCBLAS_CHECK(rocblas_sdot(blas_handle, N, d_t, 1, d_r, 1, &tmp1));
+            ROCBLAS_CHECK(rocblas_sdot(blas_handle, N, d_t, 1, d_t, 1, &tmp2));
+        }  else {
+            ROCBLAS_CHECK(rocblas_ddot(blas_handle, N, d_t, 1, d_r, 1, &tmp1));
+            ROCBLAS_CHECK(rocblas_ddot(blas_handle, N, d_t, 1, d_t, 1, &tmp2));
+
+        }
         omega = tmp1 / tmp2;
         nomega = -omega;
-        ROCBLAS_CHECK(rocblas_daxpy(blas_handle, N, &omega, d_s, 1, d_x, 1));
-        ROCBLAS_CHECK(rocblas_daxpy(blas_handle, N, &nomega, d_t, 1, d_r, 1));
-
-        ROCBLAS_CHECK(rocblas_dnrm2(blas_handle, N, d_r, 1, &norm));
+        if constexpr (std::is_same_v<Scalar,float>) {
+            ROCBLAS_CHECK(rocblas_saxpy(blas_handle, N, &omega, d_s, 1, d_x, 1));
+            ROCBLAS_CHECK(rocblas_saxpy(blas_handle, N, &nomega, d_t, 1, d_r, 1));
+            ROCBLAS_CHECK(rocblas_snrm2(blas_handle, N, d_r, 1, &norm));
+        } else {
+            ROCBLAS_CHECK(rocblas_daxpy(blas_handle, N, &omega, d_s, 1, d_x, 1));
+            ROCBLAS_CHECK(rocblas_daxpy(blas_handle, N, &nomega, d_t, 1, d_r, 1));
+            ROCBLAS_CHECK(rocblas_dnrm2(blas_handle, N, d_r, 1, &norm));
+        }
         if (verbosity >= 3) {
             HIP_CHECK(hipStreamSynchronize(stream));
             t_rest.stop();
@@ -369,9 +496,11 @@ void rocsparseSolverBackend<block_size>::gpu_pbicgstab([[maybe_unused]] WellCont
     }
 }
 
-
-template <unsigned int block_size>
-void rocsparseSolverBackend<block_size>::initialize(std::shared_ptr<BlockedMatrix> matrix, std::shared_ptr<BlockedMatrix> jacMatrix) {
+template<class Scalar, unsigned int block_size>
+void rocsparseSolverBackend<Scalar,block_size>::
+initialize(std::shared_ptr<BlockedMatrix<Scalar>> matrix,
+           std::shared_ptr<BlockedMatrix<Scalar>> jacMatrix)
+{
     this->Nb = matrix->Nb;
     this->N = Nb * block_size;
     this->nnzb = matrix->nnzbs;
@@ -397,26 +526,26 @@ void rocsparseSolverBackend<block_size>::initialize(std::shared_ptr<BlockedMatri
     mat = matrix;
     jacMat = jacMatrix;
 
-    HIP_CHECK(hipMalloc((void**)&d_r, sizeof(double) * N));
-    HIP_CHECK(hipMalloc((void**)&d_rw, sizeof(double) * N));
-    HIP_CHECK(hipMalloc((void**)&d_p, sizeof(double) * N));
-    HIP_CHECK(hipMalloc((void**)&d_pw, sizeof(double) * N));
-    HIP_CHECK(hipMalloc((void**)&d_s, sizeof(double) * N));
-    HIP_CHECK(hipMalloc((void**)&d_t, sizeof(double) * N));
-    HIP_CHECK(hipMalloc((void**)&d_v, sizeof(double) * N));
+    HIP_CHECK(hipMalloc((void**)&d_r, sizeof(Scalar) * N));
+    HIP_CHECK(hipMalloc((void**)&d_rw, sizeof(Scalar) * N));
+    HIP_CHECK(hipMalloc((void**)&d_p, sizeof(Scalar) * N));
+    HIP_CHECK(hipMalloc((void**)&d_pw, sizeof(Scalar) * N));
+    HIP_CHECK(hipMalloc((void**)&d_s, sizeof(Scalar) * N));
+    HIP_CHECK(hipMalloc((void**)&d_t, sizeof(Scalar) * N));
+    HIP_CHECK(hipMalloc((void**)&d_v, sizeof(Scalar) * N));
 
     HIP_CHECK(hipMalloc((void**)&d_Arows, sizeof(rocsparse_int) * (Nb + 1)));
     HIP_CHECK(hipMalloc((void**)&d_Acols, sizeof(rocsparse_int) * nnzb));
-    HIP_CHECK(hipMalloc((void**)&d_Avals, sizeof(double) * nnz));
-    HIP_CHECK(hipMalloc((void**)&d_x, sizeof(double) * N));
-    HIP_CHECK(hipMalloc((void**)&d_b, sizeof(double) * N));
+    HIP_CHECK(hipMalloc((void**)&d_Avals, sizeof(Scalar) * nnz));
+    HIP_CHECK(hipMalloc((void**)&d_x, sizeof(Scalar) * N));
+    HIP_CHECK(hipMalloc((void**)&d_b, sizeof(Scalar) * N));
 
     if (useJacMatrix) {
         HIP_CHECK(hipMalloc((void**)&d_Mrows, sizeof(rocsparse_int) * (Nb + 1)));
         HIP_CHECK(hipMalloc((void**)&d_Mcols, sizeof(rocsparse_int) * nnzbs_prec));
-        HIP_CHECK(hipMalloc((void**)&d_Mvals, sizeof(double) * nnzbs_prec * block_size * block_size));
+        HIP_CHECK(hipMalloc((void**)&d_Mvals, sizeof(Scalar) * nnzbs_prec * block_size * block_size));
     } else { // preconditioner matrix is same
-        HIP_CHECK(hipMalloc((void**)&d_Mvals, sizeof(double) * nnzbs_prec * block_size * block_size));
+        HIP_CHECK(hipMalloc((void**)&d_Mvals, sizeof(Scalar) * nnzbs_prec * block_size * block_size));
         d_Mcols = d_Acols;
         d_Mrows = d_Arows;
     }
@@ -424,22 +553,24 @@ void rocsparseSolverBackend<block_size>::initialize(std::shared_ptr<BlockedMatri
     initialized = true;
 } // end initialize()
 
-template <unsigned int block_size>
-void rocsparseSolverBackend<block_size>::copy_system_to_gpu(double *b) {
+template<class Scalar, unsigned int block_size>
+void rocsparseSolverBackend<Scalar,block_size>::
+copy_system_to_gpu(Scalar *b)
+{
     Timer t;
 
     HIP_CHECK(hipMemcpyAsync(d_Arows, mat->rowPointers, sizeof(rocsparse_int) * (Nb + 1), hipMemcpyHostToDevice, stream));
     HIP_CHECK(hipMemcpyAsync(d_Acols, mat->colIndices, sizeof(rocsparse_int) * nnzb, hipMemcpyHostToDevice, stream));
-    HIP_CHECK(hipMemcpyAsync(d_Avals, mat->nnzValues, sizeof(double) * nnz, hipMemcpyHostToDevice, stream));
+    HIP_CHECK(hipMemcpyAsync(d_Avals, mat->nnzValues, sizeof(Scalar) * nnz, hipMemcpyHostToDevice, stream));
     if (useJacMatrix) {
         HIP_CHECK(hipMemcpyAsync(d_Mrows, jacMat->rowPointers, sizeof(rocsparse_int) * (Nb + 1), hipMemcpyHostToDevice, stream));
         HIP_CHECK(hipMemcpyAsync(d_Mcols, jacMat->colIndices, sizeof(rocsparse_int) * nnzbs_prec, hipMemcpyHostToDevice, stream));
-        HIP_CHECK(hipMemcpyAsync(d_Mvals, jacMat->nnzValues, sizeof(double) * nnzbs_prec * block_size * block_size, hipMemcpyHostToDevice, stream));
+        HIP_CHECK(hipMemcpyAsync(d_Mvals, jacMat->nnzValues, sizeof(Scalar) * nnzbs_prec * block_size * block_size, hipMemcpyHostToDevice, stream));
     } else {
-        HIP_CHECK(hipMemcpyAsync(d_Mvals, d_Avals, sizeof(double) * nnz, hipMemcpyDeviceToDevice, stream));
+        HIP_CHECK(hipMemcpyAsync(d_Mvals, d_Avals, sizeof(Scalar) * nnz, hipMemcpyDeviceToDevice, stream));
     }
-    HIP_CHECK(hipMemsetAsync(d_x, 0, sizeof(double) * N, stream));
-    HIP_CHECK(hipMemcpyAsync(d_b, b, sizeof(double) * N, hipMemcpyHostToDevice, stream));
+    HIP_CHECK(hipMemsetAsync(d_x, 0, sizeof(Scalar) * N, stream));
+    HIP_CHECK(hipMemcpyAsync(d_b, b, sizeof(Scalar) * N, hipMemcpyHostToDevice, stream));
 
     if (verbosity >= 3) {
         HIP_CHECK(hipStreamSynchronize(stream));
@@ -450,18 +581,20 @@ void rocsparseSolverBackend<block_size>::copy_system_to_gpu(double *b) {
 } // end copy_system_to_gpu()
 
 // don't copy rowpointers and colindices, they stay the same
-template <unsigned int block_size>
-void rocsparseSolverBackend<block_size>::update_system_on_gpu(double *b) {
+template<class Scalar, unsigned int block_size>
+void rocsparseSolverBackend<Scalar,block_size>::
+update_system_on_gpu(Scalar* b)
+{
     Timer t;
 
-    HIP_CHECK(hipMemcpyAsync(d_Avals, mat->nnzValues, sizeof(double) * nnz, hipMemcpyHostToDevice, stream));
+    HIP_CHECK(hipMemcpyAsync(d_Avals, mat->nnzValues, sizeof(Scalar) * nnz, hipMemcpyHostToDevice, stream));
     if (useJacMatrix) {
-        HIP_CHECK(hipMemcpyAsync(d_Mvals, jacMat->nnzValues, sizeof(double) * nnzbs_prec * block_size * block_size, hipMemcpyHostToDevice, stream));
+        HIP_CHECK(hipMemcpyAsync(d_Mvals, jacMat->nnzValues, sizeof(Scalar) * nnzbs_prec * block_size * block_size, hipMemcpyHostToDevice, stream));
     } else {
-        HIP_CHECK(hipMemcpyAsync(d_Mvals, d_Avals, sizeof(double) * nnz, hipMemcpyDeviceToDevice, stream));
+        HIP_CHECK(hipMemcpyAsync(d_Mvals, d_Avals, sizeof(Scalar) * nnz, hipMemcpyDeviceToDevice, stream));
     }
-    HIP_CHECK(hipMemsetAsync(d_x, 0, sizeof(double) * N, stream));
-    HIP_CHECK(hipMemcpyAsync(d_b, b, sizeof(double) * N, hipMemcpyHostToDevice, stream));
+    HIP_CHECK(hipMemsetAsync(d_x, 0, sizeof(Scalar) * N, stream));
+    HIP_CHECK(hipMemcpyAsync(d_b, b, sizeof(Scalar) * N, hipMemcpyHostToDevice, stream));
 
     if (verbosity >= 3) {
         HIP_CHECK(hipStreamSynchronize(stream));
@@ -471,8 +604,10 @@ void rocsparseSolverBackend<block_size>::update_system_on_gpu(double *b) {
     }
 } // end update_system_on_gpu()
 
-template <unsigned int block_size>
-bool rocsparseSolverBackend<block_size>::analyze_matrix() {
+template<class Scalar, unsigned int block_size>
+bool rocsparseSolverBackend<Scalar,block_size>::
+analyze_matrix()
+{
     std::size_t d_bufferSize_M, d_bufferSize_L, d_bufferSize_U, d_bufferSize;
     Timer t;
 
@@ -494,21 +629,36 @@ bool rocsparseSolverBackend<block_size>::analyze_matrix() {
     ROCSPARSE_CHECK(rocsparse_set_mat_fill_mode(descr_U, rocsparse_fill_mode_upper));
     ROCSPARSE_CHECK(rocsparse_set_mat_diag_type(descr_U, rocsparse_diag_type_non_unit));
 
-    ROCSPARSE_CHECK(rocsparse_dbsrilu0_buffer_size(handle, dir, Nb, nnzbs_prec,
-                                 descr_M, d_Mvals, d_Mrows, d_Mcols, block_size, ilu_info, &d_bufferSize_M));
-    ROCSPARSE_CHECK(rocsparse_dbsrsv_buffer_size(handle, dir, operation, Nb, nnzbs_prec,
-                               descr_L, d_Mvals, d_Mrows, d_Mcols, block_size, ilu_info, &d_bufferSize_L));
-    ROCSPARSE_CHECK(rocsparse_dbsrsv_buffer_size(handle, dir, operation, Nb, nnzbs_prec,
-                               descr_U, d_Mvals, d_Mrows, d_Mcols, block_size, ilu_info, &d_bufferSize_U));
+    if constexpr (std::is_same_v<Scalar,float>) {
+        ROCSPARSE_CHECK(rocsparse_sbsrilu0_buffer_size(handle, dir, Nb, nnzbs_prec,
+                                     descr_M, d_Mvals, d_Mrows, d_Mcols, block_size, ilu_info, &d_bufferSize_M));
+        ROCSPARSE_CHECK(rocsparse_sbsrsv_buffer_size(handle, dir, operation, Nb, nnzbs_prec,
+                                   descr_L, d_Mvals, d_Mrows, d_Mcols, block_size, ilu_info, &d_bufferSize_L));
+        ROCSPARSE_CHECK(rocsparse_sbsrsv_buffer_size(handle, dir, operation, Nb, nnzbs_prec,
+                                   descr_U, d_Mvals, d_Mrows, d_Mcols, block_size, ilu_info, &d_bufferSize_U));
+    } else {
+        ROCSPARSE_CHECK(rocsparse_dbsrilu0_buffer_size(handle, dir, Nb, nnzbs_prec,
+                                     descr_M, d_Mvals, d_Mrows, d_Mcols, block_size, ilu_info, &d_bufferSize_M));
+        ROCSPARSE_CHECK(rocsparse_dbsrsv_buffer_size(handle, dir, operation, Nb, nnzbs_prec,
+                                   descr_L, d_Mvals, d_Mrows, d_Mcols, block_size, ilu_info, &d_bufferSize_L));
+        ROCSPARSE_CHECK(rocsparse_dbsrsv_buffer_size(handle, dir, operation, Nb, nnzbs_prec,
+                                   descr_U, d_Mvals, d_Mrows, d_Mcols, block_size, ilu_info, &d_bufferSize_U));
+    }
 
     d_bufferSize = std::max(d_bufferSize_M, std::max(d_bufferSize_L, d_bufferSize_U));
 
     HIP_CHECK(hipMalloc((void**)&d_buffer, d_bufferSize));
 
     // analysis of ilu LU decomposition
-    ROCSPARSE_CHECK(rocsparse_dbsrilu0_analysis(handle, dir, \
-                               Nb, nnzbs_prec, descr_M, d_Mvals, d_Mrows, d_Mcols, \
-                               block_size, ilu_info, rocsparse_analysis_policy_reuse, rocsparse_solve_policy_auto, d_buffer));
+    if constexpr (std::is_same_v<Scalar,float>) {
+        ROCSPARSE_CHECK(rocsparse_sbsrilu0_analysis(handle, dir, \
+                                   Nb, nnzbs_prec, descr_M, d_Mvals, d_Mrows, d_Mcols, \
+                                   block_size, ilu_info, rocsparse_analysis_policy_reuse, rocsparse_solve_policy_auto, d_buffer));
+    } else {
+        ROCSPARSE_CHECK(rocsparse_dbsrilu0_analysis(handle, dir, \
+                                   Nb, nnzbs_prec, descr_M, d_Mvals, d_Mrows, d_Mcols, \
+                                   block_size, ilu_info, rocsparse_analysis_policy_reuse, rocsparse_solve_policy_auto, d_buffer));
+    }
 
     int zero_position = 0;
     rocsparse_status status = rocsparse_bsrilu0_zero_pivot(handle, ilu_info, &zero_position);
@@ -518,23 +668,46 @@ bool rocsparseSolverBackend<block_size>::analyze_matrix() {
     }
 
     // analysis of ilu apply
-    ROCSPARSE_CHECK(rocsparse_dbsrsv_analysis(handle, dir, operation, \
-                             Nb, nnzbs_prec, descr_L, d_Mvals, d_Mrows, d_Mcols, \
-                             block_size, ilu_info, rocsparse_analysis_policy_reuse, rocsparse_solve_policy_auto, d_buffer));
-    ROCSPARSE_CHECK(rocsparse_dbsrsv_analysis(handle, dir, operation, \
-                             Nb, nnzbs_prec, descr_U, d_Mvals, d_Mrows, d_Mcols, \
-                             block_size, ilu_info, rocsparse_analysis_policy_reuse, rocsparse_solve_policy_auto, d_buffer));
+    if constexpr (std::is_same_v<Scalar,float>) {
+        ROCSPARSE_CHECK(rocsparse_sbsrsv_analysis(handle, dir, operation, \
+                                 Nb, nnzbs_prec, descr_L, d_Mvals, d_Mrows, d_Mcols, \
+                                 block_size, ilu_info, rocsparse_analysis_policy_reuse, rocsparse_solve_policy_auto, d_buffer));
+        ROCSPARSE_CHECK(rocsparse_sbsrsv_analysis(handle, dir, operation, \
+                                 Nb, nnzbs_prec, descr_U, d_Mvals, d_Mrows, d_Mcols, \
+                                 block_size, ilu_info, rocsparse_analysis_policy_reuse, rocsparse_solve_policy_auto, d_buffer));
+    } else {
+        ROCSPARSE_CHECK(rocsparse_dbsrsv_analysis(handle, dir, operation, \
+                                 Nb, nnzbs_prec, descr_L, d_Mvals, d_Mrows, d_Mcols, \
+                                 block_size, ilu_info, rocsparse_analysis_policy_reuse, rocsparse_solve_policy_auto, d_buffer));
+        ROCSPARSE_CHECK(rocsparse_dbsrsv_analysis(handle, dir, operation, \
+                                 Nb, nnzbs_prec, descr_U, d_Mvals, d_Mrows, d_Mcols, \
+                                 block_size, ilu_info, rocsparse_analysis_policy_reuse, rocsparse_solve_policy_auto, d_buffer));
+    }
 
 #if HIP_VERSION >= 60000000
-    ROCSPARSE_CHECK(rocsparse_dbsrmv_analysis(handle, dir, operation,
-                                              Nb, Nb, nnzb,
-                                              descr_A, d_Avals, d_Arows, d_Acols,
-                                              block_size, spmv_info));
+    if constexpr (std::is_same_v<Scalar,float>) {
+      ROCSPARSE_CHECK(rocsparse_sbsrmv_analysis(handle, dir, operation,
+                                                Nb, Nb, nnzb,
+                                                descr_A, d_Avals, d_Arows, d_Acols,
+                                                block_size, spmv_info));
+    } else {
+      ROCSPARSE_CHECK(rocsparse_dbsrmv_analysis(handle, dir, operation,
+                                                Nb, Nb, nnzb,
+                                                descr_A, d_Avals, d_Arows, d_Acols,
+                                                block_size, spmv_info));
+    }
 #elif HIP_VERSION >= 50400000
-    ROCSPARSE_CHECK(rocsparse_dbsrmv_ex_analysis(handle, dir, operation,
-        Nb, Nb, nnzb,
-        descr_A, d_Avals, d_Arows, d_Acols,
-        block_size, spmv_info));
+    if constexpr (std::is_same_v<Scalar,float>) {
+        ROCSPARSE_CHECK(rocsparse_dbsrmv_ex_analysis(handle, dir, operation,
+            Nb, Nb, nnzb,
+            descr_A, d_Avals, d_Arows, d_Acols,
+            block_size, spmv_info));
+    } else {
+        ROCSPARSE_CHECK(rocsparse_sbsrmv_ex_analysis(handle, dir, operation,
+            Nb, Nb, nnzb,
+            descr_A, d_Avals, d_Arows, d_Acols,
+            block_size, spmv_info));
+    }
 #endif
 
     if (verbosity >= 3) {
@@ -549,14 +722,20 @@ bool rocsparseSolverBackend<block_size>::analyze_matrix() {
     return true;
 } // end analyze_matrix()
 
-
-template <unsigned int block_size>
-bool rocsparseSolverBackend<block_size>::create_preconditioner() {
+template<class Scalar, unsigned int block_size>
+bool rocsparseSolverBackend<Scalar,block_size>::
+create_preconditioner()
+{
     Timer t;
 
     bool result = true;
-    ROCSPARSE_CHECK(rocsparse_dbsrilu0(handle, dir, Nb, nnzbs_prec, descr_M,
-                    d_Mvals, d_Mrows, d_Mcols, block_size, ilu_info, rocsparse_solve_policy_auto, d_buffer));
+    if constexpr (std::is_same_v<Scalar,float>) {
+        ROCSPARSE_CHECK(rocsparse_sbsrilu0(handle, dir, Nb, nnzbs_prec, descr_M,
+                        d_Mvals, d_Mrows, d_Mcols, block_size, ilu_info, rocsparse_solve_policy_auto, d_buffer));
+    } else {
+        ROCSPARSE_CHECK(rocsparse_dbsrilu0(handle, dir, Nb, nnzbs_prec, descr_M,
+                        d_Mvals, d_Mrows, d_Mcols, block_size, ilu_info, rocsparse_solve_policy_auto, d_buffer));
+    }
 
     // Check for zero pivot
     int zero_position = 0;
@@ -576,9 +755,10 @@ bool rocsparseSolverBackend<block_size>::create_preconditioner() {
     return result;
 } // end create_preconditioner()
 
-
-template <unsigned int block_size>
-void rocsparseSolverBackend<block_size>::solve_system(WellContributions &wellContribs, BdaResult &res) {
+template<class Scalar, unsigned int block_size>
+void rocsparseSolverBackend<Scalar,block_size>::
+solve_system(WellContributions<Scalar>& wellContribs, BdaResult& res)
+{
     Timer t;
 
     // actually solve
@@ -590,17 +770,17 @@ void rocsparseSolverBackend<block_size>::solve_system(WellContributions &wellCon
         out << "rocsparseSolver::solve_system(): " << t.stop() << " s";
         OpmLog::info(out.str());
     }
-
 } // end solve_system()
-
 
 // copy result to host memory
 // caller must be sure that x is a valid array
-template <unsigned int block_size>
-void rocsparseSolverBackend<block_size>::get_result(double *x) {
+template<class Scalar, unsigned int block_size>
+void rocsparseSolverBackend<Scalar,block_size>::
+get_result(Scalar* x)
+{
     Timer t;
 
-    HIP_CHECK(hipMemcpyAsync(x, d_x, sizeof(double) * N, hipMemcpyDeviceToHost, stream));
+    HIP_CHECK(hipMemcpyAsync(x, d_x, sizeof(Scalar) * N, hipMemcpyDeviceToHost, stream));
     HIP_CHECK(hipStreamSynchronize(stream)); // always wait, caller might want to use x immediately
 
     if (verbosity >= 3) {
@@ -610,13 +790,13 @@ void rocsparseSolverBackend<block_size>::get_result(double *x) {
     }
 } // end get_result()
 
-
-template <unsigned int block_size>
-SolverStatus rocsparseSolverBackend<block_size>::solve_system(std::shared_ptr<BlockedMatrix> matrix,
-                                                              double *b,
-                                                              std::shared_ptr<BlockedMatrix> jacMatrix,
-                                                              WellContributions& wellContribs,
-                                                              BdaResult &res)
+template<class Scalar, unsigned int block_size>
+SolverStatus rocsparseSolverBackend<Scalar,block_size>::
+solve_system(std::shared_ptr<BlockedMatrix<Scalar>> matrix,
+             Scalar* b,
+             std::shared_ptr<BlockedMatrix<Scalar>> jacMatrix,
+             WellContributions<Scalar>& wellContribs,
+             BdaResult& res)
 {
     if (initialized == false) {
         initialize(matrix, jacMatrix);
@@ -640,19 +820,22 @@ SolverStatus rocsparseSolverBackend<block_size>::solve_system(std::shared_ptr<Bl
     return SolverStatus::BDA_SOLVER_SUCCESS;
 }
 
+#define INSTANTIATE_BDA_FUNCTIONS(T,n) \
+    template class rocsparseSolverBackend<T,n>;
 
-#define INSTANTIATE_BDA_FUNCTIONS(n)                                        \
-template rocsparseSolverBackend<n>::rocsparseSolverBackend(                 \
-    int, int, double, unsigned int, unsigned int);
+#define INSTANCE_TYPE(T)           \
+    INSTANTIATE_BDA_FUNCTIONS(T,1) \
+    INSTANTIATE_BDA_FUNCTIONS(T,2) \
+    INSTANTIATE_BDA_FUNCTIONS(T,3) \
+    INSTANTIATE_BDA_FUNCTIONS(T,4) \
+    INSTANTIATE_BDA_FUNCTIONS(T,5) \
+    INSTANTIATE_BDA_FUNCTIONS(T,6)
 
-INSTANTIATE_BDA_FUNCTIONS(1);
-INSTANTIATE_BDA_FUNCTIONS(2);
-INSTANTIATE_BDA_FUNCTIONS(3);
-INSTANTIATE_BDA_FUNCTIONS(4);
-INSTANTIATE_BDA_FUNCTIONS(5);
-INSTANTIATE_BDA_FUNCTIONS(6);
+INSTANCE_TYPE(double)
 
-#undef INSTANTIATE_BDA_FUNCTIONS
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
 } // namespace Accelerator
 } // namespace Opm

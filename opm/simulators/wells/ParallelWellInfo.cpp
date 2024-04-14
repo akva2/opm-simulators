@@ -731,7 +731,7 @@ template<class Scalar> using cdIter = typename std::vector<Scalar>::const_iterat
     template bool operator==(const ParallelWellInfo<T>&, const ParallelWellInfo<T>&); \
     template bool operator==(const ParallelWellInfo<T>& well, const std::pair<std::string, bool>&); \
     template bool operator==(const std::pair<std::string, bool>&, const ParallelWellInfo<T>&); \
-    template bool operator!=(const ParallelWellInfo<T>&, const ParallelWellInfo<double>&); \
+    template bool operator!=(const ParallelWellInfo<T>&, const ParallelWellInfo<T>&); \
     template bool operator!=(const std::pair<std::string, bool>&, const ParallelWellInfo<T>&); \
     template bool operator!=(const ParallelWellInfo<T>&, const std::pair<std::string, bool>&);
 
