@@ -36,10 +36,12 @@ namespace Accelerator
 using Opm::OpmLog;
 
 
-template <unsigned int block_size>
-void amgclSolverBackend<block_size>::solve_cuda(double *b) {
-    typedef amgcl::backend::cuda<double> CUDA_Backend;
-    typedef amgcl::make_solver<amgcl::runtime::preconditioner<CUDA_Backend>, amgcl::runtime::solver::wrapper<CUDA_Backend> > CUDA_Solver;
+template<class Scalar, unsigned int block_size>
+void amgclSolverBackend<Scalar,block_size>::solve_cuda(Scalar* b)
+{
+    using CUDA_Backend = amgcl::backend::cuda<Scalar>;
+    using CUDA_Solver = amgcl::make_solver<amgcl::runtime::preconditioner<CUDA_Backend>,
+                                           amgcl::runtime::solver::wrapper<CUDA_Backend>>;
 
     static typename CUDA_Backend::params CUDA_bprm; // amgcl backend parameters, only used for cusparseHandle
 
@@ -67,8 +69,8 @@ void amgclSolverBackend<block_size>::solve_cuda(double *b) {
         OpmLog::info(out.str());
     });
 
-    thrust::device_vector<double> B(b, b + N);
-    thrust::device_vector<double> X(N, 0.0);
+    thrust::device_vector<Scalar> B(b, b + N);
+    thrust::device_vector<Scalar> X(N, 0.0);
 
     // actually solve
     std::tie(iters, error) = solve(B, X);
@@ -76,18 +78,22 @@ void amgclSolverBackend<block_size>::solve_cuda(double *b) {
     thrust::copy(X.begin(), X.end(), x.begin());
 }
 
+#define INSTANTIATE_BDA_FUNCTIONS(T,n) \
+    template void amgclSolverBackend<T,n>::solve_cuda(T*); \
 
-#define INSTANTIATE_BDA_FUNCTIONS(n)                      \
-template void amgclSolverBackend<n>::solve_cuda(double*); \
+#define INSTANCE_TYPE(T)           \
+    INSTANTIATE_BDA_FUNCTIONS(T,1) \
+    INSTANTIATE_BDA_FUNCTIONS(T,2) \
+    INSTANTIATE_BDA_FUNCTIONS(T,3) \
+    INSTANTIATE_BDA_FUNCTIONS(T,4) \
+    INSTANTIATE_BDA_FUNCTIONS(T,5) \
+    INSTANTIATE_BDA_FUNCTIONS(T,6)
 
-INSTANTIATE_BDA_FUNCTIONS(1);
-INSTANTIATE_BDA_FUNCTIONS(2);
-INSTANTIATE_BDA_FUNCTIONS(3);
-INSTANTIATE_BDA_FUNCTIONS(4);
-INSTANTIATE_BDA_FUNCTIONS(5);
-INSTANTIATE_BDA_FUNCTIONS(6);
+INSTANCE_TYPE(double)
 
-#undef INSTANTIATE_BDA_FUNCTIONS
+#if FLOW_INSTANCE_FLOAT
+INSTANCE_TYPE(float)
+#endif
 
 } // namespace Accelerator
 } // namespace Opm

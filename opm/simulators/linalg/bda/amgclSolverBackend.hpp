@@ -40,10 +40,7 @@
 #include <mutex>
 #include <vector>
 
-namespace Opm
-{
-namespace Accelerator
-{
+namespace Opm::Accelerator {
 
 /// This class does not implement a solver, but converts the BCSR format to normal CSR and uses amgcl for solving
 /// Note amgcl also implements blocked solvers, but looks like it needs unblocked input data
@@ -149,8 +146,7 @@ public:
 
 }; // end class amgclSolverBackend
 
-} // namespace Accelerator
-} // namespace Opm
+} // namespace Opm::Accelerator
 
 #endif
 

@@ -74,7 +74,7 @@ BdaBridge(std::string accelerator_mode_,
     if (accelerator_mode.compare("cusparse") == 0) {
 #if HAVE_CUDA
         use_gpu = true;
-        backend.reset(new Accelerator::cusparseSolverBackend<block_size>(linear_solver_verbosity, maxit, tolerance, deviceID));
+        backend.reset(new Accelerator::cusparseSolverBackend<Scalar,block_size>(linear_solver_verbosity, maxit, tolerance, deviceID));
 #else
         OPM_THROW(std::logic_error, "Error cusparseSolver was chosen, but CUDA was not found by CMake");
 #endif
