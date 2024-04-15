@@ -28,17 +28,15 @@
 
 /// This file is only compiled when both amgcl and CUDA are found by CMake
 
-namespace Opm
-{
-namespace Accelerator
-{
-
-using Opm::OpmLog;
-
+namespace Opm::Accelerator {
 
 template<class Scalar, unsigned int block_size>
 void amgclSolverBackend<Scalar,block_size>::solve_cuda(Scalar* b)
 {
+    if constexpr (std::is_same_v<Scalar,float>) {
+        throw std::runtime_error("Cannot use AMGCL CUDA with floats.");
+    } else {
+
     using CUDA_Backend = amgcl::backend::cuda<Scalar>;
     using CUDA_Solver = amgcl::make_solver<amgcl::runtime::preconditioner<CUDA_Backend>,
                                            amgcl::runtime::solver::wrapper<CUDA_Backend>>;
@@ -76,6 +74,7 @@ void amgclSolverBackend<Scalar,block_size>::solve_cuda(Scalar* b)
     std::tie(iters, error) = solve(B, X);
 
     thrust::copy(X.begin(), X.end(), x.begin());
+    }
 }
 
 #define INSTANTIATE_BDA_FUNCTIONS(T,n) \
@@ -95,6 +94,5 @@ INSTANCE_TYPE(double)
 INSTANCE_TYPE(float)
 #endif
 
-} // namespace Accelerator
-} // namespace Opm
+} // namespace Opm::Accelerator
 

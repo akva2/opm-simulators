@@ -55,8 +55,8 @@ __global__ void apply_well_contributions(
     const int c = lane % dim;                           // col in block
     const int r = (lane / dim) % dim_wells;             // row in block
 
-    __shared__ Scalar* smem;
-    Scalar* __restrict__ z1 = smem;
+    extern __shared__ unsigned char smem[];
+    Scalar* __restrict__ z1 = reinterpret_cast<Scalar*>(smem);
     Scalar* __restrict__ z2 = z1 + dim_wells;
 
     if (idx_t < dim_wells) {
