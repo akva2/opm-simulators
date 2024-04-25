@@ -68,6 +68,7 @@ function(add_test_compareECLFiles)
   if(NOT PARAM_PREFIX)
     set(PARAM_PREFIX compareECLFiles)
   endif()
+  string(REPLACE rst_deck summary SUMMARY_COMMAND ${RST_DECK_COMMAND})
   set(RESULT_PATH ${BASE_RESULT_PATH}${PARAM_DIR_PREFIX}/${PARAM_SIMULATOR}+${PARAM_CASENAME})
   set(TEST_ARGS ${PARAM_TEST_ARGS})
   set(DRIVER_ARGS -i ${OPM_TESTS_ROOT}/${PARAM_DIR}
@@ -77,6 +78,7 @@ function(add_test_compareECLFiles)
                   -a ${PARAM_ABS_TOL}
                   -t ${PARAM_REL_TOL}
                   -c ${COMPARE_ECL_COMMAND}
+                  -S ${SUMMARY_COMMAND}
                   -d ${RST_DECK_COMMAND})
    if(PARAM_RESTART_STEP)
      list(APPEND DRIVER_ARGS -s ${PARAM_RESTART_STEP})

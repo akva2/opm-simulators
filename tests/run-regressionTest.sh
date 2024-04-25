@@ -14,6 +14,7 @@ then
   echo -e "\t\t -a <tol>      Absolute tolerance in comparison"
   echo -e "\t\t -t <tol>      Relative tolerance in comparison"
   echo -e "\t\t -c <path>     Path to comparison tool"
+  echo -e "\t\t -S <path>     Path to summary tool"
   echo -e "\t\t -d <path>     Path to restart deck tool"
   echo -e "\t\t -e <filename> Simulator binary to use"
   echo -e "\tOptional options:"
@@ -24,7 +25,7 @@ fi
 
 RESTART_STEP=""
 OPTIND=1
-while getopts "i:r:b:f:a:t:c:d:s:e:h:" OPT
+while getopts "i:r:b:f:a:t:c:d:s:e:h:S:" OPT
 do
   case "${OPT}" in
     i) INPUT_DATA_PATH=${OPTARG} ;;
@@ -36,6 +37,7 @@ do
     c) COMPARE_ECL_COMMAND=${OPTARG} ;;
     d) RST_DECK_COMMAND=${OPTARG} ;;
     s) RESTART_STEP=${OPTARG} ;;
+    S) SUMMARY_COMMAND=${OPTARG} ;;
     e) EXE_NAME=${OPTARG} ;;
     h) RESTART_SCHED=${OPTARG} ;;
   esac
@@ -45,7 +47,16 @@ TEST_ARGS="$@"
 
 mkdir -p ${RESULT_PATH}
 cd ${RESULT_PATH}
-${BINPATH}/${EXE_NAME} ${INPUT_DATA_PATH}/${FILENAME} ${TEST_ARGS} --output-dir=${RESULT_PATH}
+if test -n "${SUMMARY_COMMAND}"
+then
+  ${SUMMARY_COMMAND} ${INPUT_DATA_PATH}/opm-simulation-reference/${EXE_NAME}/${FILENAME} TIME | sed -e 's/TIME//g' | grep "\S" > timesteps
+#  cat years | awk '{ printf("%8f\n", $0) }' > timesteps
+#  cat years | awk 'NR > 1  { printf("%8f\n", ($0 - prev)*60*60*24*365) } { prev = $0}' > timesteps
+#  ${BINPATH}/${EXE_NAME} ${INPUT_DATA_PATH}/${FILENAME} ${TEST_ARGS} --output-dir=${RESULT_PATH}
+  ${BINPATH}/${EXE_NAME} ${INPUT_DATA_PATH}/${FILENAME} ${TEST_ARGS} --output-dir=${RESULT_PATH} --time-step-control=hardcoded --time-step-control-file-name=${RESULT_PATH}/timesteps
+else
+  ${BINPATH}/${EXE_NAME} ${INPUT_DATA_PATH}/${FILENAME} ${TEST_ARGS} --output-dir=${RESULT_PATH}
+fi
 test $? -eq 0 || exit 1
 cd ..
 

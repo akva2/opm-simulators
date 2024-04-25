@@ -119,9 +119,8 @@ namespace Opm
         while ( std::getline(infile, line)) {
             if( line[0] != '-') { // ignore lines starting with '-'
                 const double time = std::stod(line,&sz); // read the first number i.e. the actual substep time
-                subStepTime_.push_back( time * unit::day );
+                subStepTime_.push_back(time * unit::day);
             }
-
         }
     }
 
@@ -137,6 +136,9 @@ namespace Opm
     computeTimeStepSize( const double /*dt */, const int /*iterations */, const RelativeChangeInterface& /* relativeChange */ , const double simulationTimeElapsed) const
     {
         auto nextTime = std::upper_bound(subStepTime_.begin(), subStepTime_.end(), simulationTimeElapsed);
+        if (nextTime == subStepTime_.end()) {
+            return unit::day;
+        }
         return (*nextTime - simulationTimeElapsed);
     }
 

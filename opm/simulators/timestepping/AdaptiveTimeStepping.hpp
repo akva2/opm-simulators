@@ -860,6 +860,7 @@ std::set<std::string> consistentlyFailingWells(const std::vector<StepReport>& sr
                 const std::string filename = Parameters::get<TypeTag, Properties::TimeStepControlFileName>(); // "timesteps"
                 timeStepControl_ = std::make_unique<HardcodedTimeStepControl>(filename);
                 timeStepControlType_ = TimeStepControlType::HardCodedTimeStep;
+                maxGrowth_ = 1e20;
             }
             else
                 OPM_THROW(std::runtime_error,
