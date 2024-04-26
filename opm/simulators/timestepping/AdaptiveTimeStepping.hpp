@@ -40,6 +40,7 @@
 #include <cassert>
 #include <cmath>
 #include <functional>
+#include <iomanip>
 #include <memory>
 #include <set>
 #include <sstream>
@@ -482,6 +483,13 @@ std::set<std::string> consistentlyFailingWells(const std::vector<StepReport>& sr
                 }
 
                 if (substepReport.converged || continue_on_uncoverged_solution) {
+            /*        static std::ofstream of;
+                    static double curr = 0.0;
+                    if (!of.is_open()) {
+                        of.open("timesteps");
+                    }
+                    curr += substepTimer.currentStepLength() / unit::day;
+                    of << std::setprecision(16) << curr << std::endl;*/
 
                     // advance by current dt
                     ++substepTimer;
@@ -670,7 +678,7 @@ std::set<std::string> consistentlyFailingWells(const std::vector<StepReport>& sr
 
         void updateNEXTSTEP(double max_next_tstep)
         {
-             // \Note Only update next suggested step if TSINIT was explicitly set in TUNING or NEXTSTEP is active. 
+             // \Note Only update next suggested step if TSINIT was explicitly set in TUNING or NEXTSTEP is active.
             if (max_next_tstep > 0) {
                 suggestedNextTimestep_ = max_next_tstep;
             }

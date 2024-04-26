@@ -49,13 +49,13 @@ mkdir -p ${RESULT_PATH}
 cd ${RESULT_PATH}
 if test -n "${SUMMARY_COMMAND}"
 then
-  ${SUMMARY_COMMAND} ${INPUT_DATA_PATH}/opm-simulation-reference/${EXE_NAME}/${FILENAME} TIME | sed -e 's/TIME//g' | grep "\S" > timesteps
+#  ${SUMMARY_COMMAND} ${INPUT_DATA_PATH}/opm-simulation-reference/${EXE_NAME}/${FILENAME} TIME | sed -e 's/TIME//g' | grep "\S" > timesteps
 #  cat years | awk '{ printf("%8f\n", $0) }' > timesteps
 #  cat years | awk 'NR > 1  { printf("%8f\n", ($0 - prev)*60*60*24*365) } { prev = $0}' > timesteps
-#  ${BINPATH}/${EXE_NAME} ${INPUT_DATA_PATH}/${FILENAME} ${TEST_ARGS} --output-dir=${RESULT_PATH}
-  ${BINPATH}/${EXE_NAME} ${INPUT_DATA_PATH}/${FILENAME} ${TEST_ARGS} --output-dir=${RESULT_PATH} --time-step-control=hardcoded --time-step-control-file-name=${RESULT_PATH}/timesteps
+  ${BINPATH}/${EXE_NAME} ${INPUT_DATA_PATH}/${FILENAME} ${TEST_ARGS} --output-dir=${RESULT_PATH}  --output-extra-convergence-info=step,iterations
+#  ${BINPATH}/${EXE_NAME} ${INPUT_DATA_PATH}/${FILENAME} ${TEST_ARGS} --output-dir=${RESULT_PATH} --time-step-control=hardcoded --time-step-control-file-name=${RESULT_PATH}/timesteps --output-extra-convergence-info=step,iterations
 else
-  ${BINPATH}/${EXE_NAME} ${INPUT_DATA_PATH}/${FILENAME} ${TEST_ARGS} --output-dir=${RESULT_PATH}
+  ${BINPATH}/${EXE_NAME} ${INPUT_DATA_PATH}/${FILENAME} ${TEST_ARGS} --output-dir=${RESULT_PATH} 
 fi
 test $? -eq 0 || exit 1
 cd ..

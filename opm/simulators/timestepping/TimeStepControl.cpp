@@ -133,11 +133,18 @@ namespace Opm
     }
 
     double HardcodedTimeStepControl::
-    computeTimeStepSize( const double /*dt */, const int /*iterations */, const RelativeChangeInterface& /* relativeChange */ , const double simulationTimeElapsed) const
+    computeTimeStepSize( const double /*dt */, const int /*iterations */, const RelativeChangeInterface& /*relativeChange*/, const double simulationTimeElapsed) const
     {
         auto nextTime = std::upper_bound(subStepTime_.begin(), subStepTime_.end(), simulationTimeElapsed);
         if (nextTime == subStepTime_.end()) {
             return unit::day;
+        }
+        if (*nextTime - simulationTimeElapsed < 1e-6) {
+            std::cout << "Skipping to next step" << std::endl;
+            if (nextTime+1 != subStepTime_.end())
+                return *(nextTime+1) - simulationTimeElapsed;
+            else
+                return unit::day;
         }
         return (*nextTime - simulationTimeElapsed);
     }
