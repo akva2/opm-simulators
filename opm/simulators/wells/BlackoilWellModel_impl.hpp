@@ -61,13 +61,15 @@
 namespace Opm {
     template<typename TypeTag>
     BlackoilWellModel<TypeTag>::
-    BlackoilWellModel(Simulator& simulator, const PhaseUsage& phase_usage)
+    BlackoilWellModel(Simulator& simulator, const PhaseUsage& phase_usage,
+                      std::shared_ptr<FluidSystem> fluidSystem)
         : BlackoilWellModelGeneric<Scalar>(simulator.vanguard().schedule(),
                                             simulator.vanguard().summaryState(),
                                             simulator.vanguard().eclState(),
                                             phase_usage,
                                             simulator.gridView().comm())
         , simulator_(simulator)
+        , fluidSystem_(std::move(fluidSystem))
     {
         this->terminal_output_ = ((simulator.gridView().comm().rank() == 0) &&
                                    Parameters::get<TypeTag, Properties::EnableTerminalOutput>());
@@ -109,9 +111,9 @@ namespace Opm {
                 constexpr auto iw = FluidSystem::waterPhaseIdx;
 
                 // Ideally, these would be 'constexpr'.
-                const auto haveOil = FluidSystem::phaseIsActive(io);
-                const auto haveGas = FluidSystem::phaseIsActive(ig);
-                const auto haveWat = FluidSystem::phaseIsActive(iw);
+                const auto haveOil = fluidSystem_->phaseIsActive(io);
+                const auto haveGas = fluidSystem_->phaseIsActive(ig);
+                const auto haveWat = fluidSystem_->phaseIsActive(iw);
 
                 auto weightedPhaseDensity = [&fs](const auto ip)
                 {
@@ -134,8 +136,11 @@ namespace Opm {
 
     template<typename TypeTag>
     BlackoilWellModel<TypeTag>::
-    BlackoilWellModel(Simulator& simulator) :
-        BlackoilWellModel(simulator, phaseUsageFromDeck(simulator.vanguard().eclState()))
+    BlackoilWellModel(Simulator& simulator,
+                      std::shared_ptr<FluidSystem> fluidSystem)
+        : BlackoilWellModel(simulator,
+                            phaseUsageFromDeck(simulator.vanguard().eclState()),
+                            std::move(fluidSystem))
     {}
 
 
@@ -2593,7 +2598,7 @@ namespace Opm {
                 Scalar weight_factor = 0.0;
                 for (unsigned phaseIdx = 0; phaseIdx < FluidSystem::numPhases; ++phaseIdx)
                 {
-                    if (!FluidSystem::phaseIsActive(phaseIdx)) {
+                    if (!fluidSystem_->phaseIsActive(phaseIdx)) {
                         continue;
                     }
                     cellInternalEnergy = fs.enthalpy(phaseIdx).value() - fs.pressure(phaseIdx).value() / fs.density(phaseIdx).value();

@@ -1054,6 +1054,7 @@ namespace Opm
     WellInterface<TypeTag>::
     updateWellStateWithTarget(const Simulator& simulator,
                               const GroupState<Scalar>& group_state,
+                              const FluidSystem& fluidSystem,
                               WellState<Scalar>& well_state,
                               DeferredLogger& deferred_logger) const
     {
@@ -1108,9 +1109,9 @@ namespace Opm
             {
                 ws.surface_rates[phasePos] = (1.0 - this->rsRvInj()) * controls.surface_rate;
                 if(this->rsRvInj() > 0) {
-                    if (injectorType == InjectorType::OIL && FluidSystem::phaseIsActive(FluidSystem::gasPhaseIdx)) {
+                    if (injectorType == InjectorType::OIL && fluidSystem.phaseIsActive(FluidSystem::gasPhaseIdx)) {
                         ws.surface_rates[pu.phase_pos[BlackoilPhases::Vapour]] = controls.surface_rate * this->rsRvInj();
-                    } else if (injectorType == InjectorType::GAS && FluidSystem::phaseIsActive(FluidSystem::oilPhaseIdx)) {
+                    } else if (injectorType == InjectorType::GAS && fluidSystem.phaseIsActive(FluidSystem::oilPhaseIdx)) {
                         ws.surface_rates[pu.phase_pos[BlackoilPhases::Liquid]] = controls.surface_rate * this->rsRvInj();
                     } else {
                         OPM_DEFLOG_THROW(std::runtime_error, "Expected OIL or GAS as type for injectors when RS/RV (item 10) is non-zero "  + this->name(), deferred_logger );

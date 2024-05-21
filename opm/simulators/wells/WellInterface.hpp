@@ -218,6 +218,7 @@ public:
 
     virtual void updateWellStateWithTarget(const Simulator& simulator,
                                            const GroupState<Scalar>& group_state,
+                                           const FluidSystem& fluidSystem,
                                            WellState<Scalar>& well_state,
                                            DeferredLogger& deferred_logger) const;
 

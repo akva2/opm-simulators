@@ -281,6 +281,7 @@ public:
                               enableDiffusion,
                               enableDispersion)
         , thresholdPressures_(simulator)
+        , fluidSystem_(std::make_shared<FluidSystem>())
         , wellModel_(simulator)
         , aquiferModel_(simulator)
         , pffDofData_(simulator.gridView(), this->elementMapper())
@@ -383,8 +384,8 @@ public:
                                 this->episodeIndex(),
                                 eclState.runspec().tabdims().getNumPVTTables());
 
-        if (FluidSystem::phaseIsActive(FluidSystem::oilPhaseIdx) &&
-            FluidSystem::phaseIsActive(FluidSystem::gasPhaseIdx)) {
+        if (fluidSystem_->phaseIsActive(FluidSystem::oilPhaseIdx) &&
+            fluidSystem_->phaseIsActive(FluidSystem::gasPhaseIdx)) {
             this->maxOilSaturation_.resize(this->model().numGridDof(), 0.0);
         }
 
@@ -569,9 +570,9 @@ public:
         if (episodeIdx >= 0) {
             const auto& oilVap = schedule[episodeIdx].oilvap();
             if (oilVap.getType() == OilVaporizationProperties::OilVaporization::VAPPARS) {
-                FluidSystem::setVapPars(oilVap.vap1(), oilVap.vap2());
+                fluidSystem_->setVapPars(oilVap.vap1(), oilVap.vap2());
             } else {
-                FluidSystem::setVapPars(0.0, 0.0);
+                fluidSystem_->setVapPars(0.0, 0.0);
             }
         }
     }
@@ -1421,12 +1422,12 @@ public:
                 const auto phaseIdx = phidx_map[i];
                 const auto sourceComp = sc_map[i];
                 const auto compIdx = cidx_map[i];
-                if (!FluidSystem::phaseIsActive(phaseIdx)) {
+                if (!fluidSystem_->phaseIsActive(phaseIdx)) {
                     continue;
                 } 
                 Scalar mass_rate = source.rate({ijk, sourceComp}) / this->model().dofTotalVolume(globalDofIdx);
                 if constexpr (getPropValue<TypeTag, Properties::BlackoilConserveSurfaceVolume>()) {
-                    mass_rate /= FluidSystem::referenceDensity(phaseIdx, pvtRegionIdx);
+                    mass_rate /= fluidSystem_->referenceDensity(phaseIdx, pvtRegionIdx);
                 }
                 rate[Indices::canonicalToActiveComponentIndex(compIdx)] += mass_rate;
             }
@@ -1445,7 +1446,7 @@ public:
             if constexpr (enableEnergy) {
                 for (unsigned i = 0; i < phidx_map.size(); ++i) {
                     const auto phaseIdx = phidx_map[i];
-                    if (!FluidSystem::phaseIsActive(phaseIdx)) {
+                    if (!fluidSystem_->phaseIsActive(phaseIdx)) {
                         continue;
                     }
                     const auto sourceComp = sc_map[i];
@@ -1459,7 +1460,7 @@ public:
                             Scalar temperature = source.temperature({ijk, sourceComp});
                             fs.setTemperature(temperature);
                         }
-                        const auto& h = FluidSystem::enthalpy(fs, phaseIdx, pvtRegionIdx);
+                        const auto& h = fluidSystem_->enthalpy(fs, phaseIdx, pvtRegionIdx);
                         Scalar mass_rate = source.rate({ijk, sourceComp})/ this->model().dofTotalVolume(globalDofIdx);
                         Scalar energy_rate = getValue(h)*mass_rate;
                         rate[Indices::contiEnergyEqIdx] += energy_rate;
@@ -1552,19 +1553,19 @@ public:
 
                 switch (bc.component) {
                     case BCComponent::OIL:
-                        if (!FluidSystem::phaseIsActive(FluidSystem::oilPhaseIdx))
+                        if (!fluidSystem_->haseIsActive(FluidSystem::oilPhaseIdx))
                             throw std::logic_error("oil is not active and you're trying to add oil BC");
 
                         fluidState.setSaturation(FluidSystem::oilPhaseIdx, 1.0);
                         break;
                     case BCComponent::GAS:
-                        if (!FluidSystem::phaseIsActive(FluidSystem::gasPhaseIdx))
+                        if (!fluidSystem_->phaseIsActive(FluidSystem::gasPhaseIdx))
                             throw std::logic_error("gas is not active and you're trying to add gas BC");
 
                         fluidState.setSaturation(FluidSystem::gasPhaseIdx, 1.0);
                         break;
                         case BCComponent::WATER:
-                        if (!FluidSystem::phaseIsActive(FluidSystem::waterPhaseIdx))
+                        if (!fluidSystem_->phaseIsActive(FluidSystem::waterPhaseIdx))
                             throw std::logic_error("water is not active and you're trying to add water BC");
 
                         fluidState.setSaturation(FluidSystem::waterPhaseIdx, 1.0);
@@ -1587,7 +1588,7 @@ public:
                 Valgrind::CheckDefined(pressure);
                 Valgrind::CheckDefined(pc);
                 for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                    if (!FluidSystem::phaseIsActive(phaseIdx))
+                    if (!fluidSystem_->phaseIsActive(phaseIdx))
                         continue;
 
                     if (Indices::oilEnabled)
@@ -1605,27 +1606,27 @@ public:
                     temperature = *temperature_input;
                 fluidState.setTemperature(temperature);
 
-                if (FluidSystem::enableDissolvedGas()) {
+                if (fluidSystem_->enableDissolvedGas()) {
                     fluidState.setRs(0.0);
                     fluidState.setRv(0.0);
                 }
-                if (FluidSystem::enableDissolvedGasInWater()) {
+                if (fluidSystem_->enableDissolvedGasInWater()) {
                     fluidState.setRsw(0.0);
                 }
-                if (FluidSystem::enableVaporizedWater())
+                if (fluidSystem_->enableVaporizedWater())
                     fluidState.setRvw(0.0);
 
                 for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                    if (!FluidSystem::phaseIsActive(phaseIdx))
+                    if (!fluidSystem_->phaseIsActive(phaseIdx))
                         continue;
 
-                    const auto& b = FluidSystem::inverseFormationVolumeFactor(fluidState, phaseIdx, pvtRegionIdx);
+                    const auto& b = fluidSystem_->inverseFormationVolumeFactor(fluidState, phaseIdx, pvtRegionIdx);
                     fluidState.setInvB(phaseIdx, b);
 
-                    const auto& rho = FluidSystem::density(fluidState, phaseIdx, pvtRegionIdx);
+                    const auto& rho = fluidSystem_->density(fluidState, phaseIdx, pvtRegionIdx);
                     fluidState.setDensity(phaseIdx, rho);
                     if (enableEnergy) {
-                        const auto& h = FluidSystem::enthalpy(fluidState, phaseIdx, pvtRegionIdx);
+                        const auto& h = fluidSystem_->enthalpy(fluidState, phaseIdx, pvtRegionIdx);
                         fluidState.setEnthalpy(phaseIdx, h);
                     }
                 }
@@ -2273,7 +2274,7 @@ protected:
         const Scalar smallSaturationTolerance = 1.e-6;
         Scalar sumSaturation = 0.0;
         for (std::size_t phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            if (FluidSystem::phaseIsActive(phaseIdx)) {
+            if (fluidSystem_->phaseIsActive(phaseIdx)) {
                 if (elemFluidState.saturation(phaseIdx) < smallSaturationTolerance)
                     elemFluidState.setSaturation(phaseIdx, 0.0);
 
@@ -2291,7 +2292,7 @@ protected:
         assert(sumSaturation > 0.0);
 
         for (std::size_t phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            if (FluidSystem::phaseIsActive(phaseIdx)) {
+            if (fluidSystem_->phaseIsActive(phaseIdx)) {
                 const Scalar saturation = elemFluidState.saturation(phaseIdx) / sumSaturation;
                 elemFluidState.setSaturation(phaseIdx, saturation);
             }
@@ -2318,23 +2319,23 @@ protected:
 
         // make sure all required quantities are enables
         if (Indices::numPhases > 1) {
-            if (FluidSystem::phaseIsActive(waterPhaseIdx) && !has_swat)
+            if (fluidSystem_->phaseIsActive(waterPhaseIdx) && !has_swat)
                 throw std::runtime_error("The ECL input file requires the presence of the SWAT keyword if "
                                      "the water phase is active");
-            if (FluidSystem::phaseIsActive(gasPhaseIdx) && !has_sgas && FluidSystem::phaseIsActive(oilPhaseIdx))
+            if (fluidSystem_->phaseIsActive(gasPhaseIdx) && !has_sgas && fluidSystem_->phaseIsActive(oilPhaseIdx))
                 throw std::runtime_error("The ECL input file requires the presence of the SGAS keyword if "
                                      "the gas phase is active");
         }
         if (!has_pressure)
             throw std::runtime_error("The ECL input file requires the presence of the PRESSURE "
                                       "keyword if the model is initialized explicitly");
-        if (FluidSystem::enableDissolvedGas() && !has_rs)
+        if (fluidSystem_->enableDissolvedGas() && !has_rs)
             throw std::runtime_error("The ECL input file requires the RS keyword to be present if"
                                      " dissolved gas is enabled");
-        if (FluidSystem::enableVaporizedOil() && !has_rv)
+        if (fluidSystem_->enableVaporizedOil() && !has_rv)
             throw std::runtime_error("The ECL input file requires the RV keyword to be present if"
                                      " vaporized oil is enabled");
-        if (FluidSystem::enableVaporizedWater() && !has_rvw)
+        if (fluidSystem_->enableVaporizedWater() && !has_rvw)
             throw std::runtime_error("The ECL input file requires the RVW keyword to be present if"
                                      " vaporized water is enabled");
         if (enableBrine && !has_salt)
@@ -2358,24 +2359,24 @@ protected:
         std::vector<double> saltData;
         std::vector<double> saltpData;
 
-        if (FluidSystem::phaseIsActive(waterPhaseIdx) && Indices::numPhases > 1)
+        if (fluidSystem_->phaseIsActive(waterPhaseIdx) && Indices::numPhases > 1)
             waterSaturationData = fp.get_double("SWAT");
         else
             waterSaturationData.resize(numDof);
 
-        if (FluidSystem::phaseIsActive(gasPhaseIdx) && FluidSystem::phaseIsActive(oilPhaseIdx))
+        if (fluidSystem_->phaseIsActive(gasPhaseIdx) && fluidSystem_->phaseIsActive(oilPhaseIdx))
             gasSaturationData = fp.get_double("SGAS");
         else
             gasSaturationData.resize(numDof);
 
         pressureData = fp.get_double("PRESSURE");
-        if (FluidSystem::enableDissolvedGas())
+        if (fluidSystem_->enableDissolvedGas())
             rsData = fp.get_double("RS");
 
-        if (FluidSystem::enableVaporizedOil())
+        if (fluidSystem_->enableVaporizedOil())
             rvData = fp.get_double("RV");
 
-        if (FluidSystem::enableVaporizedWater())
+        if (fluidSystem_->enableVaporizedWater())
             rvwData = fp.get_double("RVW");
 
         // initial reservoir temperature
@@ -2399,8 +2400,9 @@ protected:
             // set temperature
             //////
             Scalar temperatureLoc = tempiData[dofIdx];
-            if (!std::isfinite(temperatureLoc) || temperatureLoc <= 0)
-                temperatureLoc = FluidSystem::surfaceTemperature;
+            if (!std::isfinite(temperatureLoc) || temperatureLoc <= 0) {
+                temperatureLoc = fluidSystem_->surfaceTemperature;
+            }
             dofFluidState.setTemperature(temperatureLoc);
 
             //////
@@ -2418,25 +2420,28 @@ protected:
             //////
             // set saturations
             //////
-            if (FluidSystem::phaseIsActive(FluidSystem::waterPhaseIdx))
+            if (fluidSystem_->phaseIsActive(FluidSystem::waterPhaseIdx)) {
                 dofFluidState.setSaturation(FluidSystem::waterPhaseIdx,
                                             waterSaturationData[dofIdx]);
+            }
 
-            if (FluidSystem::phaseIsActive(FluidSystem::gasPhaseIdx)){
-                if (!FluidSystem::phaseIsActive(FluidSystem::oilPhaseIdx)){
+            if (fluidSystem_->phaseIsActive(FluidSystem::gasPhaseIdx)){
+                if (!fluidSystem_->phaseIsActive(FluidSystem::oilPhaseIdx)) {
                     dofFluidState.setSaturation(FluidSystem::gasPhaseIdx,
                                             1.0
                                             - waterSaturationData[dofIdx]);
                 }
-                else
+                else {
                     dofFluidState.setSaturation(FluidSystem::gasPhaseIdx,
                                                 gasSaturationData[dofIdx]);
+                }
             }
-            if (FluidSystem::phaseIsActive(FluidSystem::oilPhaseIdx))
+            if (fluidSystem_->phaseIsActive(FluidSystem::oilPhaseIdx)) {
                 dofFluidState.setSaturation(FluidSystem::oilPhaseIdx,
                                             1.0
                                             - waterSaturationData[dofIdx]
                                             - gasSaturationData[dofIdx]);
+            }
 
             //////
             // set phase pressures
@@ -2451,44 +2456,49 @@ protected:
             Valgrind::CheckDefined(pressure);
             Valgrind::CheckDefined(pc);
             for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                if (!FluidSystem::phaseIsActive(phaseIdx))
+                if (!fluidSystem_->phaseIsActive(phaseIdx)) {
                     continue;
+                }
 
-                if (Indices::oilEnabled)
+                if (Indices::oilEnabled) {
                     dofFluidState.setPressure(phaseIdx, pressure + (pc[phaseIdx] - pc[oilPhaseIdx]));
-                else if (Indices::gasEnabled)
+                } else if (Indices::gasEnabled) {
                     dofFluidState.setPressure(phaseIdx, pressure + (pc[phaseIdx] - pc[gasPhaseIdx]));
-                else if (Indices::waterEnabled)
+                } else if (Indices::waterEnabled) {
                     //single (water) phase
                     dofFluidState.setPressure(phaseIdx, pressure);
+                }
             }
 
-            if (FluidSystem::enableDissolvedGas())
+            if (fluidSystem_->enableDissolvedGas()) {
                 dofFluidState.setRs(rsData[dofIdx]);
-            else if (Indices::gasEnabled && Indices::oilEnabled)
+            } else if (Indices::gasEnabled && Indices::oilEnabled) {
                 dofFluidState.setRs(0.0);
+            }
 
-            if (FluidSystem::enableVaporizedOil())
+            if (fluidSystem_->enableVaporizedOil()) {
                 dofFluidState.setRv(rvData[dofIdx]);
-            else if (Indices::gasEnabled && Indices::oilEnabled)
+            } else if (Indices::gasEnabled && Indices::oilEnabled) {
                 dofFluidState.setRv(0.0);
+            }
 
-            if (FluidSystem::enableVaporizedWater())
+            if (fluidSystem_->enableVaporizedWater()) {
                 dofFluidState.setRvw(rvwData[dofIdx]);
+            }
 
             //////
             // set invB_
             //////
             for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                if (!FluidSystem::phaseIsActive(phaseIdx))
+                if (!fluidSystem_->phaseIsActive(phaseIdx)) {
                     continue;
+                }
 
-                const auto& b = FluidSystem::inverseFormationVolumeFactor(dofFluidState, phaseIdx, pvtRegionIndex(dofIdx));
+                const auto& b = fluidSystem_->inverseFormationVolumeFactor(dofFluidState, phaseIdx, pvtRegionIndex(dofIdx));
                 dofFluidState.setInvB(phaseIdx, b);
 
-                const auto& rho = FluidSystem::density(dofFluidState, phaseIdx, pvtRegionIndex(dofIdx));
+                const auto& rho = fluidSystem_->density(dofFluidState, phaseIdx, pvtRegionIndex(dofIdx));
                 dofFluidState.setDensity(phaseIdx, rho);
-
             }
         }
     }
@@ -2688,8 +2698,9 @@ private:
             int elemIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/0, /*timeIdx=*/0);
             const auto& dofFluidState = initialFluidStates_[elemIdx];
             for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                if (!FluidSystem::phaseIsActive(phaseIdx))
+                if (!fluidSystem_->phaseIsActive(phaseIdx)) {
                     continue;
+                }
 
                 sumInvB[phaseIdx] += dofFluidState.invB(phaseIdx);
             }
@@ -2701,8 +2712,9 @@ private:
         Scalar numTotalDof = comm.sum(numDof);
 
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            if (!FluidSystem::phaseIsActive(phaseIdx))
-                    continue;
+            if (!fluidSystem_->phaseIsActive(phaseIdx)) {
+                continue;
+            }
 
             Scalar avgB = numTotalDof / sumInvB[phaseIdx];
             unsigned solventCompIdx = FluidSystem::solventComponentIndex(phaseIdx);
@@ -2712,10 +2724,10 @@ private:
     }
 
     int refPressurePhaseIdx_() const {
-        if (FluidSystem::phaseIsActive(oilPhaseIdx)) {
+        if (fluidSystem_->phaseIsActive(oilPhaseIdx)) {
             return oilPhaseIdx;
         }
-        else if (FluidSystem::phaseIsActive(gasPhaseIdx)) {
+        else if (fluidSystem_->phaseIsActive(gasPhaseIdx)) {
             return gasPhaseIdx;
         }
         else {
@@ -2786,6 +2798,7 @@ private:
     bool enableDriftCompensation_;
     GlobalEqVector drift_;
 
+    std::shared_ptr<FluidSystem> fluidSystem_;
     WellModel wellModel_;
     AquiferModel aquiferModel_;
 

@@ -148,7 +148,8 @@ class WellContributions;
 
             using Domain = SubDomain<Grid>;
 
-            BlackoilWellModel(Simulator& simulator);
+            BlackoilWellModel(Simulator& simulator,
+                              std::shared_ptr<FluidSystem> fluidSystem);
 
             void init();
             void initWellContainer(const int reportStepIdx) override;
@@ -368,6 +369,7 @@ class WellContributions;
 
         protected:
             Simulator& simulator_;
+            std::shared_ptr<FluidSystem> fluidSystem_;
 
             // a vector of all the wells.
             std::vector<WellInterfacePtr> well_container_{};
@@ -563,7 +565,8 @@ class WellContributions;
             }
 
         private:
-            BlackoilWellModel(Simulator& simulator, const PhaseUsage& pu);
+            BlackoilWellModel(Simulator& simulator, const PhaseUsage& pu,
+                              std::shared_ptr<FluidSystem> fluidSystem);
         };
 
 
