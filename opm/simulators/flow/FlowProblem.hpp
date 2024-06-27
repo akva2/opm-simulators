@@ -255,7 +255,7 @@ public:
                                          int paramIdx,
                                          int)
     {
-        using ParamsMeta = GetProp<TypeTag, Properties::ParameterMetaData>;
+        using ParamsMeta = Properties::ParameterMetaData;//GetProp<TypeTag, Properties::ParameterMetaData>;
         Dune::ParameterTree& tree = ParamsMeta::tree();
         return eclPositionalParameter(tree,
                                       seenParams,

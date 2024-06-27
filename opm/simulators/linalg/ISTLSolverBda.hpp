@@ -151,7 +151,7 @@ public:
     {
         OPM_TIMEBLOCK(initializeBda);
 
-        std::string accelerator_mode = Parameters::get<TypeTag, Properties::AcceleratorMode>();
+        std::string accelerator_mode = Parameters::get<Properties::AcceleratorMode>();
         // Force accelerator mode to none if using MPI.
         if ((this->simulator_.vanguard().grid().comm().size() > 1) && (accelerator_mode != "none")) {
             const bool on_io_rank = (this->simulator_.gridView().comm().rank() == 0);
@@ -166,13 +166,13 @@ public:
         }
 
         // Initialize the BdaBridge
-        const int platformID = Parameters::get<TypeTag, Properties::OpenclPlatformId>();
-        const int deviceID = Parameters::get<TypeTag, Properties::BdaDeviceId>();
-        const int maxit = Parameters::get<TypeTag, Properties::LinearSolverMaxIter>();
-        const double tolerance = Parameters::get<TypeTag, Properties::LinearSolverReduction>();
-        const bool opencl_ilu_parallel = Parameters::get<TypeTag, Properties::OpenclIluParallel>();
+        const int platformID = Parameters::get<Properties::OpenclPlatformId>();
+        const int deviceID = Parameters::get<Properties::BdaDeviceId>();
+        const int maxit = Parameters::get<Properties::LinearSolverMaxIter>();
+        const double tolerance = Parameters::get<Properties::LinearSolverReduction>();
+        const bool opencl_ilu_parallel = Parameters::get<Properties::OpenclIluParallel>();
         const int linear_solver_verbosity = this->parameters_[0].linear_solver_verbosity_;
-        std::string linsolver = Parameters::get<TypeTag, Properties::LinearSolver>();
+        std::string linsolver = Parameters::get<Properties::LinearSolver>();
         bdaBridge_ = std::make_unique<detail::BdaSolverInfo<Matrix,Vector>>(accelerator_mode,
                                                                             linear_solver_verbosity,
                                                                             maxit,
@@ -203,7 +203,7 @@ public:
             // to the original one with a deleter that does nothing.
             // Outch! We need to be able to scale the linear system! Hence const_cast
             // setup sparsity pattern for jacobi matrix for preconditioner (only used for openclSolver)
-            bdaBridge_->numJacobiBlocks_ = Parameters::get<TypeTag, Properties::NumJacobiBlocks>();
+            bdaBridge_->numJacobiBlocks_ = Parameters::get<Properties::NumJacobiBlocks>();
             bdaBridge_->prepare(this->simulator_.vanguard().grid(),
                                this->simulator_.vanguard().cartesianIndexMapper(),
                                this->simulator_.vanguard().schedule().getWellsatEnd(),

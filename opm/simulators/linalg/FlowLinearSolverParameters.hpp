@@ -44,176 +44,156 @@ namespace TTag {
 struct FlowIstlSolverParams {};
 }
 
-template<class TypeTag, class MyTypeTag>
-struct LinearSolverReduction {
-    using type = UndefinedProperty;
-};
+// template<class TypeTag, class MyTypeTag>
+// struct LinearSolverReduction {
+//     using type = UndefinedProperty;
+// };
 
-template<class TypeTag, class MyTypeTag>
-struct RelaxedLinearSolverReduction {
-    using type = UndefinedProperty;
-};
+// template<class TypeTag, class MyTypeTag>
+// struct RelaxedLinearSolverReduction {
+//     using type = UndefinedProperty;
+// };
 
-template<class TypeTag, class MyTypeTag>
-struct LinearSolverMaxIter {
-    using type = UndefinedProperty;
-};
-template<class TypeTag, class MyTypeTag>
-struct LinearSolverRestart {
-    using type = UndefinedProperty;
-};
+// template<class TypeTag, class MyTypeTag>
+// struct LinearSolverMaxIter {
+//     using type = UndefinedProperty;
+// };
+// template<class TypeTag, class MyTypeTag>
+// struct LinearSolverRestart {
+//     using type = UndefinedProperty;
+// };
 //
 // LinearSolverVerbosity defined in opm-models
 //
-template<class TypeTag, class MyTypeTag>
-struct IluRelaxation {
-    using type = UndefinedProperty;
-};
-template<class TypeTag, class MyTypeTag>
-struct IluFillinLevel {
-    using type = UndefinedProperty;
-};
-template<class TypeTag, class MyTypeTag>
-struct MiluVariant {
-    using type = UndefinedProperty;
-};
-template<class TypeTag, class MyTypeTag>
-struct IluRedblack {
-    using type = UndefinedProperty;
-};
-template<class TypeTag, class MyTypeTag>
-struct IluReorderSpheres {
-    using type = UndefinedProperty;
-};
-template<class TypeTag, class MyTypeTag>
-struct UseGmres {
-    using type = UndefinedProperty;
-};
-template<class TypeTag, class MyTypeTag>
-struct LinearSolverIgnoreConvergenceFailure{
-    using type = UndefinedProperty;
-};
-template<class TypeTag, class MyTypeTag>
-struct ScaleLinearSystem {
-    using type = UndefinedProperty;
-};
-template<class TypeTag, class MyTypeTag>
-struct LinearSolver {
-    using type = UndefinedProperty;
-};
-template<class TypeTag, class MyTypeTag>
-struct LinearSolverPrintJsonDefinition {
-    using type = UndefinedProperty;
-};
-template<class TypeTag, class MyTypeTag>
-struct CprReuseSetup {
-    using type = UndefinedProperty;
-};
-template<class TypeTag, class MyTypeTag>
-struct CprReuseInterval {
-    using type = UndefinedProperty;
-};
-template<class TypeTag, class MyTypeTag>
-struct AcceleratorMode {
-    using type = UndefinedProperty;
-};
-template<class TypeTag, class MyTypeTag>
-struct BdaDeviceId {
-    using type = UndefinedProperty;
-};
-template<class TypeTag, class MyTypeTag>
-struct OpenclPlatformId {
-    using type = UndefinedProperty;
-};
-template<class TypeTag, class MyTypeTag>
-struct OpenclIluParallel {
-    using type = UndefinedProperty;
-};
-template<class TypeTag>
-struct LinearSolverReduction<TypeTag, TTag::FlowIstlSolverParams> {
-    using type = GetPropType<TypeTag, Scalar>;
+// template<class TypeTag, class MyTypeTag>
+// struct IluRelaxation {
+//     using type = UndefinedProperty;
+// };
+// template<class TypeTag, class MyTypeTag>
+// struct IluFillinLevel {
+//     using type = UndefinedProperty;
+// };
+// template<class TypeTag, class MyTypeTag>
+// struct MiluVariant {
+//     using type = UndefinedProperty;
+// };
+// template<class TypeTag, class MyTypeTag>
+// struct IluRedblack {
+//     using type = UndefinedProperty;
+// };
+// template<class TypeTag, class MyTypeTag>
+// struct IluReorderSpheres {
+//     using type = UndefinedProperty;
+// };
+// template<class TypeTag, class MyTypeTag>
+// struct UseGmres {
+//     using type = UndefinedProperty;
+// };
+// template<class TypeTag, class MyTypeTag>
+// struct LinearSolverIgnoreConvergenceFailure{
+//     using type = UndefinedProperty;
+// };
+// template<class TypeTag, class MyTypeTag>
+// struct ScaleLinearSystem {
+//     using type = UndefinedProperty;
+// };
+// template<class TypeTag, class MyTypeTag>
+// struct LinearSolver {
+//     using type = UndefinedProperty;
+// };
+// template<class TypeTag, class MyTypeTag>
+// struct LinearSolverPrintJsonDefinition {
+//     using type = UndefinedProperty;
+// };
+// template<class TypeTag, class MyTypeTag>
+// struct CprReuseSetup {
+//     using type = UndefinedProperty;
+// };
+// template<class TypeTag, class MyTypeTag>
+// struct CprReuseInterval {
+//     using type = UndefinedProperty;
+// };
+// template<class TypeTag, class MyTypeTag>
+// struct AcceleratorMode {
+//     using type = UndefinedProperty;
+// };
+// template<class TypeTag, class MyTypeTag>
+// struct BdaDeviceId {
+//     using type = UndefinedProperty;
+// };
+// template<class TypeTag, class MyTypeTag>
+// struct OpenclPlatformId {
+//     using type = UndefinedProperty;
+// };
+// template<class TypeTag, class MyTypeTag>
+// struct OpenclIluParallel {
+//     using type = UndefinedProperty;
+// };
+struct LinearSolverReduction {
+    using type = double;//GetPropType<TypeTag, Scalar>;
     static constexpr type value = 1e-2;
 };
-template<class TypeTag>
-struct RelaxedLinearSolverReduction<TypeTag, TTag::FlowIstlSolverParams> {
-    using type = GetPropType<TypeTag, Scalar>;
+struct RelaxedLinearSolverReduction {
+    using type = double;//GetPropType<TypeTag, Scalar>;
     static constexpr type value = 1e-2;
 };
-template<class TypeTag>
-struct LinearSolverMaxIter<TypeTag, TTag::FlowIstlSolverParams> {
+struct LinearSolverMaxIter {
     static constexpr int value = 200;
 };
-template<class TypeTag>
-struct LinearSolverRestart<TypeTag, TTag::FlowIstlSolverParams> {
+struct LinearSolverRestart {
     static constexpr int value = 40;
 };
-template<class TypeTag>
-struct LinearSolverVerbosity<TypeTag, TTag::FlowIstlSolverParams> {
-    static constexpr int value = 0;
-};
-template<class TypeTag>
-struct IluRelaxation<TypeTag, TTag::FlowIstlSolverParams> {
-    using type = GetPropType<TypeTag, Scalar>;
+// template<class TypeTag>
+// struct LinearSolverVerbosity<TypeTag, TTag::FlowIstlSolverParams> {
+//     static constexpr int value = 0;
+// };
+struct IluRelaxation {
+    using type = double;//GetPropType<TypeTag, Scalar>;
     static constexpr type value = 0.9;
 };
-template<class TypeTag>
-struct IluFillinLevel<TypeTag, TTag::FlowIstlSolverParams> {
+struct IluFillinLevel {
     static constexpr int value = 0;
 };
-template<class TypeTag>
-struct MiluVariant<TypeTag, TTag::FlowIstlSolverParams> {
+struct MiluVariant {
     static constexpr auto value = "ILU";
 };
-template<class TypeTag>
-struct IluRedblack<TypeTag, TTag::FlowIstlSolverParams> {
+struct IluRedblack {
     static constexpr bool value = false;
 };
-template<class TypeTag>
-struct IluReorderSpheres<TypeTag, TTag::FlowIstlSolverParams> {
+struct IluReorderSpheres {
     static constexpr bool value = false;
 };
-template<class TypeTag>
-struct UseGmres<TypeTag, TTag::FlowIstlSolverParams> {
+struct UseGmres {
     static constexpr bool value = false;
 };
-template<class TypeTag>
-struct LinearSolverIgnoreConvergenceFailure<TypeTag, TTag::FlowIstlSolverParams> {
+struct LinearSolverIgnoreConvergenceFailure {
     static constexpr bool value = false;
 };
-template<class TypeTag>
-struct ScaleLinearSystem<TypeTag, TTag::FlowIstlSolverParams> {
+struct ScaleLinearSystem {
     static constexpr bool value = false;
 };
-template<class TypeTag>
-struct LinearSolver<TypeTag, TTag::FlowIstlSolverParams> {
+struct LinearSolver {
     static constexpr auto value = "ilu0";
 };
-template<class TypeTag>
-struct LinearSolverPrintJsonDefinition<TypeTag, TTag::FlowIstlSolverParams> {
+struct LinearSolverPrintJsonDefinition {
     static constexpr auto value = true;
 };
-template<class TypeTag>
-struct CprReuseSetup<TypeTag, TTag::FlowIstlSolverParams> {
+struct CprReuseSetup {
     static constexpr int value = 4;
 };
-template<class TypeTag>
-struct CprReuseInterval<TypeTag, TTag::FlowIstlSolverParams> {
+struct CprReuseInterval {
     static constexpr int value = 30;
 };
-template<class TypeTag>
-struct AcceleratorMode<TypeTag, TTag::FlowIstlSolverParams> {
+struct AcceleratorMode {
     static constexpr auto value = "none";
 };
-template<class TypeTag>
-struct BdaDeviceId<TypeTag, TTag::FlowIstlSolverParams> {
+struct BdaDeviceId {
     static constexpr int value = 0;
 };
-template<class TypeTag>
-struct OpenclPlatformId<TypeTag, TTag::FlowIstlSolverParams> {
+struct OpenclPlatformId {
     static constexpr int value = 0;
 };
-template<class TypeTag>
-struct OpenclIluParallel<TypeTag, TTag::FlowIstlSolverParams> {
+struct OpenclIluParallel {
     static constexpr bool value = true; // note: false should only be used in debug
 };
 
@@ -261,34 +241,34 @@ namespace Opm
         void init(bool cprRequestedInDataFile)
         {
             // TODO: these parameters have undocumented non-trivial dependencies
-            linear_solver_reduction_ = Parameters::get<TypeTag, Properties::LinearSolverReduction>();
-            relaxed_linear_solver_reduction_ = Parameters::get<TypeTag, Properties::RelaxedLinearSolverReduction>();
-            linear_solver_maxiter_ = Parameters::get<TypeTag, Properties::LinearSolverMaxIter>();
-            linear_solver_restart_ = Parameters::get<TypeTag, Properties::LinearSolverRestart>();
-            linear_solver_verbosity_ = Parameters::get<TypeTag, Properties::LinearSolverVerbosity>();
-            ilu_relaxation_ = Parameters::get<TypeTag, Properties::IluRelaxation>();
-            ilu_fillin_level_ = Parameters::get<TypeTag, Properties::IluFillinLevel>();
-            ilu_milu_ = convertString2Milu(Parameters::get<TypeTag, Properties::MiluVariant>());
-            ilu_redblack_ = Parameters::get<TypeTag, Properties::IluRedblack>();
-            ilu_reorder_sphere_ = Parameters::get<TypeTag, Properties::IluReorderSpheres>();
-            newton_use_gmres_ = Parameters::get<TypeTag, Properties::UseGmres>();
-            ignoreConvergenceFailure_ = Parameters::get<TypeTag, Properties::LinearSolverIgnoreConvergenceFailure>();
-            scale_linear_system_ = Parameters::get<TypeTag, Properties::ScaleLinearSystem>();
-            linsolver_ = Parameters::get<TypeTag, Properties::LinearSolver>();
-            linear_solver_print_json_definition_ = Parameters::get<TypeTag, Properties::LinearSolverPrintJsonDefinition>();
-            cpr_reuse_setup_  = Parameters::get<TypeTag, Properties::CprReuseSetup>();
-            cpr_reuse_interval_  = Parameters::get<TypeTag, Properties::CprReuseInterval>();
+            linear_solver_reduction_ = Parameters::get<Properties::LinearSolverReduction>();
+            relaxed_linear_solver_reduction_ = Parameters::get<Properties::RelaxedLinearSolverReduction>();
+            linear_solver_maxiter_ = Parameters::get<Properties::LinearSolverMaxIter>();
+            linear_solver_restart_ = Parameters::get<Properties::LinearSolverRestart>();
+            linear_solver_verbosity_ = Parameters::get<Properties::LinearSolverVerbosity>();
+            ilu_relaxation_ = Parameters::get<Properties::IluRelaxation>();
+            ilu_fillin_level_ = Parameters::get<Properties::IluFillinLevel>();
+            ilu_milu_ = convertString2Milu(Parameters::get<Properties::MiluVariant>());
+            ilu_redblack_ = Parameters::get<Properties::IluRedblack>();
+            ilu_reorder_sphere_ = Parameters::get<Properties::IluReorderSpheres>();
+            newton_use_gmres_ = Parameters::get<Properties::UseGmres>();
+            ignoreConvergenceFailure_ = Parameters::get<Properties::LinearSolverIgnoreConvergenceFailure>();
+            scale_linear_system_ = Parameters::get<Properties::ScaleLinearSystem>();
+            linsolver_ = Parameters::get<Properties::LinearSolver>();
+            linear_solver_print_json_definition_ = Parameters::get<Properties::LinearSolverPrintJsonDefinition>();
+            cpr_reuse_setup_  = Parameters::get<Properties::CprReuseSetup>();
+            cpr_reuse_interval_  = Parameters::get<Properties::CprReuseInterval>();
 
-            if (!Parameters::isSet<TypeTag, Properties::LinearSolver>() && cprRequestedInDataFile) {
+            if (!Parameters::isSet<Properties::LinearSolver>() && cprRequestedInDataFile) {
                 linsolver_ = "cpr";
             } else {
-                linsolver_ = Parameters::get<TypeTag, Properties::LinearSolver>();
+                linsolver_ = Parameters::get<Properties::LinearSolver>();
             }
 
-            accelerator_mode_ = Parameters::get<TypeTag, Properties::AcceleratorMode>();
-            bda_device_id_ = Parameters::get<TypeTag, Properties::BdaDeviceId>();
-            opencl_platform_id_ = Parameters::get<TypeTag, Properties::OpenclPlatformId>();
-            opencl_ilu_parallel_ = Parameters::get<TypeTag, Properties::OpenclIluParallel>();
+            accelerator_mode_ = Parameters::get<Properties::AcceleratorMode>();
+            bda_device_id_ = Parameters::get<Properties::BdaDeviceId>();
+            opencl_platform_id_ = Parameters::get<Properties::OpenclPlatformId>();
+            opencl_ilu_parallel_ = Parameters::get<Properties::OpenclIluParallel>();
         }
 
         template <class TypeTag>

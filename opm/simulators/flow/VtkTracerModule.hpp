@@ -46,14 +46,13 @@ struct VtkTracer {};
 }
 
 // create the property tags needed for the tracer model
-template<class TypeTag, class MyTypeTag>
-struct VtkWriteTracerConcentration {
-    using type = UndefinedProperty;
-};
+// template<class TypeTag, class MyTypeTag>
+// struct VtkWriteTracerConcentration {
+//     using type = UndefinedProperty;
+// };
 
 // set default values for what quantities to output
-template<class TypeTag>
-struct VtkWriteTracerConcentration<TypeTag, TTag::VtkTracer> {
+struct VtkWriteTracerConcentration {
     static constexpr bool value = false;
 };
 
@@ -126,7 +125,7 @@ namespace Opm {
      */
         void processElement(const ElementContext& elemCtx)
         {
-            if (!Parameters::get<TypeTag, Properties::EnableVtkOutput>())
+            if (!Parameters::get<Properties::EnableVtkOutput>())
                 return;
 
             if (eclTracerConcentrationOutput_()) {
@@ -180,7 +179,7 @@ namespace Opm {
     private:
         static bool eclTracerConcentrationOutput_()
         {
-            static bool val = Parameters::get<TypeTag, Properties::VtkWriteTracerConcentration>();
+            static bool val = Parameters::get<Properties::VtkWriteTracerConcentration>();
             return val;
         }
 

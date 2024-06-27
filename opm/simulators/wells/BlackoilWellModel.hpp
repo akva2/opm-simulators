@@ -80,10 +80,7 @@
 
 namespace Opm::Properties {
 
-template<class TypeTag, class MyTypeTag>
-struct EnableTerminalOutput {
-    using type = UndefinedProperty;
-};
+struct EnableTerminalOutput { static constexpr bool value = true; };
 
 } // namespace Opm::Properties
 

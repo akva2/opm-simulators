@@ -21,6 +21,7 @@
 #ifndef OPM_NON_LINEAR_SOLVER_HPP
 #define OPM_NON_LINEAR_SOLVER_HPP
 
+#include "opm/models/nonlinear/newtonmethod.hh"
 #include <opm/simulators/timestepping/SimulatorReport.hpp>
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/simulators/timestepping/SimulatorTimerInterface.hpp>
@@ -46,13 +47,11 @@ struct NewtonMaxRelax {
     using type = UndefinedProperty;
 };
 
-// we are reusing NewtonMaxIterations from opm-models
-// See opm/models/nonlinear/newtonmethodproperties.hh
 
-template<class TypeTag, class MyTypeTag>
-struct NewtonMinIterations{
-    using type = UndefinedProperty;
-};
+// template<class TypeTag, class MyTypeTag>
+// struct NewtonMinIterations{
+//     using type = UndefinedProperty;
+// };
 template<class TypeTag, class MyTypeTag>
 struct NewtonRelaxationType{
     using type = UndefinedProperty;
@@ -63,12 +62,10 @@ struct NewtonMaxRelax<TypeTag, TTag::FlowNonLinearSolver> {
     using type = GetPropType<TypeTag, Scalar>;
     static constexpr type value = 0.5;
 };
-template<class TypeTag>
-struct NewtonMaxIterations<TypeTag, TTag::FlowNonLinearSolver> {
-    static constexpr int value = 20;
-};
-template<class TypeTag>
-struct NewtonMinIterations<TypeTag, TTag::FlowNonLinearSolver> {
+// struct NewtonMaxIterations {
+//     static constexpr int value = 20;
+// };
+struct NewtonMinIterations {
     static constexpr int value = 2;
 };
 template<class TypeTag>

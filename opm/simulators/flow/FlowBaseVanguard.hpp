@@ -36,6 +36,7 @@
 
 #include <opm/models/discretization/common/fvbaseproperties.hh>
 #include <opm/models/io/basevanguard.hh>
+#include <opm/models/discretization/common/fvbaseproperties.hh>
 #include <opm/models/utils/parametersystem.hh>
 #include <opm/models/utils/propertysystem.hh>
 
@@ -64,34 +65,34 @@ template<class TypeTag, class MyTypeTag>
 struct EquilGrid {
     using type = UndefinedProperty;
 };
-template<class TypeTag, class MyTypeTag>
-struct EnableOpmRstFile {
-    using type = UndefinedProperty;
-};
-template<class TypeTag, class MyTypeTag>
-struct ParsingStrictness {
-    using type = UndefinedProperty;
-};
+// template<class TypeTag, class MyTypeTag>
+// struct EnableOpmRstFile {
+//     using type = UndefinedProperty;
+// };
+// template<class TypeTag, class MyTypeTag>
+// struct ParsingStrictness {
+//     using type = UndefinedProperty;
+// };
 template<class TypeTag, class MyTypeTag>
 struct InputSkipMode {
     using type = UndefinedProperty;
 };
-template<class TypeTag, class MyTypeTag>
-struct SchedRestart {
-    using type = UndefinedProperty;
-};
-template<class TypeTag, class MyTypeTag>
-struct EclOutputInterval {
-    using type = UndefinedProperty;
-};
-template<class TypeTag, class MyTypeTag>
-struct IgnoreKeywords {
-    using type = UndefinedProperty;
-};
-template<class TypeTag, class MyTypeTag>
-struct EdgeWeightsMethod {
-    using type = UndefinedProperty;
-};
+// template<class TypeTag, class MyTypeTag>
+// struct SchedRestart {
+//     using type = UndefinedProperty;
+// };
+// template<class TypeTag, class MyTypeTag>
+// struct EclOutputInterval {
+//     using type = UndefinedProperty;
+// };
+// template<class TypeTag, class MyTypeTag>
+// struct IgnoreKeywords {
+//     using type = UndefinedProperty;
+// };
+// template<class TypeTag, class MyTypeTag>
+// struct EdgeWeightsMethod {
+//     using type = UndefinedProperty;
+// };
 
 #if HAVE_OPENCL || HAVE_ROCSPARSE || HAVE_CUDA
 template<class TypeTag, class MyTypeTag>
@@ -100,10 +101,10 @@ struct NumJacobiBlocks {
 };
 #endif
 
-template<class TypeTag, class MyTypeTag>
-struct OwnerCellsFirst {
-    using type = UndefinedProperty;
-};
+// template<class TypeTag, class MyTypeTag>
+// struct OwnerCellsFirst {
+//     using type = UndefinedProperty;
+// };
 
 template<class TypeTag, class MyTypeTag>
 struct SerialPartitioning {
@@ -126,41 +127,34 @@ struct ExternalPartition
     using type = UndefinedProperty;
 };
 
-template<class TypeTag, class MyTypeTag>
-struct AllowDistributedWells {
-    using type = UndefinedProperty;
-};
+// template<class TypeTag, class MyTypeTag>
+// struct AllowDistributedWells {
+//     using type = UndefinedProperty;
+// };
 
-template<class TypeTag>
-struct IgnoreKeywords<TypeTag, TTag::FlowBaseVanguard> {
+struct IgnoreKeywords {
     static constexpr auto value = "";
 };
-template<class TypeTag>
-struct EclDeckFileName<TypeTag, TTag::FlowBaseVanguard> {
-    static constexpr auto value = "";
-};
-template<class TypeTag>
-struct EclOutputInterval<TypeTag, TTag::FlowBaseVanguard> {
+// struct EclDeckFileName {
+//     static constexpr auto value = "";
+// };
+struct EclOutputInterval {
     static constexpr int value = -1;
 };
-template<class TypeTag>
-struct EnableOpmRstFile<TypeTag, TTag::FlowBaseVanguard> {
+struct EnableOpmRstFile {
     static constexpr bool value = false;
 };
-template<class TypeTag>
-struct ParsingStrictness<TypeTag, TTag::FlowBaseVanguard> {
+struct ParsingStrictness {
     static constexpr auto value = "normal";
 };
 template<class TypeTag>
 struct InputSkipMode<TypeTag, TTag::FlowBaseVanguard> {
     static constexpr auto value = "100";
 };
-template<class TypeTag>
-struct SchedRestart<TypeTag, TTag::FlowBaseVanguard> {
+struct SchedRestart {
     static constexpr bool value = false;
 };
-template<class TypeTag>
-struct EdgeWeightsMethod<TypeTag, TTag::FlowBaseVanguard> {
+struct EdgeWeightsMethod {
     static constexpr int value = 1;
 };
 
@@ -171,8 +165,7 @@ struct NumJacobiBlocks<TypeTag, TTag::FlowBaseVanguard> {
 };
 #endif
 
-template<class TypeTag>
-struct OwnerCellsFirst<TypeTag, TTag::FlowBaseVanguard> {
+struct OwnerCellsFirst {
     static constexpr bool value = true;
 };
 template<class TypeTag>
@@ -196,19 +189,18 @@ struct ExternalPartition<TypeTag, TTag::FlowBaseVanguard>
     static constexpr auto* value = "";
 };
 
-template<class TypeTag>
-struct AllowDistributedWells<TypeTag, TTag::FlowBaseVanguard> {
+struct AllowDistributedWells {
     static constexpr bool value = false;
 };
 
-template<class T1, class T2>
-struct UseMultisegmentWell;
+// template<class T1, class T2>
+// struct UseMultisegmentWell;
 
 // Same as in BlackoilModelParameters.hpp but for here.
-template<class TypeTag>
-struct UseMultisegmentWell<TypeTag, TTag::FlowBaseVanguard> {
-    static constexpr bool value = true;
-};
+// template<class TypeTag>
+// struct UseMultisegmentWell<TypeTag, TTag::FlowBaseVanguard> {
+//     static constexpr bool value = true;
+// };
 } // namespace Opm::Properties
 
 namespace Opm {
@@ -246,63 +238,63 @@ public:
      */
     static void registerParameters()
     {
-        Parameters::registerParam<TypeTag, Properties::EclDeckFileName>
+        Parameters::registerParam<Properties::EclDeckFileName>
             ("The name of the file which contains the ECL deck to be simulated");
-        Parameters::registerParam<TypeTag, Properties::EclOutputInterval>
+        Parameters::registerParam<Properties::EclOutputInterval>
             ("The number of report steps that ought to be skipped between two writes of ECL results");
-        Parameters::registerParam<TypeTag, Properties::EnableOpmRstFile>
+        Parameters::registerParam<Properties::EnableOpmRstFile>
             ("Include OPM-specific keywords in the ECL restart file to "
              "enable restart of OPM simulators from these files");
-        Parameters::registerParam<TypeTag, Properties::IgnoreKeywords>
+        Parameters::registerParam<Properties::IgnoreKeywords>
             ("List of Eclipse keywords which should be ignored. As a ':' separated string.");
-        Parameters::registerParam<TypeTag, Properties::ParsingStrictness>
+        Parameters::registerParam<Properties::ParsingStrictness>
             ("Set strictness of parsing process. Available options are "
              "normal (stop for critical errors), "
              "high (stop for all errors) and "
              "low (as normal, except do not stop due to unsupported "
              "keywords even if marked critical");
-        Parameters::registerParam<TypeTag, Properties::InputSkipMode>
+        Parameters::registerParam<Properties::InputSkipMode>
             ("Set compatibility mode for the SKIP100/SKIP300 keywords. Options are "
              "100 (skip SKIP100..ENDSKIP, keep SKIP300..ENDSKIP) [default], "
              "300 (skip SKIP300..ENDSKIP, keep SKIP100..ENDSKIP) and "
              "all (skip both SKIP100..ENDSKIP and SKIP300..ENDSKIP) ");
-        Parameters::registerParam<TypeTag, Properties::SchedRestart>
+        Parameters::registerParam<Properties::SchedRestart>
             ("When restarting: should we try to initialize wells and "
              "groups from historical SCHEDULE section.");
-        Parameters::registerParam<TypeTag, Properties::EdgeWeightsMethod>
+        Parameters::registerParam<Properties::EdgeWeightsMethod>
             ("Choose edge-weighing strategy: 0=uniform, 1=trans, 2=log(trans).");
 
 #if HAVE_OPENCL || HAVE_ROCSPARSE || HAVE_CUDA
-        Parameters::registerParam<TypeTag, Properties::NumJacobiBlocks>
+        Parameters::registerParam<Properties::NumJacobiBlocks>
             ("Number of blocks to be created for the Block-Jacobi preconditioner.");
 #endif
 
-        Parameters::registerParam<TypeTag, Properties::OwnerCellsFirst>
+        Parameters::registerParam<Properties::OwnerCellsFirst>
             ("Order cells owned by rank before ghost/overlap cells.");
 #if HAVE_MPI
-        Parameters::registerParam<TypeTag, Properties::SerialPartitioning>
+        Parameters::registerParam<Properties::SerialPartitioning>
             ("Perform partitioning for parallel runs on a single process.");
-        Parameters::registerParam<TypeTag, Properties::ZoltanImbalanceTol>
+        Parameters::registerParam<Properties::ZoltanImbalanceTol>
             ("Tolerable imbalance of the loadbalancing provided by Zoltan (default: 1.1).");
-        Parameters::registerParam<TypeTag, Properties::ZoltanParams>
+        Parameters::registerParam<Properties::ZoltanParams>
             ("Configuration of Zoltan partitioner. "
              "Valid options are: graph, hypergraph or scotch. "
              "Alternatively, you can request a configuration to be read "
              "from a JSON file by giving the filename here, ending with '.json.' "
              "See https://sandialabs.github.io/Zoltan/ug_html/ug.html "
              "for available Zoltan options.");
-        Parameters::hideParam<TypeTag, Properties::ZoltanParams>();
-        Parameters::registerParam<TypeTag, Properties::ExternalPartition>
+        Parameters::hideParam<Properties::ZoltanParams>();
+        Parameters::registerParam<Properties::ExternalPartition>
             ("Name of file from which to load an externally generated "
              "partitioning of the model's active cells for MPI "
              "distribution purposes. If empty, the built-in partitioning "
              "method will be employed.");
-        Parameters::hideParam<TypeTag, Properties::ExternalPartition>();
+        Parameters::hideParam<Properties::ExternalPartition>();
 #endif
-        Parameters::registerParam<TypeTag, Properties::AllowDistributedWells>
+        Parameters::registerParam<Properties::AllowDistributedWells>
             ("Allow the perforations of a well to be distributed to interior of multiple processes");
         // register here for the use in the tests without BlackoilModelParameters
-        Parameters::registerParam<TypeTag, Properties::UseMultisegmentWell>
+        Parameters::registerParam<Properties::UseMultisegmentWell>
             ("Use the well model for multi-segment wells instead of the one for single-segment wells");
     }
 
@@ -315,26 +307,26 @@ public:
     FlowBaseVanguard(Simulator& simulator)
         : ParentType(simulator)
     {
-        fileName_ = Parameters::get<TypeTag, Properties::EclDeckFileName>();
-        edgeWeightsMethod_   = Dune::EdgeWeightMethod(Parameters::get<TypeTag, Properties::EdgeWeightsMethod>());
+        fileName_ = Parameters::get<Properties::EclDeckFileName>();
+        edgeWeightsMethod_   = Dune::EdgeWeightMethod(Parameters::get<Properties::EdgeWeightsMethod>());
 
 #if HAVE_OPENCL || HAVE_ROCSPARSE || HAVE_CUDA
-        numJacobiBlocks_ = Parameters::get<TypeTag, Properties::NumJacobiBlocks>();
+        numJacobiBlocks_ = Parameters::get<Properties::NumJacobiBlocks>();
 #endif
 
-        ownersFirst_ = Parameters::get<TypeTag, Properties::OwnerCellsFirst>();
+        ownersFirst_ = Parameters::get<Properties::OwnerCellsFirst>();
 #if HAVE_MPI
-        serialPartitioning_ = Parameters::get<TypeTag, Properties::SerialPartitioning>();
-        zoltanImbalanceTol_ = Parameters::get<TypeTag, Properties::ZoltanImbalanceTol>();
-        zoltanParams_ = Parameters::get<TypeTag, Properties::ZoltanParams>();
-        externalPartitionFile_ = Parameters::get<TypeTag, Properties::ExternalPartition>();
+        serialPartitioning_ = Parameters::get<Properties::SerialPartitioning>();
+        zoltanImbalanceTol_ = Parameters::get<Properties::ZoltanImbalanceTol>();
+        zoltanParams_ = Parameters::get<Properties::ZoltanParams>();
+        externalPartitionFile_ = Parameters::get<Properties::ExternalPartition>();
 #endif
-        enableDistributedWells_ = Parameters::get<TypeTag, Properties::AllowDistributedWells>();
-        ignoredKeywords_ = Parameters::get<TypeTag, Properties::IgnoreKeywords>();
-        int output_param = Parameters::get<TypeTag, Properties::EclOutputInterval>();
+        enableDistributedWells_ = Parameters::get<Properties::AllowDistributedWells>();
+        ignoredKeywords_ = Parameters::get<Properties::IgnoreKeywords>();
+        int output_param = Parameters::get<Properties::EclOutputInterval>();
         if (output_param >= 0)
             outputInterval_ = output_param;
-        useMultisegmentWell_ = Parameters::get<TypeTag, Properties::UseMultisegmentWell>();
+        useMultisegmentWell_ = Parameters::get<Properties::UseMultisegmentWell>();
         enableExperiments_ = enableExperiments;
 
         init();
@@ -530,8 +522,8 @@ protected:
     {
         asImp_().createGrids_();
         asImp_().filterConnections_();
-        std::string outputDir = Parameters::get<TypeTag, Properties::OutputDir>();
-        bool enableEclCompatFile = !Parameters::get<TypeTag, Properties::EnableOpmRstFile>();
+        std::string outputDir = Parameters::get<Properties::OutputDir>();
+        bool enableEclCompatFile = !Parameters::get<Properties::EnableOpmRstFile>();
         asImp_().updateOutputDir_(outputDir, enableEclCompatFile);
         asImp_().finalizeInit_();
     }

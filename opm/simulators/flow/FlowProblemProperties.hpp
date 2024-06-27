@@ -72,10 +72,10 @@ struct WellModel {
 };
 
 // The number of time steps skipped between writing two consequtive restart files
-template<class TypeTag, class MyTypeTag>
-struct RestartWritingInterval {
-    using type = UndefinedProperty;
-};
+// template<class TypeTag, class MyTypeTag>
+// struct RestartWritingInterval {
+//     using type = UndefinedProperty;
+// };
 
 // Enable partial compensation of systematic mass losses via the source term of the next time
 // step
@@ -112,10 +112,10 @@ struct AquiferModel {
     using type = UndefinedProperty;
 };
 
-template<class TypeTag, class MyTypeTag>
-struct OutputMode {
-    using type = UndefinedProperty;
-};
+// template<class TypeTag, class MyTypeTag>
+// struct OutputMode {
+//     using type = UndefinedProperty;
+// };
 // Parameterize equilibration accuracy
 template<class TypeTag, class MyTypeTag>
 struct NumPressurePointsEquil {
@@ -239,10 +239,10 @@ struct AquiferModel<TypeTag, TTag::FlowBaseProblem> {
 };
 
 // Enable gravity
-template<class TypeTag>
-struct EnableGravity<TypeTag, TTag::FlowBaseProblem> {
-    static constexpr bool value = true;
-};
+// template<class TypeTag>
+// struct EnableGravity<TypeTag, TTag::FlowBaseProblem> {
+//     static constexpr bool value = true;
+// };
 
 // Enable diffusion
 template<class TypeTag>
@@ -257,10 +257,10 @@ struct EnableDispersion<TypeTag, TTag::FlowBaseProblem> {
 };
 
 // only write the solutions for the report steps to disk
-template<class TypeTag>
-struct EnableWriteAllSolutions<TypeTag, TTag::FlowBaseProblem> {
-    static constexpr bool value = false;
-};
+// struct EnableWriteAllSolutions
+// {
+//     static constexpr bool value = false;
+// };
 
 // disable API tracking
 template<class TypeTag>
@@ -273,35 +273,35 @@ struct EnableApiTracking<TypeTag, TTag::FlowBaseProblem> {
 // By default, stop it after the universe will probably have stopped
 // to exist. (the ECL problem will finish the simulation explicitly
 // after it simulated the last episode specified in the deck.)
-template<class TypeTag>
-struct EndTime<TypeTag, TTag::FlowBaseProblem> {
-    using type = GetPropType<TypeTag, Scalar>;
-    static constexpr type value = 1e100;
-};
+// template<class TypeTag>
+// struct EndTime<TypeTag, TTag::FlowBaseProblem> {
+//     using type = GetPropType<TypeTag, Scalar>;
+//     static constexpr type value = 1e100;
+// };
 
 // The default for the initial time step size of the simulation [s].
 //
 // The chosen value means that the size of the first time step is the
 // one of the initial episode (if the length of the initial episode is
 // not millions of trillions of years, that is...)
-template<class TypeTag>
-struct InitialTimeStepSize<TypeTag, TTag::FlowBaseProblem> {
-    using type = GetPropType<TypeTag, Scalar>;
-    static constexpr type value = 3600*24;
-};
+// template<class TypeTag>
+// struct InitialTimeStepSize<TypeTag, TTag::FlowBaseProblem> {
+//     using type = GetPropType<TypeTag, Scalar>;
+//     static constexpr type value = 3600*24;
+// };
 
 // the default for the allowed volumetric error for oil per second
-template<class TypeTag>
-struct NewtonTolerance<TypeTag, TTag::FlowBaseProblem> {
-    using type = GetPropType<TypeTag, Scalar>;
-    static constexpr type value = 1e-2;
-};
+// template<class TypeTag>
+// struct NewtonTolerance<TypeTag, TTag::FlowBaseProblem> {
+//     using type = GetPropType<TypeTag, Scalar>;
+//     static constexpr type value = 1e-2;
+// };
 
 // Disable the VTK output by default for this problem ...
-template<class TypeTag>
-struct EnableVtkOutput<TypeTag, TTag::FlowBaseProblem> {
-    static constexpr bool value = false;
-};
+// template<class TypeTag>
+// struct EnableVtkOutput<TypeTag, TTag::FlowBaseProblem> {
+//     static constexpr bool value = false;
+// };
 
 // ... but enable the ECL output by default
 template<class TypeTag>
@@ -405,23 +405,22 @@ struct EclOutputDoublePrecision<TypeTag, TTag::FlowBaseProblem> {
 };
 
 // The default location for the ECL output files
-template<class TypeTag>
-struct OutputDir<TypeTag, TTag::FlowBaseProblem> {
-    static constexpr auto value = ".";
-};
+// struct OutputDir {
+//     static constexpr auto value = ".";
+// };
 
 // the cache for intensive quantities can be used for ECL problems and also yields a
 // decent speedup...
-template<class TypeTag>
-struct EnableIntensiveQuantityCache<TypeTag, TTag::FlowBaseProblem> {
-    static constexpr bool value = true;
-};
+// template<class TypeTag>
+// struct EnableIntensiveQuantityCache<TypeTag, TTag::FlowBaseProblem> {
+//     static constexpr bool value = true;
+// };
 
 // the cache for the storage term can also be used and also yields a decent speedup
-template<class TypeTag>
-struct EnableStorageCache<TypeTag, TTag::FlowBaseProblem> {
-    static constexpr bool value = true;
-};
+// template<class TypeTag>
+// struct EnableStorageCache<TypeTag, TTag::FlowBaseProblem> {
+//     static constexpr bool value = true;
+// };
 
 // Use the "velocity module" which uses the Eclipse "NEWTRAN" transmissibilities
 template<class TypeTag>
@@ -437,8 +436,7 @@ struct GradientCalculator<TypeTag, TTag::FlowBaseProblem> {
 
 // The frequency of writing restart (*.ers) files. This is the number of time steps
 // between writing restart files
-template<class TypeTag>
-struct RestartWritingInterval<TypeTag, TTag::FlowBaseProblem> {
+struct RestartWritingInterval {
     static constexpr int value = 0xffffff; // disable
 };
 
@@ -506,8 +504,7 @@ struct EnableExperiments<TypeTag, TTag::FlowBaseProblem> {
     static constexpr bool value = false;
 };
 
-template<class TypeTag>
-struct OutputMode<TypeTag, TTag::FlowBaseProblem> {
+struct OutputMode {
     static constexpr auto value = "all";
 };
 // Parameterize equilibration accuracy
