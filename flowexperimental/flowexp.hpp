@@ -96,11 +96,6 @@ struct MatrixAddWellContributions<TypeTag, TTag::FlowExpTypeTag> {
     static constexpr bool value = true;
 };
 
-template<class TypeTag>
-struct EnableTerminalOutput<TypeTag, TTag::FlowExpTypeTag> {
-    static constexpr bool value = false;
-};
-
 // flow's well model only works with surface volumes
 template<class TypeTag>
 struct BlackoilConserveSurfaceVolume<TypeTag, TTag::FlowExpTypeTag> {
@@ -169,19 +164,21 @@ struct LinearSolverBackend<TypeTag, TTag::FlowExpTypeTag> {
 
 namespace Opm::Parameters {
 
-// if openMP is available, set the default the number of threads per process for the main
-// simulation to 2 (instead of grabbing everything that is available).
-#if _OPENMP
-template<class TypeTag>
-struct ThreadsPerProcess<TypeTag, Properties::TTag::FlowExpTypeTag>
-{ static constexpr int value = 2; };
-#endif
-
 // By default, flowexp accepts the result of the time integration unconditionally if the
 // smallest time step size is reached.
 template<class TypeTag>
 struct ContinueOnConvergenceError<TypeTag, Properties::TTag::FlowExpTypeTag>
 { static constexpr bool value = true; };
+
+template<class TypeTag>
+struct EnableTerminalOutput<TypeTag, Properties::TTag::FlowExpTypeTag>
+{ static constexpr bool value = false; };
+
+// set the maximum number of Newton iterations to 8 so that we fail quickly (albeit
+// relatively often)
+template<class TypeTag>
+struct NewtonMaxIterations<TypeTag, Properties::TTag::FlowExpTypeTag>
+{ static constexpr int value = 8; };
 
 // the default for the allowed volumetric error for oil per second
 template<class TypeTag>
@@ -191,11 +188,13 @@ struct NewtonTolerance<TypeTag, Properties::TTag::FlowExpTypeTag>
     static constexpr type value = 1e-1;
 };
 
-// set the maximum number of Newton iterations to 8 so that we fail quickly (albeit
-// relatively often)
+// if openMP is available, set the default the number of threads per process for the main
+// simulation to 2 (instead of grabbing everything that is available).
+#if _OPENMP
 template<class TypeTag>
-struct NewtonMaxIterations<TypeTag, Properties::TTag::FlowExpTypeTag>
-{ static constexpr int value = 8; };
+struct ThreadsPerProcess<TypeTag, Properties::TTag::FlowExpTypeTag>
+{ static constexpr int value = 2; };
+#endif
 
 } // namespace Opm::Parameters
 
@@ -234,7 +233,7 @@ public:
         ParentType::registerParameters();
 
         BlackoilModelParameters<TypeTag>::registerParameters();
-        Parameters::registerParam<TypeTag, Properties::EnableTerminalOutput>("Do *NOT* use!");
+        Parameters::registerParam<TypeTag, Parameters::EnableTerminalOutput>("Do *NOT* use!");
         Parameters::hideParam<TypeTag, Properties::DbhpMaxRel>();
         Parameters::hideParam<TypeTag, Properties::DwellFractionMax>();
         Parameters::hideParam<TypeTag, Properties::MaxResidualAllowed>();
@@ -258,7 +257,7 @@ public:
         Parameters::hideParam<TypeTag, Properties::UpdateEquationsScaling>();
         Parameters::hideParam<TypeTag, Properties::UseUpdateStabilization>();
         Parameters::hideParam<TypeTag, Properties::MatrixAddWellContributions>();
-        Parameters::hideParam<TypeTag, Properties::EnableTerminalOutput>();
+        Parameters::hideParam<TypeTag, Parameters::EnableTerminalOutput>();
     }
 
     // inherit the constructors

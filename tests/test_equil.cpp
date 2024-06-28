@@ -66,40 +66,49 @@
 #endif
 
 
-namespace Opm::Properties {
+namespace Opm::Parameters {
 
 template<class TypeTag>
-struct EnableTerminalOutput<TypeTag, TTag::FlowBaseProblem> {
-    static constexpr bool value = true;
-};
+struct EnableTerminalOutput<TypeTag, Properties::TTag::FlowBaseProblem>
+{ static constexpr bool value = true; };
+
+}
+
+namespace Opm::Properties {
 
 namespace TTag {
 
-
 struct TestEquilTypeTag {
-    using InheritsFrom = std::tuple<FlowTimeSteppingParameters, FlowModelParameters, FlowBaseProblem, BlackOilModel>;
+    using InheritsFrom = std::tuple<FlowTimeSteppingParameters,
+                                    FlowModelParameters,
+                                    FlowBaseProblem,
+                                    BlackOilModel>;
 };
+
 struct TestEquilVapwatTypeTag {
-    using InheritsFrom = std::tuple<FlowModelParameters, FlowBaseProblem, BlackOilModel>;
+    using InheritsFrom = std::tuple<FlowModelParameters,
+                                    FlowBaseProblem,
+                                    BlackOilModel>;
 };
+
 }
 
 template<class TypeTag>
-struct WellModel<TypeTag, TTag::TestEquilTypeTag> {
-    using type = BlackoilWellModel<TypeTag>;
-};
+struct WellModel<TypeTag, TTag::TestEquilTypeTag>
+{ using type = BlackoilWellModel<TypeTag>; };
+
 template<class TypeTag>
-struct EnableVapwat<TypeTag, TTag::TestEquilTypeTag> {
-    static constexpr bool value = true;
-};
+struct EnableVapwat<TypeTag, TTag::TestEquilTypeTag>
+{  static constexpr bool value = true; };
+
 template<class TypeTag>
-struct WellModel<TypeTag, TTag::TestEquilVapwatTypeTag> {
-    using type = BlackoilWellModel<TypeTag>;
-};
+struct WellModel<TypeTag, TTag::TestEquilVapwatTypeTag>
+{ using type = BlackoilWellModel<TypeTag>; };
+
 template<class TypeTag>
-struct EnableVapwat<TypeTag, TTag::TestEquilVapwatTypeTag> {
-    static constexpr bool value = true;
-};
+struct EnableVapwat<TypeTag, TTag::TestEquilVapwatTypeTag>
+{ static constexpr bool value = true; };
+
 } // namespace Opm::Properties
 
 template <class TypeTag>
@@ -237,7 +246,7 @@ struct EquilFixture {
         BlackoilModelParameters<TypeTag>::registerParameters();
         AdaptiveTimeStepping<TypeTag>::registerParameters();
         Parameters::registerParam<TypeTag,
-                                  Properties::EnableTerminalOutput>("Dummy added for the well model to compile.");
+                                  Parameters::EnableTerminalOutput>("Dummy added for the well model to compile.");
         registerAllParameters_<TypeTag>();
     }
 
