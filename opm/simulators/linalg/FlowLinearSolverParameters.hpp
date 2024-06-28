@@ -220,170 +220,166 @@ struct LinearSolverVerbosity<TypeTag, Properties::TTag::FlowIstlSolverParams>
 
 namespace Opm {
 
-    /// This class carries all parameters for the NewtonIterationBlackoilInterleaved class.
-    struct FlowLinearSolverParameters
+/// This class carries all parameters for the NewtonIterationBlackoilInterleaved class.
+struct FlowLinearSolverParameters
+{
+    double linear_solver_reduction_;
+    double relaxed_linear_solver_reduction_;
+    int    linear_solver_maxiter_;
+    int    linear_solver_restart_;
+    int    linear_solver_verbosity_;
+    double ilu_relaxation_;
+    int    ilu_fillin_level_;
+    MILU_VARIANT   ilu_milu_;
+    bool   ilu_redblack_;
+    bool   ilu_reorder_sphere_;
+    bool   newton_use_gmres_;
+    bool   ignoreConvergenceFailure_;
+    bool scale_linear_system_;
+    std::string linsolver_;
+    bool linear_solver_print_json_definition_;
+    int cpr_reuse_setup_;
+    int cpr_reuse_interval_;
+    std::string accelerator_mode_;
+    int bda_device_id_;
+    int opencl_platform_id_;
+    bool opencl_ilu_parallel_;
+
+    template <class TypeTag>
+    void init(bool cprRequestedInDataFile)
     {
-        double linear_solver_reduction_;
-        double relaxed_linear_solver_reduction_;
-        int    linear_solver_maxiter_;
-        int    linear_solver_restart_;
-        int    linear_solver_verbosity_;
-        double ilu_relaxation_;
-        int    ilu_fillin_level_;
-        MILU_VARIANT   ilu_milu_;
-        bool   ilu_redblack_;
-        bool   ilu_reorder_sphere_;
-        bool   newton_use_gmres_;
-        bool   ignoreConvergenceFailure_;
-        bool scale_linear_system_;
-        std::string linsolver_;
-        bool linear_solver_print_json_definition_;
-        int cpr_reuse_setup_;
-        int cpr_reuse_interval_;
-        std::string accelerator_mode_;
-        int bda_device_id_;
-        int opencl_platform_id_;
-        bool opencl_ilu_parallel_;
+        // TODO: these parameters have undocumented non-trivial dependencies
+        linear_solver_reduction_ = Parameters::get<TypeTag, Properties::LinearSolverReduction>();
+        relaxed_linear_solver_reduction_ = Parameters::get<TypeTag, Properties::RelaxedLinearSolverReduction>();
+        linear_solver_maxiter_ = Parameters::get<TypeTag, Properties::LinearSolverMaxIter>();
+        linear_solver_restart_ = Parameters::get<TypeTag, Properties::LinearSolverRestart>();
+        linear_solver_verbosity_ = Parameters::get<TypeTag, Parameters::LinearSolverVerbosity>();
+        ilu_relaxation_ = Parameters::get<TypeTag, Properties::IluRelaxation>();
+        ilu_fillin_level_ = Parameters::get<TypeTag, Properties::IluFillinLevel>();
+        ilu_milu_ = convertString2Milu(Parameters::get<TypeTag, Properties::MiluVariant>());
+        ilu_redblack_ = Parameters::get<TypeTag, Properties::IluRedblack>();
+        ilu_reorder_sphere_ = Parameters::get<TypeTag, Properties::IluReorderSpheres>();
+        newton_use_gmres_ = Parameters::get<TypeTag, Properties::UseGmres>();
+        ignoreConvergenceFailure_ = Parameters::get<TypeTag, Properties::LinearSolverIgnoreConvergenceFailure>();
+        scale_linear_system_ = Parameters::get<TypeTag, Properties::ScaleLinearSystem>();
+        linsolver_ = Parameters::get<TypeTag, Properties::LinearSolver>();
+        linear_solver_print_json_definition_ = Parameters::get<TypeTag, Properties::LinearSolverPrintJsonDefinition>();
+        cpr_reuse_setup_  = Parameters::get<TypeTag, Properties::CprReuseSetup>();
+        cpr_reuse_interval_  = Parameters::get<TypeTag, Properties::CprReuseInterval>();
 
-        template <class TypeTag>
-        void init(bool cprRequestedInDataFile)
-        {
-            // TODO: these parameters have undocumented non-trivial dependencies
-            linear_solver_reduction_ = Parameters::get<TypeTag, Properties::LinearSolverReduction>();
-            relaxed_linear_solver_reduction_ = Parameters::get<TypeTag, Properties::RelaxedLinearSolverReduction>();
-            linear_solver_maxiter_ = Parameters::get<TypeTag, Properties::LinearSolverMaxIter>();
-            linear_solver_restart_ = Parameters::get<TypeTag, Properties::LinearSolverRestart>();
-            linear_solver_verbosity_ = Parameters::get<TypeTag, Parameters::LinearSolverVerbosity>();
-            ilu_relaxation_ = Parameters::get<TypeTag, Properties::IluRelaxation>();
-            ilu_fillin_level_ = Parameters::get<TypeTag, Properties::IluFillinLevel>();
-            ilu_milu_ = convertString2Milu(Parameters::get<TypeTag, Properties::MiluVariant>());
-            ilu_redblack_ = Parameters::get<TypeTag, Properties::IluRedblack>();
-            ilu_reorder_sphere_ = Parameters::get<TypeTag, Properties::IluReorderSpheres>();
-            newton_use_gmres_ = Parameters::get<TypeTag, Properties::UseGmres>();
-            ignoreConvergenceFailure_ = Parameters::get<TypeTag, Properties::LinearSolverIgnoreConvergenceFailure>();
-            scale_linear_system_ = Parameters::get<TypeTag, Properties::ScaleLinearSystem>();
+        if (!Parameters::isSet<TypeTag, Properties::LinearSolver>() && cprRequestedInDataFile) {
+            linsolver_ = "cpr";
+        } else {
             linsolver_ = Parameters::get<TypeTag, Properties::LinearSolver>();
-            linear_solver_print_json_definition_ = Parameters::get<TypeTag, Properties::LinearSolverPrintJsonDefinition>();
-            cpr_reuse_setup_  = Parameters::get<TypeTag, Properties::CprReuseSetup>();
-            cpr_reuse_interval_  = Parameters::get<TypeTag, Properties::CprReuseInterval>();
-
-            if (!Parameters::isSet<TypeTag, Properties::LinearSolver>() && cprRequestedInDataFile) {
-                linsolver_ = "cpr";
-            } else {
-                linsolver_ = Parameters::get<TypeTag, Properties::LinearSolver>();
-            }
-
-            accelerator_mode_ = Parameters::get<TypeTag, Properties::AcceleratorMode>();
-            bda_device_id_ = Parameters::get<TypeTag, Properties::BdaDeviceId>();
-            opencl_platform_id_ = Parameters::get<TypeTag, Properties::OpenclPlatformId>();
-            opencl_ilu_parallel_ = Parameters::get<TypeTag, Properties::OpenclIluParallel>();
         }
 
-        template <class TypeTag>
-        static void registerParameters()
-        {
-            Parameters::registerParam<TypeTag, Properties::LinearSolverReduction>
-                ("The minimum reduction of the residual which the linear solver must achieve");
-            Parameters::registerParam<TypeTag, Properties::RelaxedLinearSolverReduction>
-                ("The minimum reduction of the residual which the linear solver need to "
-                 "achieve for the solution to be accepted");
-            Parameters::registerParam<TypeTag, Properties::LinearSolverMaxIter>
-                ("The maximum number of iterations of the linear solver");
-            Parameters::registerParam<TypeTag, Properties::LinearSolverRestart>
-                ("The number of iterations after which GMRES is restarted");
-            Parameters::registerParam<TypeTag, Parameters::LinearSolverVerbosity>
-                ("The verbosity level of the linear solver (0: off, 2: all)");
-            Parameters::registerParam<TypeTag, Properties::IluRelaxation>
-                ("The relaxation factor of the linear solver's ILU preconditioner");
-            Parameters::registerParam<TypeTag, Properties::IluFillinLevel>
-                ("The fill-in level of the linear solver's ILU preconditioner");
-            Parameters::registerParam<TypeTag, Properties::MiluVariant>
-                ("Specify which variant of the modified-ILU preconditioner ought to be used. "
-                 "Possible variants are: ILU (default, plain ILU), "
-                 "MILU_1 (lump diagonal with dropped row entries), "
-                 "MILU_2 (lump diagonal with the sum of the absolute values of the dropped row entries), "
-                 "MILU_3 (if diagonal is positive add sum of dropped row entries, otherwise subtract them), "
-                 "MILU_4 (if diagonal is positive add sum of dropped row entries, otherwise do nothing");
-            Parameters::registerParam<TypeTag, Properties::IluRedblack>
-                ("Use red-black partitioning for the ILU preconditioner");
-            Parameters::registerParam<TypeTag, Properties::IluReorderSpheres>
-                ("Whether to reorder the entries of the matrix in the red-black "
-                 "ILU preconditioner in spheres starting at an edge. "
-                 "If false the original ordering is preserved in each color. "
-                 "Otherwise why try to ensure D4 ordering (in a 2D structured grid, "
-                 "the diagonal elements are consecutive).");
-            Parameters::registerParam<TypeTag, Properties::UseGmres>
-                ("Use GMRES as the linear solver");
-            Parameters::registerParam<TypeTag, Properties::LinearSolverIgnoreConvergenceFailure>
-                ("Continue with the simulation like nothing happened "
-                 "after the linear solver did not converge");
-            Parameters::registerParam<TypeTag, Properties::ScaleLinearSystem>
-                ("Scale linear system according to equation scale and primary variable types");
-            Parameters::registerParam<TypeTag, Properties::LinearSolver>
-                ("Configuration of solver. Valid options are: ilu0 (default), "
-                 "dilu, cprw, cpr (an alias for cprw), cpr_quasiimpes, "
-                 "cpr_trueimpes, cpr_trueimpesanalytic, amg or hybrid (experimental). "
-                 "Alternatively, you can request a configuration to be read from a "
-                 "JSON file by giving the filename here, ending with '.json.'");
-            Parameters::registerParam<TypeTag, Properties::LinearSolverPrintJsonDefinition>
-                ("Write the JSON definition of the linear solver setup to the DBG file.");
-            Parameters::registerParam<TypeTag, Properties::CprReuseSetup>
-                ("Reuse preconditioner setup. Valid options are "
-                 "0: recreate the preconditioner for every linear solve, "
-                 "1: recreate once every timestep, "
-                 "2: recreate if last linear solve took more than 10 iterations, "
-                 "3: never recreate, "
-                 "4: recreated every CprReuseInterval");
-            Parameters::registerParam<TypeTag, Properties::CprReuseInterval>
-                ("Reuse preconditioner interval. Used when CprReuseSetup is set to 4, "
-                 "then the preconditioner will be fully recreated instead of reused "
-                 "every N linear solve, where N is this parameter.");
-            Parameters::registerParam<TypeTag, Properties::AcceleratorMode>
-                ("Choose a linear solver, usage: "
-                 "'--accelerator-mode=[none|cusparse|opencl|amgcl|rocalution|rocsparse]'");
-            Parameters::registerParam<TypeTag, Properties::BdaDeviceId>
-                ("Choose device ID for cusparseSolver or openclSolver, "
-                 "use 'nvidia-smi' or 'clinfo' to determine valid IDs");
-            Parameters::registerParam<TypeTag, Properties::OpenclPlatformId>
-                ("Choose platform ID for openclSolver, use 'clinfo' "
-                 "to determine valid platform IDs");
-            Parameters::registerParam<TypeTag, Properties::OpenclIluParallel>
-                ("Parallelize ILU decomposition and application on GPU");
-        }
+        accelerator_mode_ = Parameters::get<TypeTag, Properties::AcceleratorMode>();
+        bda_device_id_ = Parameters::get<TypeTag, Properties::BdaDeviceId>();
+        opencl_platform_id_ = Parameters::get<TypeTag, Properties::OpenclPlatformId>();
+        opencl_ilu_parallel_ = Parameters::get<TypeTag, Properties::OpenclIluParallel>();
+    }
 
-        FlowLinearSolverParameters() { reset(); }
+    template <class TypeTag>
+    static void registerParameters()
+    {
+        Parameters::registerParam<TypeTag, Properties::LinearSolverReduction>
+            ("The minimum reduction of the residual which the linear solver must achieve");
+        Parameters::registerParam<TypeTag, Properties::RelaxedLinearSolverReduction>
+            ("The minimum reduction of the residual which the linear solver need to "
+             "achieve for the solution to be accepted");
+        Parameters::registerParam<TypeTag, Properties::LinearSolverMaxIter>
+            ("The maximum number of iterations of the linear solver");
+        Parameters::registerParam<TypeTag, Properties::LinearSolverRestart>
+            ("The number of iterations after which GMRES is restarted");
+        Parameters::registerParam<TypeTag, Parameters::LinearSolverVerbosity>
+            ("The verbosity level of the linear solver (0: off, 2: all)");
+        Parameters::registerParam<TypeTag, Properties::IluRelaxation>
+            ("The relaxation factor of the linear solver's ILU preconditioner");
+        Parameters::registerParam<TypeTag, Properties::IluFillinLevel>
+            ("The fill-in level of the linear solver's ILU preconditioner");
+        Parameters::registerParam<TypeTag, Properties::MiluVariant>
+            ("Specify which variant of the modified-ILU preconditioner ought to be used. "
+             "Possible variants are: ILU (default, plain ILU), "
+             "MILU_1 (lump diagonal with dropped row entries), "
+             "MILU_2 (lump diagonal with the sum of the absolute values of the dropped row entries), "
+             "MILU_3 (if diagonal is positive add sum of dropped row entries, otherwise subtract them), "
+             "MILU_4 (if diagonal is positive add sum of dropped row entries, otherwise do nothing");
+        Parameters::registerParam<TypeTag, Properties::IluRedblack>
+            ("Use red-black partitioning for the ILU preconditioner");
+        Parameters::registerParam<TypeTag, Properties::IluReorderSpheres>
+            ("Whether to reorder the entries of the matrix in the red-black "
+             "ILU preconditioner in spheres starting at an edge. "
+             "If false the original ordering is preserved in each color. "
+             "Otherwise why try to ensure D4 ordering (in a 2D structured grid, "
+             "the diagonal elements are consecutive).");
+        Parameters::registerParam<TypeTag, Properties::UseGmres>
+            ("Use GMRES as the linear solver");
+        Parameters::registerParam<TypeTag, Properties::LinearSolverIgnoreConvergenceFailure>
+            ("Continue with the simulation like nothing happened "
+             "after the linear solver did not converge");
+        Parameters::registerParam<TypeTag, Properties::ScaleLinearSystem>
+            ("Scale linear system according to equation scale and primary variable types");
+        Parameters::registerParam<TypeTag, Properties::LinearSolver>
+            ("Configuration of solver. Valid options are: ilu0 (default), "
+             "dilu, cprw, cpr (an alias for cprw), cpr_quasiimpes, "
+             "cpr_trueimpes, cpr_trueimpesanalytic, amg or hybrid (experimental). "
+             "Alternatively, you can request a configuration to be read from a "
+             "JSON file by giving the filename here, ending with '.json.'");
+        Parameters::registerParam<TypeTag, Properties::LinearSolverPrintJsonDefinition>
+            ("Write the JSON definition of the linear solver setup to the DBG file.");
+        Parameters::registerParam<TypeTag, Properties::CprReuseSetup>
+            ("Reuse preconditioner setup. Valid options are "
+             "0: recreate the preconditioner for every linear solve, "
+             "1: recreate once every timestep, "
+             "2: recreate if last linear solve took more than 10 iterations, "
+             "3: never recreate, "
+             "4: recreated every CprReuseInterval");
+        Parameters::registerParam<TypeTag, Properties::CprReuseInterval>
+            ("Reuse preconditioner interval. Used when CprReuseSetup is set to 4, "
+             "then the preconditioner will be fully recreated instead of reused "
+             "every N linear solve, where N is this parameter.");
+        Parameters::registerParam<TypeTag, Properties::AcceleratorMode>
+            ("Choose a linear solver, usage: "
+             "'--accelerator-mode=[none|cusparse|opencl|amgcl|rocalution|rocsparse]'");
+        Parameters::registerParam<TypeTag, Properties::BdaDeviceId>
+            ("Choose device ID for cusparseSolver or openclSolver, "
+             "use 'nvidia-smi' or 'clinfo' to determine valid IDs");
+        Parameters::registerParam<TypeTag, Properties::OpenclPlatformId>
+            ("Choose platform ID for openclSolver, use 'clinfo' "
+             "to determine valid platform IDs");
+        Parameters::registerParam<TypeTag, Properties::OpenclIluParallel>
+            ("Parallelize ILU decomposition and application on GPU");
+    }
 
-        // set default values
-        void reset()
-        {
-            relaxed_linear_solver_reduction_ = 1e-2;
-            linear_solver_reduction_  = 1e-2;
-            linear_solver_maxiter_    = 200;
-            linear_solver_restart_    = 40;
-            linear_solver_verbosity_  = 0;
-            ilu_relaxation_           = 0.9;
-            ilu_fillin_level_         = 0;
-            ilu_milu_                 = MILU_VARIANT::ILU;
-            ilu_redblack_             = false;
-            ilu_reorder_sphere_       = false;
-            newton_use_gmres_         = false;
-            ignoreConvergenceFailure_ = false;
-            scale_linear_system_      = false;
-            linsolver_                = "ilu0";
-            linear_solver_print_json_definition_ = true;
-            cpr_reuse_setup_          = 4;
-            cpr_reuse_interval_       = 30;
-            accelerator_mode_         = "none";
-            bda_device_id_            = 0;
-            opencl_platform_id_       = 0;
-            opencl_ilu_parallel_      = true;
-        }
-    };
+    FlowLinearSolverParameters() { reset(); }
 
+    // set default values
+    void reset()
+    {
+        relaxed_linear_solver_reduction_ = 1e-2;
+        linear_solver_reduction_  = 1e-2;
+        linear_solver_maxiter_    = 200;
+        linear_solver_restart_    = 40;
+        linear_solver_verbosity_  = 0;
+        ilu_relaxation_           = 0.9;
+        ilu_fillin_level_         = 0;
+        ilu_milu_                 = MILU_VARIANT::ILU;
+        ilu_redblack_             = false;
+        ilu_reorder_sphere_       = false;
+        newton_use_gmres_         = false;
+        ignoreConvergenceFailure_ = false;
+        scale_linear_system_      = false;
+        linsolver_                = "ilu0";
+        linear_solver_print_json_definition_ = true;
+        cpr_reuse_setup_          = 4;
+        cpr_reuse_interval_       = 30;
+        accelerator_mode_         = "none";
+        bda_device_id_            = 0;
+        opencl_platform_id_       = 0;
+        opencl_ilu_parallel_      = true;
+    }
+};
 
 } // namespace Opm
-
-
-
 
 #endif // OPM_FLOWLINEARSOLVERPARAMETERS_HEADER_INCLUDED
