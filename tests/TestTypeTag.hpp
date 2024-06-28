@@ -67,18 +67,6 @@ template<class TypeTag>
 struct WellModel<TypeTag, TTag::TestTypeTag>
 { using type = BlackoilWellModel<TypeTag>; };
 
-// currently, ebos uses the non-multisegment well model by default to avoid
-// regressions. the --use-multisegment-well=true|false command line parameter is still
-// available in ebos, but hidden from view.
-template<class TypeTag>
-struct UseMultisegmentWell<TypeTag, TTag::TestTypeTag>
-{ static constexpr bool value = false; };
-
-// set some properties that are only required by the well model
-template<class TypeTag>
-struct MatrixAddWellContributions<TypeTag, TTag::TestTypeTag>
-{ static constexpr bool value = true; };
-
 // flow's well model only works with surface volumes
 template<class TypeTag>
 struct BlackoilConserveSurfaceVolume<TypeTag, TTag::TestTypeTag>
@@ -117,6 +105,11 @@ template<class TypeTag>
 struct EnableTerminalOutput<TypeTag, Properties::TTag::TestTypeTag>
 { static constexpr bool value = false; };
 
+// set some parameters that are only required by the well model
+template<class TypeTag>
+struct MatrixAddWellContributions<TypeTag, Properties::TTag::TestTypeTag>
+{ static constexpr bool value = true; };
+
 // set the maximum number of Newton iterations to 8 so that we fail quickly (albeit
 // relatively often)
 template<class TypeTag>
@@ -130,6 +123,13 @@ struct NewtonTolerance<TypeTag, Properties::TTag::TestTypeTag>
     using type = GetPropType<TypeTag, Properties::Scalar>;
     static constexpr type value = 1e-1;
 };
+
+// currently, ebos uses the non-multisegment well model by default to avoid
+// regressions. the --use-multisegment-well=true|false command line parameter is still
+// available in ebos, but hidden from view.
+template<class TypeTag>
+struct UseMultisegmentWell<TypeTag, Properties::TTag::TestTypeTag>
+{ static constexpr bool value = false; };
 
 // if openMP is available, set the default the number of threads per process for the main
 // simulation to 2 (instead of grabbing everything that is available).
