@@ -247,7 +247,7 @@ namespace Opm {
                 if (Parameters::get<TypeTag, Parameters::PrintParameters>() == 1) {
                     doExit = true;
                     if (mpiRank == 0)
-                        Parameters::printValues<TypeTag>();
+                        Parameters::printValues();
                 }
 
                 if (doExit)
