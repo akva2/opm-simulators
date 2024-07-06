@@ -158,16 +158,6 @@ template<class TypeTag>
 struct EnableTerminalOutput<TypeTag, Properties::TTag::FlowExpTypeTag>
 { static constexpr bool value = false; };
 
-// set the maximum number of Newton iterations to 8 so that we fail quickly (albeit
-// relatively often)
-template<class TypeTag>
-struct NewtonMaxIterations<TypeTag, Properties::TTag::FlowExpTypeTag>
-{ static constexpr int value = 8; };
-
-} // namespace Opm::Parameters
-
-namespace Opm::Parameters {
-
 // the maximum volumetric error of a cell in the relaxed region
 template<class TypeTag>
 struct EclNewtonRelaxedTolerance<TypeTag, Properties::TTag::FlowExpTypeTag> {
@@ -189,7 +179,7 @@ template<class TypeTag>
 struct MatrixAddWellContributions<TypeTag, Properties::TTag::FlowExpTypeTag>
 { static constexpr bool value = true; };
 
-}
+} // namespace Opm::Parameters
 
 namespace Opm {
 template <class TypeTag>
@@ -255,6 +245,7 @@ public:
         // smallest time step size is reached.
         Parameters::SetDefault<Parameters::ContinueOnConvergenceError>(true);
 
+        Parameters::SetDefault<Parameters::NewtonMaxIterations>(8);
         Parameters::SetDefault<Parameters::NewtonTolerance<Scalar>>(1e-2);
     }
 
