@@ -122,50 +122,9 @@ struct LinearSolverBackend<TypeTag, TTag::FlowExpTypeTag> {
 
 namespace Opm::Parameters {
 
-// set fraction of the pore volume where the volumetric residual may be violated during
-// strict Newton iterations
-template<class TypeTag>
-struct EclNewtonRelaxedVolumeFraction<TypeTag, Properties::TTag::FlowExpTypeTag>
-{
-    using type = GetPropType<TypeTag, Properties::Scalar>;
-    static constexpr type value = 0.05;
-};
-
-// the tolerated amount of "incorrect" amount of oil per time step for the complete
-// reservoir. this is scaled by the pore volume of the reservoir, i.e., larger reservoirs
-// will tolerate larger residuals.
-template<class TypeTag>
-struct EclNewtonSumTolerance<TypeTag, Properties::TTag::FlowExpTypeTag>
-{
-    using type = GetPropType<TypeTag, Properties::Scalar>;
-    static constexpr type value = 1e-5;
-};
-
-template<class TypeTag>
-struct EclNewtonSumToleranceExponent<TypeTag, Properties::TTag::FlowExpTypeTag>
-{
-    using type = GetPropType<TypeTag, Properties::Scalar>;
-    static constexpr type value = 1./3.;
-};
-// make all Newton iterations strict, i.e., the volumetric Newton tolerance must be
-// always be upheld in the majority of the spatial domain. In this context, "majority"
-// means 1 - EclNewtonRelaxedVolumeFraction.
-template<class TypeTag>
-struct EclNewtonStrictIterations<TypeTag, Properties::TTag::FlowExpTypeTag>
-{ static constexpr int value = 100; };
-
 template<class TypeTag>
 struct EnableTerminalOutput<TypeTag, Properties::TTag::FlowExpTypeTag>
 { static constexpr bool value = false; };
-
-// the maximum volumetric error of a cell in the relaxed region
-template<class TypeTag>
-struct EclNewtonRelaxedTolerance<TypeTag, Properties::TTag::FlowExpTypeTag> {
-    using type = GetPropType<TypeTag, Properties::Scalar>;
-    static constexpr auto baseValue =
-        Parameters::NewtonTolerance<type>::value;
-    static constexpr type value = 1e6 * baseValue;
-};
 
 // currently, flowexp uses the non-multisegment well model by default to avoid
 // regressions. the --use-multisegment-well=true|false command line parameter is still
@@ -247,6 +206,9 @@ public:
 
         Parameters::SetDefault<Parameters::NewtonMaxIterations>(8);
         Parameters::SetDefault<Parameters::NewtonTolerance<Scalar>>(1e-2);
+        Parameters::SetDefault<Parameters::EclNewtonRelaxedTolerance<Scalar>>(1e-1);
+        Parameters::SetDefault<Parameters::EclNewtonRelaxedVolumeFraction<Scalar>>(0.0);
+        Parameters::SetDefault<Parameters::EclNewtonSumTolerance<Scalar>>(1e-5);
     }
 
     // inherit the constructors

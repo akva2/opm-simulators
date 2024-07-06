@@ -75,35 +75,6 @@ struct Simulator<TypeTag, TTag::FlowExpProblemBlackOil>
 
 } // namespace Opm::Properties
 
-namespace Opm::Parameters {
-
-template<class TypeTag>
-struct EclNewtonRelaxedTolerance<TypeTag, Properties::TTag::FlowExpProblemBlackOil>
-{
-    using type = GetPropType<TypeTag, Properties::Scalar>;
-    static constexpr auto baseValue =
-        Parameters::NewtonTolerance<type>::value;
-    static constexpr type value = 10 * baseValue;
-};
-
-// set fraction of the pore volume where the volumetric residual may be violated during
-// strict Newton iterations
-template<class TypeTag>
-struct EclNewtonRelaxedVolumeFraction<TypeTag, Properties::TTag::FlowExpProblemBlackOil>
-{
-    using type = GetPropType<TypeTag, Properties::Scalar>;
-    static constexpr type value = 0.0;
-};
-
-template<class TypeTag>
-struct EclNewtonSumTolerance<TypeTag, Properties::TTag::FlowExpProblemBlackOil>
-{
-    using type = GetPropType<TypeTag, Properties::Scalar>;
-    static constexpr type value = 1e-5;
-};
-
-} // namespace Opm::Parameters
-
 int main(int argc, char** argv)
 {
     using TypeTag = Opm::Properties::TTag::FlowExpProblemBlackOil;
