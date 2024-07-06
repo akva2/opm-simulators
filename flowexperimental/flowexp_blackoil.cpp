@@ -114,10 +114,6 @@ struct NewtonTolerance<TypeTag, Properties::TTag::FlowExpProblemBlackOil>
     static constexpr type value = 1e-2;
 };
 
-template<class TypeTag>
-struct ThreadsPerProcess<TypeTag, Properties::TTag::FlowExpProblemBlackOil>
-{ static constexpr int value = 1; };
-
 } // namespace Opm::Parameters
 
 int main(int argc, char** argv)

@@ -178,14 +178,6 @@ struct NewtonTolerance<TypeTag, Properties::TTag::FlowExpTypeTag>
     static constexpr type value = 1e-1;
 };
 
-// if openMP is available, set the default the number of threads per process for the main
-// simulation to 2 (instead of grabbing everything that is available).
-#if _OPENMP
-template<class TypeTag>
-struct ThreadsPerProcess<TypeTag, Properties::TTag::FlowExpTypeTag>
-{ static constexpr int value = 2; };
-#endif
-
 } // namespace Opm::Parameters
 
 namespace Opm::Parameters {
@@ -265,6 +257,12 @@ public:
         Parameters::hideParam<TypeTag, Parameters::UseUpdateStabilization>();
         Parameters::hideParam<TypeTag, Parameters::MatrixAddWellContributions>();
         Parameters::hideParam<TypeTag, Parameters::EnableTerminalOutput>();
+
+        // if openMP is available, set the default the number of threads per process for the main
+        // simulation to 2 (instead of grabbing everything that is available).
+#if _OPENMP
+        Parameters::SetDefault<Parameters::ThreadsPerProcess>(1);
+#endif
     }
 
     // inherit the constructors

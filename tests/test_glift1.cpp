@@ -109,6 +109,7 @@ struct GliftFixture {
         Opm::FlowGenericVanguard::setCommunication(std::make_unique<Opm::Parallel::Communication>());
         using TypeTag = Opm::Properties::TTag::FlowProblem;
         Opm::registerAllParameters_<TypeTag>();
+        Opm::Parameters::SetDefault<Opm::Parameters::ThreadsPerProcess>(2);
     }
 };
 

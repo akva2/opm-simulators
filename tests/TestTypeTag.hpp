@@ -131,14 +131,6 @@ template<class TypeTag>
 struct UseMultisegmentWell<TypeTag, Properties::TTag::TestTypeTag>
 { static constexpr bool value = false; };
 
-// if openMP is available, set the default the number of threads per process for the main
-// simulation to 2 (instead of grabbing everything that is available).
-#if _OPENMP
-template<class TypeTag>
-struct ThreadsPerProcess<TypeTag, Properties::TTag::TestTypeTag>
-{ static constexpr int value = 2; };
-#endif
-
 } // namespace Opm::Parameters
 
 #endif // OPM_TEST_TYPETAG_HPP
