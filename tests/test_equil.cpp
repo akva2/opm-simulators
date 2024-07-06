@@ -66,14 +66,6 @@
 #endif
 
 
-namespace Opm::Parameters {
-
-template<class TypeTag>
-struct EnableTerminalOutput<TypeTag, Properties::TTag::FlowBaseProblem>
-{ static constexpr bool value = true; };
-
-}
-
 namespace Opm::Properties {
 
 namespace TTag {
@@ -245,8 +237,7 @@ struct EquilFixture {
         FlowGenericVanguard::setCommunication(std::make_unique<Opm::Parallel::Communication>());
         BlackoilModelParameters<TypeTag>::registerParameters();
         AdaptiveTimeStepping<TypeTag>::registerParameters();
-        Parameters::registerParam<TypeTag,
-                                  Parameters::EnableTerminalOutput>("Dummy added for the well model to compile.");
+        Parameters::Register<Parameters::EnableTerminalOutput>("Dummy added for the well model to compile.");
         registerAllParameters_<TypeTag>();
     }
 

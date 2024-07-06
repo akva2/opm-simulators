@@ -87,7 +87,7 @@ initSimulator(const char *filename)
 
     registerEclTimeSteppingParameters<TypeTag>();
     BlackoilModelParameters<TypeTag>::registerParameters();
-    Parameters::registerParam<TypeTag, Parameters::EnableTerminalOutput>("Do *NOT* use!");
+    Parameters::Register<Parameters::EnableTerminalOutput>("Do *NOT* use!");
     setupParameters_<TypeTag>(/*argc=*/sizeof(argv)/sizeof(argv[0]), argv, /*registerParams=*/true);
 
     FlowGenericVanguard::readDeck(filename);

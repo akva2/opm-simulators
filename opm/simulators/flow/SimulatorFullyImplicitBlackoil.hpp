@@ -101,10 +101,6 @@ template <class TypeTag>
 struct LoadStep<TypeTag, Properties::TTag::FlowProblem>
 { static constexpr int value = -1; };
 
-template<class TypeTag>
-struct EnableTerminalOutput<TypeTag, Properties::TTag::FlowProblem>
-{ static constexpr bool value = true; };
-
 } // namespace Opm::Parameters
 
 namespace Opm {
@@ -171,7 +167,7 @@ public:
         // Only rank 0 does print to std::cout, and only if specifically requested.
         this->terminalOutput_ = false;
         if (this->grid().comm().rank() == 0) {
-            this->terminalOutput_ = Parameters::get<TypeTag, Parameters::EnableTerminalOutput>();
+            this->terminalOutput_ = Parameters::Get<Parameters::EnableTerminalOutput>();
 
             this->startConvergenceOutputThread(Parameters::get<TypeTag, Parameters::OutputExtraConvergenceInfo>(),
                                                R"(OutputExtraConvergenceInfo (--output-extra-convergence-info))");
@@ -190,7 +186,7 @@ public:
         SolverParameters::registerParameters();
         TimeStepper::registerParameters();
 
-        Parameters::registerParam<TypeTag, Parameters::EnableTerminalOutput>
+        Parameters::Register<Parameters::EnableTerminalOutput>
             ("Print high-level information about the simulation's progress to the terminal");
         Parameters::registerParam<TypeTag, Parameters::EnableAdaptiveTimeStepping>
             ("Use adaptive time stepping between report steps");

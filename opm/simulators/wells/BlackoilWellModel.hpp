@@ -78,12 +78,9 @@
 
 #include <opm/simulators/utils/DeferredLogger.hpp>
 
-namespace Opm::Parameters{
+namespace Opm::Parameters {
 
-template<class TypeTag, class MyTypeTag>
-struct EnableTerminalOutput {
-    using type = Properties::UndefinedProperty;
-};
+struct EnableTerminalOutput { static constexpr bool value = true; };
 
 } // namespace Opm::Properties
 
