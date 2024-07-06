@@ -71,8 +71,7 @@ namespace Opm::Properties {
 namespace TTag {
 
 struct TestEquilTypeTag {
-    using InheritsFrom = std::tuple<FlowTimeSteppingParameters,
-                                    FlowBaseProblem,
+    using InheritsFrom = std::tuple<FlowBaseProblem,
                                     BlackOilModel>;
 };
 
