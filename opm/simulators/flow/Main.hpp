@@ -404,7 +404,7 @@ private:
         std::string cmdline_params;
         if (outputCout_) {
             printFlowBanner(FlowGenericVanguard::comm().size(),
-                            getNumThreads<PreTypeTag>(),
+                            getNumThreads(),
                             Opm::moduleVersionName());
             std::ostringstream str;
             Parameters::printValues(str);
@@ -415,12 +415,12 @@ private:
         try {
             this->readDeck(deckFilename,
                            outputDir,
-                           Parameters::get<PreTypeTag, Parameters::OutputMode>(),
+                           Parameters::Get<Parameters::OutputMode>(),
                            !Parameters::Get<Parameters::SchedRestart>(),
                            Parameters::Get<Parameters::EnableLoggingFalloutWarning>(),
                            Parameters::Get<Parameters::ParsingStrictness>(),
                            Parameters::Get<Parameters::InputSkipMode>(),
-                           getNumThreads<PreTypeTag>(),
+                           getNumThreads(),
                            Parameters::Get<Parameters::EclOutputInterval>(),
                            cmdline_params,
                            Opm::moduleVersion(),
@@ -703,7 +703,6 @@ private:
 
     void setupVanguard();
 
-    template<class TypeTag>
     static int getNumThreads()
     {
 

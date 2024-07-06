@@ -140,14 +140,6 @@ struct LinearSolverSplice<TypeTag, TTag::FlowProblem>
 
 } // namespace Opm::Properties
 
-namespace Opm::Parameters {
-
-template<class TypeTag>
-struct EnableDebuggingChecks<TypeTag, Properties::TTag::FlowProblem>
-{ static constexpr bool value = false; };
-
-}
-
 namespace Opm {
 
     /// A model implementation for three-phase black oil.
@@ -1310,6 +1302,7 @@ namespace Opm {
     public:
         std::vector<bool> wasSwitched_;
     };
+
 } // namespace Opm
 
 #endif // OPM_BLACKOILMODEL_HEADER_INCLUDED

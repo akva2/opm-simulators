@@ -28,8 +28,6 @@
 #ifndef OPM_FLOW_PROBLEM_PROPERTIES_HPP
 #define OPM_FLOW_PROBLEM_PROPERTIES_HPP
 
-#include <opm/input/eclipse/Parser/ParserKeywords/E.hpp>
-
 #include <opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp>
 #include <opm/material/thermal/EclThermalLawManager.hpp>
 
@@ -273,18 +271,6 @@ template<class TypeTag>
 struct EnableAsyncEclOutput<TypeTag, Properties::TTag::FlowBaseProblem>
 { static constexpr bool value = true; };
 
-// By default, we enable the debugging checks if we're compiled in debug mode
-template<class TypeTag>
-struct EnableDebuggingChecks<TypeTag, Properties::TTag::FlowBaseProblem>
-{ static constexpr bool value = true; };
-
-// Drift compensation is an experimental feature, i.e., systematic errors in the
-// conservation quantities are only compensated for
-// as default if experimental mode is enabled.
-template<class TypeTag>
-struct EnableDriftCompensation<TypeTag, Properties::TTag::FlowBaseProblem>
-{ static constexpr bool value = true; };
-
 // enable the ECL output by default
 template<class TypeTag>
 struct EnableEclOutput<TypeTag,Properties::TTag::FlowBaseProblem>
@@ -299,26 +285,6 @@ struct EnableEsmry<TypeTag, Properties::TTag::FlowBaseProblem>
 template<class TypeTag>
 struct EnableWriteAllSolutions<TypeTag, Properties::TTag::FlowBaseProblem>
 { static constexpr bool value = false; };
-
-// By default, use implicit pressure in rock compaction
-template<class TypeTag>
-struct ExplicitRockCompaction<TypeTag, Properties::TTag::FlowBaseProblem>
-{ static constexpr bool value = false; };
-
-// Parameterize equilibration accuracy
-template<class TypeTag>
-struct NumPressurePointsEquil<TypeTag, Properties::TTag::FlowBaseProblem>
-{ static constexpr int value = ParserKeywords::EQLDIMS::DEPTH_NODES_P::defaultValue; };
-
-template<class TypeTag>
-struct OutputMode<TypeTag, Properties::TTag::FlowBaseProblem>
-{ static constexpr auto value = "all"; };
-
-// The frequency of writing restart (*.ers) files. This is the number of time steps
-// between writing restart files
-template<class TypeTag>
-struct RestartWritingInterval<TypeTag, Properties::TTag::FlowBaseProblem>
-{ static constexpr int value = 0xffffff; }; // disable
 
 } // namespace Opm::Parameters
 
