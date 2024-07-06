@@ -126,7 +126,7 @@ namespace Opm {
      */
         void processElement(const ElementContext& elemCtx)
         {
-            if (!Parameters::get<TypeTag, Parameters::EnableVtkOutput>())
+            if (!Parameters::Get<Parameters::EnableVtkOutput>())
                 return;
 
             if (eclTracerConcentrationOutput_()) {
