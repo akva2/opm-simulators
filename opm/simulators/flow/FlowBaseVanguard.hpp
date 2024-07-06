@@ -501,7 +501,7 @@ protected:
     {
         asImp_().createGrids_();
         asImp_().filterConnections_();
-        std::string outputDir = Parameters::get<TypeTag, Parameters::OutputDir>();
+        std::string outputDir = Parameters::Get<Parameters::OutputDir>();
         bool enableEclCompatFile = !Parameters::get<TypeTag, Parameters::EnableOpmRstFile>();
         asImp_().updateOutputDir_(outputDir, enableEclCompatFile);
         asImp_().finalizeInit_();
