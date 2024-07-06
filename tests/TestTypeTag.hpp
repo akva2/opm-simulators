@@ -95,12 +95,6 @@ struct LinearSolverBackend<TTag::TestTypeTag, TTag::FlowIstlSolverParams>
 
 namespace Opm::Parameters {
 
-// By default, ebos accepts the result of the time integration unconditionally if the
-// smallest time step size is reached.
-template<class TypeTag>
-struct ContinueOnConvergenceError<TypeTag, Properties::TTag::TestTypeTag>
-{ static constexpr bool value = true; };
-
 template<class TypeTag>
 struct EnableTerminalOutput<TypeTag, Properties::TTag::TestTypeTag>
 { static constexpr bool value = false; };

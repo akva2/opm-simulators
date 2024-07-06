@@ -122,12 +122,6 @@ struct LinearSolverBackend<TypeTag, TTag::FlowExpTypeTag> {
 
 namespace Opm::Parameters {
 
-// By default, flowexp accepts the result of the time integration unconditionally if the
-// smallest time step size is reached.
-template<class TypeTag>
-struct ContinueOnConvergenceError<TypeTag, Properties::TTag::FlowExpTypeTag>
-{ static constexpr bool value = true; };
-
 // set fraction of the pore volume where the volumetric residual may be violated during
 // strict Newton iterations
 template<class TypeTag>
@@ -263,6 +257,10 @@ public:
 #if _OPENMP
         Parameters::SetDefault<Parameters::ThreadsPerProcess>(1);
 #endif
+
+        // By default, flowexp accepts the result of the time integration unconditionally if the
+        // smallest time step size is reached.
+        Parameters::SetDefault<Parameters::ContinueOnConvergenceError>(true);
     }
 
     // inherit the constructors
