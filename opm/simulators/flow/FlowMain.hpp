@@ -244,7 +244,7 @@ namespace Opm {
                         Properties::printValues<TypeTag>(std::cout);
                 }
 
-                if (Parameters::get<TypeTag, Parameters::PrintParameters>() == 1) {
+                if (Parameters::Get<Parameters::PrintParameters>() == 1) {
                     doExit = true;
                     if (mpiRank == 0)
                         Parameters::printValues();
