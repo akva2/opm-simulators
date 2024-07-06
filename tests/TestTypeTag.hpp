@@ -42,8 +42,7 @@ namespace TTag {
 
 struct TestTypeTag
 {
-    using InheritsFrom = std::tuple<FlowModelParameters,
-                                    FlowBaseProblem,
+    using InheritsFrom = std::tuple<FlowBaseProblem,
                                     BlackOilModel,
                                     EclTimeSteppingParameters>;
 };
@@ -92,21 +91,5 @@ struct LinearSolverBackend<TTag::TestTypeTag, TTag::FlowIstlSolverParams>
 { using type = ISTLSolver<TTag::TestTypeTag>; };
 
 } // namespace Opm::Properties
-
-namespace Opm::Parameters {
-
-// set some parameters that are only required by the well model
-template<class TypeTag>
-struct MatrixAddWellContributions<TypeTag, Properties::TTag::TestTypeTag>
-{ static constexpr bool value = true; };
-
-// currently, ebos uses the non-multisegment well model by default to avoid
-// regressions. the --use-multisegment-well=true|false command line parameter is still
-// available in ebos, but hidden from view.
-template<class TypeTag>
-struct UseMultisegmentWell<TypeTag, Properties::TTag::TestTypeTag>
-{ static constexpr bool value = false; };
-
-} // namespace Opm::Parameters
 
 #endif // OPM_TEST_TYPETAG_HPP
