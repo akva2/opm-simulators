@@ -603,7 +603,7 @@ public:
 
 private:
     static bool enableEclOutput_()
-    { return Parameters::get<TypeTag, Parameters::EnableEclOutput>(); }
+    { return Parameters::Get<Parameters::EnableEclOutput>(); }
 
     const EclipseState& eclState() const
     { return simulator_.vanguard().eclState(); }

@@ -351,7 +351,7 @@ private:
 
     static bool enableDamarisOutput_()
     {
-        return Parameters::get<TypeTag, Parameters::EnableDamarisOutput>();
+        return Parameters::Get<Parameters::EnableDamarisOutput>();
     }
 
     void setGlobalIndexForDamaris () 
