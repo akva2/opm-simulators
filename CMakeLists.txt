@@ -371,6 +371,44 @@ opm_add_test(test_tuning_tsinit_nextstep
                 ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} opmcommon
               ONLY_COMPILE)
 
+# this test is identical to the simulation of the lens problem that
+# uses the element centered finite volume discretization in
+# conjunction with automatic differentiation
+# (lens_immiscible_ecfv_ad). The only difference is that it uses
+# multiple compile units in order to ensure that eWoms code can be
+# used within libraries that use the same type tag within multiple
+# compile units.
+opm_add_test(lens_immiscible_ecfv_ad_mcu
+             SOURCES
+              examples/lens_immiscible_ecfv_ad_cu1.cpp
+              examples/lens_immiscible_ecfv_ad_cu2.cpp
+              examples/lens_immiscible_ecfv_ad_main.cpp
+             LIBRARIES
+              opmsimulators opmcommon
+             ONLY_COMPILE)
+
+if(QuadMath_FOUND)
+  foreach(tapp co2injection_flash_ni_ecfv
+               co2injection_flash_ni_vcfv
+               co2injection_flash_ecfv
+               co2injection_flash_vcfv)
+    opm_add_test(${tapp}_quad
+                 EXE_NAME ${tapp}_quad
+                 SOURCES
+                 examples/${tapp}.cpp
+                 ONLY_COMPILE)
+    target_link_libraries(${tapp}_quad QuadMath::QuadMath)
+    target_compile_definitions(${tapp}_quad PRIVATE HAVE_QUAD=1)
+  endforeach()
+endif()
+
+target_sources(test_outputdir PRIVATE $<TARGET_OBJECTS:moduleVersion>)
+target_sources(test_equil PRIVATE $<TARGET_OBJECTS:moduleVersion>)
+target_sources(test_RestartSerialization PRIVATE $<TARGET_OBJECTS:moduleVersion>)
+target_sources(test_glift1 PRIVATE $<TARGET_OBJECTS:moduleVersion>)
+
+include (${CMAKE_CURRENT_SOURCE_DIR}/modelTests.cmake)
+
 if (HAVE_OPM_TESTS)
   include (${CMAKE_CURRENT_SOURCE_DIR}/compareECLFiles.cmake)
 endif()
@@ -378,11 +416,6 @@ endif()
 if(MPI_FOUND)
   include (${CMAKE_CURRENT_SOURCE_DIR}/parallelUnitTests.cmake)
 endif()
-
-target_sources(test_outputdir PRIVATE $<TARGET_OBJECTS:moduleVersion>)
-target_sources(test_equil PRIVATE $<TARGET_OBJECTS:moduleVersion>)
-target_sources(test_RestartSerialization PRIVATE $<TARGET_OBJECTS:moduleVersion>)
-target_sources(test_glift1 PRIVATE $<TARGET_OBJECTS:moduleVersion>)
 
 include(OpmBashCompletion)
 
