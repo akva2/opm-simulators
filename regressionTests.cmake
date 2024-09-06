@@ -417,7 +417,7 @@ add_test_compareECLFiles(CASENAME 0a3_grpctl_msw_model2
                          ABS_TOL ${abs_tol}
                          REL_TOL ${rel_tol}
                          DIR model2
-                         TEST_ARGS --solver-max-time-step-in-days=3)
+                         TEST_ARGS --solver-max-time-step-in-days=2)
 
 add_test_compareECLFiles(CASENAME 0a4_grpctl_stw_model2
                          FILENAME 0A4_GRCTRL_LRAT_LRAT_GGR_BASE_MODEL2_STW
