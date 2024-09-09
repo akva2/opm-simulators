@@ -24,5 +24,7 @@ do
   file_name=$(awk -v search="set_tests_properties\\\($failed_test\$" -v prop="FILENAME" -f ${SOURCE_DIR}/getprop.awk $BUILD_DIR/CTestTestfile.cmake)
   test_name=$(awk -v search="set_tests_properties\\\($failed_test\$" -v prop="TESTNAME" -f ${SOURCE_DIR}/getprop.awk $BUILD_DIR/CTestTestfile.cmake)
   echo "Processing ${test_name}"
-  $SOURCE_DIR/plot_well_comparison.py $OPM_TESTS_ROOT/$dir_name/opm-simulation-reference/$binary/$file_name $BUILD_DIR/tests/results/$binary+$test_name/$file_name $test_name
+  $SOURCE_DIR/plot_well_comparison.py -r $OPM_TESTS_ROOT/$dir_name/opm-simulation-reference/$binary/$file_name -s $BUILD_DIR/tests/results/$binary+$test_name/$file_name -c $test_name -o plot
 done
+
+$SOURCE_DIR/plot_well_comparison.py  -o rename
