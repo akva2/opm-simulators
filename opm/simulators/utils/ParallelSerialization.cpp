@@ -76,7 +76,19 @@ void eclStateBroadcast(Parallel::Communication comm, EclipseState& eclState, Sch
                        WellTestState&  wtestState)
 {
     Opm::Parallel::MpiSerializer ser(comm);
-    ser.broadcast(0, eclState, schedule, summaryConfig, udqState, actionState, wtestState);
+    //ser.broadcast(0, eclState, schedule, summaryConfig, udqState, actionState, wtestState);
+    ser.broadcast(eclState);
+    std::cout << "state broadcast" << std::endl;
+    ser.broadcast(schedule);
+    std::cout << "schedule broadcast" << std::endl;
+    ser.broadcast(summaryConfig);
+    std::cout << "summaryconfig broadcast" << std::endl;
+    ser.broadcast(udqState);
+    std::cout << "udqstate broadcast" << std::endl;
+    ser.broadcast(actionState);
+    std::cout << "actionstate broadcast" << std::endl;
+    ser.broadcast(wtestState);
+    std::cout << "wtestState broadcast" << std::endl;
 }
 
 template <class T>
