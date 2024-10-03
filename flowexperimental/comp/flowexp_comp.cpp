@@ -17,6 +17,12 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "config.h"
+
+#include <dune/common/parallel/mpihelper.hh>
+
+#include <opm/input/eclipse/Deck/Deck.hpp>
+#include <opm/input/eclipse/Parser/Parser.hpp>
+
 #include <opm/models/utils/start.hh>
 #include <opm/material/constraintsolvers/PTFlash.hpp>
 #include "../FlowExpNewtonMethod.hpp"
@@ -89,13 +95,14 @@ namespace Opm{
 namespace Opm::Properties {
 
    namespace TTag {
+   template<int NumComp>
    struct FlowExpCompProblem {
        using InheritsFrom = std::tuple<FlowBaseProblemComp, FlashModel>;
    };
    }
 
-    template<class TypeTag>
-    struct SparseMatrixAdapter<TypeTag, TTag::FlowExpCompProblem>
+    template<class TypeTag, int NumComp>
+    struct SparseMatrixAdapter<TypeTag, TTag::FlowExpCompProblem<NumComp>>
     {
     private:
         using Scalar = GetPropType<TypeTag, Properties::Scalar>;
@@ -149,30 +156,30 @@ struct LocalLinearizerSplice<TypeTag, TTag::FlowExpCompProblem>
 #endif
 
 // Set the problem property
-template <class TypeTag>
-struct Problem<TypeTag, TTag::FlowExpCompProblem>
+template <class TypeTag, int NumComp>
+struct Problem<TypeTag, TTag::FlowExpCompProblem<NumComp>>
 {
     using type = FlowProblemComp<TypeTag>;
 };
 
-template<class TypeTag>
-struct AquiferModel<TypeTag, TTag::FlowExpCompProblem> {
+template<class TypeTag, int NumComp>
+struct AquiferModel<TypeTag, TTag::FlowExpCompProblem<NumComp>> {
     using type = EmptyModel<TypeTag>;
 };
 
-template<class TypeTag>
-struct WellModel<TypeTag, TTag::FlowExpCompProblem> {
+template<class TypeTag, int NumComp>
+struct WellModel<TypeTag, TTag::FlowExpCompProblem<NumComp>> {
     using type = EmptyModel<TypeTag>;
 };
 
-template<class TypeTag>
-struct TracerModel<TypeTag, TTag::FlowExpCompProblem> {
+template<class TypeTag, int NumComp>
+struct TracerModel<TypeTag, TTag::FlowExpCompProblem<NumComp>> {
     using type = EmptyModel<TypeTag>;
 };
 
 
-template <class TypeTag>
-struct FlashSolver<TypeTag, TTag::FlowExpCompProblem> {
+template <class TypeTag, int NumComp>
+struct FlashSolver<TypeTag, TTag::FlowExpCompProblem<NumComp>> {
 private:
     using Scalar = GetPropType<TypeTag, Properties::Scalar>;
     using FluidSystem = GetPropType<TypeTag, Properties::FluidSystem>;
@@ -187,9 +194,9 @@ template <class TypeTag, class MyTypeTag>
 struct NumComp { using type = UndefinedProperty; };
 
 // TODO: this is unfortunate, have to check why we need to hard-code it
-template <class TypeTag>
-struct NumComp<TypeTag, TTag::FlowExpCompProblem> {
-    static constexpr int value = 3;
+template <class TypeTag, int NumComp_>
+struct NumComp<TypeTag, TTag::FlowExpCompProblem<NumComp_>> {
+    static constexpr int value = NumComp_;
 };
 #if 0
 struct Temperature { using type = UndefinedProperty; };
@@ -201,8 +208,8 @@ struct Temperature { using type = UndefinedProperty; };
  };
 #endif
 
-template <class TypeTag>
-struct FluidSystem<TypeTag, TTag::FlowExpCompProblem>
+template <class TypeTag, int NumComp_>
+struct FluidSystem<TypeTag, TTag::FlowExpCompProblem<NumComp_>>
 {
 private:
     using Scalar = GetPropType<TypeTag, Properties::Scalar>;
@@ -211,16 +218,16 @@ private:
 public:
     using type = Opm::GenericOilGasFluidSystem<Scalar, num_comp>;
 };
-template<class TypeTag>
-struct EnableMech<TypeTag, TTag::FlowExpCompProblem> {
+template<class TypeTag, int NumComp>
+struct EnableMech<TypeTag, TTag::FlowExpCompProblem<NumComp>> {
     static constexpr bool value = false;
 };
 
-template<class TypeTag>
-struct EnableDisgasInWater<TypeTag, TTag::FlowExpCompProblem> { static constexpr bool value = false; };
+template<class TypeTag, int NumComp>
+struct EnableDisgasInWater<TypeTag, TTag::FlowExpCompProblem<NumComp>> { static constexpr bool value = false; };
 
-template<class TypeTag>
-struct Stencil<TypeTag, TTag::FlowExpCompProblem>
+template<class TypeTag, int NumComp>
+struct Stencil<TypeTag, TTag::FlowExpCompProblem<NumComp>>
 {
 private:
     using Scalar = GetPropType<TypeTag, Properties::Scalar>;
@@ -230,62 +237,62 @@ public:
     using type = EcfvStencil<Scalar, GridView>;
 };
 
-template<class TypeTag>
-struct EnableApiTracking<TypeTag, TTag::FlowExpCompProblem> {
+template<class TypeTag, int NumComp>
+struct EnableApiTracking<TypeTag, TTag::FlowExpCompProblem<NumComp>> {
     static constexpr bool value = false;
 };
 
-template<class TypeTag>
-struct EnableTemperature<TypeTag, TTag::FlowExpCompProblem> {
+template<class TypeTag, int NumComp>
+struct EnableTemperature<TypeTag, TTag::FlowExpCompProblem<NumComp>> {
     static constexpr bool value = false;
 };
 
-template<class TypeTag>
-struct EnableSaltPrecipitation<TypeTag, TTag::FlowExpCompProblem> {
+template<class TypeTag, int NumComp>
+struct EnableSaltPrecipitation<TypeTag, TTag::FlowExpCompProblem<NumComp>> {
     static constexpr bool value = false;
 };
-template<class TypeTag>
-struct EnablePolymerMW<TypeTag, TTag::FlowExpCompProblem> {
-    static constexpr bool value = false;
-};
-
-template<class TypeTag>
-struct EnablePolymer<TypeTag, TTag::FlowExpCompProblem> {
+template<class TypeTag, int NumComp>
+struct EnablePolymerMW<TypeTag, TTag::FlowExpCompProblem<NumComp>> {
     static constexpr bool value = false;
 };
 
-template<class TypeTag>
-struct EnableDispersion<TypeTag, TTag::FlowExpCompProblem> {
+template<class TypeTag, int NumComp>
+struct EnablePolymer<TypeTag, TTag::FlowExpCompProblem<NumComp>> {
     static constexpr bool value = false;
 };
 
-template<class TypeTag>
-struct EnableBrine<TypeTag, TTag::FlowExpCompProblem> {
-    static constexpr bool value = false;
-};
-template<class TypeTag>
-struct EnableVapwat<TypeTag, TTag::FlowExpCompProblem> {
+template<class TypeTag, int NumComp>
+struct EnableDispersion<TypeTag, TTag::FlowExpCompProblem<NumComp>> {
     static constexpr bool value = false;
 };
 
-template<class TypeTag>
-struct EnableSolvent<TypeTag, TTag::FlowExpCompProblem> {
+template<class TypeTag, int NumComp>
+struct EnableBrine<TypeTag, TTag::FlowExpCompProblem<NumComp>> {
     static constexpr bool value = false;
 };
-template<class TypeTag>
-struct EnableEnergy<TypeTag, TTag::FlowExpCompProblem> {
+template<class TypeTag, int NumComp>
+struct EnableVapwat<TypeTag, TTag::FlowExpCompProblem<NumComp>> {
     static constexpr bool value = false;
 };
-template<class TypeTag>
-struct EnableFoam<TypeTag, TTag::FlowExpCompProblem> {
+
+template<class TypeTag, int NumComp>
+struct EnableSolvent<TypeTag, TTag::FlowExpCompProblem<NumComp>> {
     static constexpr bool value = false;
 };
-template<class TypeTag>
-struct EnableExtbo<TypeTag, TTag::FlowExpCompProblem> {
+template<class TypeTag, int NumComp>
+struct EnableEnergy<TypeTag, TTag::FlowExpCompProblem<NumComp>> {
     static constexpr bool value = false;
 };
-template<class TypeTag>
-struct EnableMICP<TypeTag, TTag::FlowExpCompProblem> {
+template<class TypeTag, int NumComp>
+struct EnableFoam<TypeTag, TTag::FlowExpCompProblem<NumComp>> {
+    static constexpr bool value = false;
+};
+template<class TypeTag, int NumComp>
+struct EnableExtbo<TypeTag, TTag::FlowExpCompProblem<NumComp>> {
+    static constexpr bool value = false;
+};
+template<class TypeTag, int NumComp>
+struct EnableMICP<TypeTag, TTag::FlowExpCompProblem<NumComp>> {
     static constexpr bool value = false;
 };
 
@@ -299,10 +306,65 @@ struct EnableThermalFluxBoundaries<TypeTag, TTag::FlowExpCompProblem> {
 
 } // namespace Opm::Properties
 
-
-int main(int argc, char** argv)
+//! @brief Runs the simulator with the correct number of components
+//!
+//! This function will compile-time recurse from numComponentsCompileTime
+//! down to (inclusive) minimumNumberOfComponents and check if
+//!
+//!     numComponentsCompileTime == numComponentsRuntime
+//!
+//! and if this is the case, it will star the simulator with numComponentsRuntime.
+//!
+//! @tparam minimumNumberOfComponents the minimum number of components supported
+//! @tparam numCompnentsCompileTime the maximum number of components supported
+//! @param numComponentsRuntime the number of components found the in the deck file
+//! @param argc argc argument from CLI
+//! @param argv argv argument from CLI
+//!
+//! @return error code
+template <int minimumNumberOfComponents, int numComponentsCompileTime>
+int
+startSimulationComponents(int numComponentsRuntime, int argc, char** argv)
 {
-    using TypeTag = Opm::Properties::TTag::FlowExpCompProblem;
-    Opm::registerEclTimeSteppingParameters<double>();
-    return Opm::start<TypeTag>(argc, argv);
+    OPM_ERROR_IF(numComponentsCompileTime < numComponentsRuntime || numComponentsRuntime < minimumNumberOfComponents,
+                 fmt::format("Deck has {} components, not supported. We support a maximum of {} components, "
+                             "and a minimum of {}.",
+                             numComponentsRuntime,
+                             numComponentsCompileTime,
+                             minimumNumberOfComponents));
+
+    if (numComponentsCompileTime == numComponentsRuntime) {
+        return Opm::start<Opm::Properties::TTag::FlowExpCompProblem<numComponentsCompileTime>>(argc, argv, false);
+    }
+    if constexpr (numComponentsCompileTime > minimumNumberOfComponents) {
+        return startSimulationComponents<minimumNumberOfComponents, numComponentsCompileTime - 1>(numComponentsRuntime, argc, argv);
+    }
+    // It will never actually reach this, but the compiler does not seem to realize, so keeping
+    // this to avoid warnings.
+    return EXIT_FAILURE;
 }
+int
+main(int argc, char** argv)
+{
+    using TypeTag = Opm::Properties::TTag::FlowExpCompProblem<0>;
+    Opm::registerEclTimeSteppingParameters<double>();
+
+    // This is a bit cumbersome, but we need to read the input file
+    // first to figure out the number of components (I think) in order
+    // to select the correct type tag.
+    //
+    // TODO: Do a more dynamic dispatch approach similar to the normal
+    //       flow application
+    auto comm = Dune::MPIHelper::instance(argc, argv).getCommunication();
+    auto commPtr = std::make_unique<decltype(comm)>(comm);
+    Opm::setupParameters_<TypeTag>(argc, const_cast<const char**>(argv), true);
+
+    auto inputFilename
+        = Opm::FlowGenericVanguard::canonicalDeckPath(Opm::Parameters::Get<Opm::Parameters::EclDeckFileName>());
+    Opm::FlowGenericVanguard::setCommunication(std::move(commPtr));
+    Opm::FlowGenericVanguard::readDeck(inputFilename);
+    Opm::FlowGenericVanguard vanguard;
+    const auto numComps = vanguard.eclState().compositionalConfig().numComps();
+    return startSimulationComponents<2, 7>(numComps, argc, argv);
+}
+
