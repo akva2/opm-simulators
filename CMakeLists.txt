@@ -48,13 +48,15 @@ foreach(component IN LISTS OPM_COMPILE_COMPONENTS)
   if(index EQUAL -1)
     message(FATAL_ERROR "Invalid component ${component} in OPM_COMPILE_COMPONENTS. Valid components are: ${valid_components}")
   endif()
+  set(FLOWEXP_COMP_SWITCH_BODY "${FLOWEXP_COMP_SWITCH_BODY}\n    case ${component}: return dispatchFlowExpComp<${component}>(argc, argv);")
 endforeach()
+string(SUBSTRING "${FLOWEXP_COMP_SWITCH_BODY}" 5 -1 FLOWEXP_COMP_SWITCH_BODY)
+configure_file(flowexperimental/comp/flowexp_comp_dispatch.cpp.in flowexp_comp_dispatch.cpp @ONLY)
 # Check for duplicates in OPM_COMPILE_COMPONENTS
 list(REMOVE_DUPLICATES OPM_COMPILE_COMPONENTS)
 # Make a string we can use in the code
 # this will be used in a template argument pack.
 string(REPLACE ";" "," OPM_COMPILE_COMPONENTS_TEMPLATE_LIST "${OPM_COMPILE_COMPONENTS}")
-
 
 # HIP requires cmake version 3.21
 if (CONVERT_CUDA_TO_HIP AND CMAKE_VERSION VERSION_GREATER_EQUAL "3.21")
@@ -594,6 +596,7 @@ opm_add_test(flowexp_comp
   LIBRARIES opmsimulators
   SOURCES
   flowexperimental/comp/flowexp_comp.cpp
+  flowexp_comp_dispatch.cpp
   ${FLOWEXP_COMPONENTS_SOURCES}
   $<TARGET_OBJECTS:moduleVersion>
 )

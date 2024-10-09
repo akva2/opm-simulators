@@ -89,6 +89,8 @@ public:
 template<int numComp>
 int dispatchFlowExpComp(int argc, char** argv);
 
+int dispatchFlowExpComp(int argc, char** argv, int numComponents);
+
 }
 
 namespace Opm::Properties {
