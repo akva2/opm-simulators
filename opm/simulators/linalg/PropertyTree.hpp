@@ -155,7 +155,10 @@ public:
     /// output--i.e., whether or not to insert new lines and spaces for
     /// human readability.
     void write_json(std::ostream& os, bool pretty) const;
-
+    boost::property_tree::ptree* getBoostParamPtr() const{
+      //just to be able to use full boost interface
+      return tree_.get();
+    }
 protected:
     /// Converting constructor.
     ///
