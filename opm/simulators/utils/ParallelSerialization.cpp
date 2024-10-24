@@ -62,14 +62,16 @@
 #include <opm/input/eclipse/Schedule/Well/WVFPDP.hpp>
 #include <opm/input/eclipse/Schedule/Well/WVFPEXP.hpp>
 
-
+#include <opm/simulators/utils/DeferredLoggingErrorHelpers.hpp>
 #include <opm/simulators/utils/MPISerializer.hpp>
 
 #include <dune/common/parallel/mpihelper.hh>
 
 namespace Opm {
 
-void eclStateBroadcast(Parallel::Communication comm, EclipseState& eclState, Schedule& schedule,
+void eclStateBroadcast(Parallel::Communication comm,
+                       EclipseState& eclState,
+                       Schedule& schedule,
                        SummaryConfig& summaryConfig,
                        UDQState& udqState,
                        Action::State& actionState,

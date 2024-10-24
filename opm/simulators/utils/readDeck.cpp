@@ -21,6 +21,7 @@
 */
 
 #include "config.h"
+#include "opm/simulators/utils/DeferredLoggingErrorHelpers.hpp"
 
 #if HAVE_MPI
 #include "mpi.h"
@@ -599,20 +600,22 @@ void Opm::readDeck(Opm::Parallel::Communication    comm,
     // In case of parse errors eclipseState/schedule might be null and
     // trigger segmentation faults in parallel during broadcast (e.g. when
     // serializing the non-existent TableManager)
-    parseSuccess = comm.min(parseSuccess);
     try {
-        if (parseSuccess) {
-            OPM_TIMEBLOCK(eclBcast);
-            eclStateBroadcast(comm, *eclipseState, *schedule,
-                              *summaryConfig, *udqState, *actionState, *wtestState);
-        }
+        parseSuccess = comm.min(parseSuccess);
+        DeferredLogger local_logger{};
+        OPM_BEGIN_PARALLEL_TRY_CATCH()
+            if (parseSuccess) {
+                parseSuccess = false;
+                OPM_TIMEBLOCK(eclBcast);
+                eclStateBroadcast(comm, *eclipseState, *schedule,
+                                  *summaryConfig, *udqState, *actionState, *wtestState);
+                parseSuccess = true;
+            }
+        OPM_END_PARALLEL_TRY_CATCH_LOG(local_logger, "eclStateBroadCast: ", true, comm);
+    } catch (const std::exception& e) {
+        failureMessage.clear();
     }
-    catch (const std::exception& broadcast_error) {
-        failureMessage = broadcast_error.what();
-        OpmLog::error(fmt::format("Distributing properties to all processes failed\n"
-                                  "Internal error message: {}", broadcast_error.what()));
-        parseSuccess = 0;
-    }
+
 #endif
 
     if (*errorGuard) { // errors encountered
@@ -625,7 +628,9 @@ void Opm::readDeck(Opm::Parallel::Communication    comm,
 
     if (! parseSuccess) {
         if (comm.rank() == 0) {
-            OpmLog::error(fmt::format("Unrecoverable errors while loading input: {}", failureMessage));
+            if (!failureMessage.empty()) {
+                OpmLog::error(fmt::format("Unrecoverable errors while loading input: {}", failureMessage));
+            }
         }
 
 #if HAVE_MPI

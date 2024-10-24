@@ -60,7 +60,7 @@ namespace {
         ///   internal communicator in the \p packer object.
         explicit CollectConvReports(const Opm::Mpi::Packer&            packer,
                                     const Opm::Parallel::Communication comm)
-            : Opm::Serializer<Opm::Mpi::Packer> { packer }
+            : Opm::Serializer<Opm::Mpi::Packer> { packer, false }
             , comm_                             { comm }
         {}
 

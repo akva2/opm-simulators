@@ -31,7 +31,7 @@ namespace Opm::Parallel {
 class MpiSerializer : public Serializer<Mpi::Packer> {
 public:
     MpiSerializer(Parallel::Communication comm)
-        : Serializer<Mpi::Packer>(m_packer)
+        : Serializer<Mpi::Packer>(m_packer, true)
         , m_packer(comm)
         , m_comm(comm)
     {}
@@ -117,7 +117,8 @@ public:
     }
 
 private:
-    void broadcast_chunked(int root) {
+    void broadcast_chunked(int root)
+    {
         const int maxChunkSize = std::numeric_limits<int>::max();
         std::size_t remainingSize = m_packSize;
         std::size_t pos = 0;

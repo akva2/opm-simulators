@@ -19,6 +19,8 @@
 #ifndef SERIALIZATION_PACKERS_HPP
 #define SERIALIZATION_PACKERS_HPP
 
+#include <boost/date_time/gregorian/formatters.hpp>
+#include <opm/common/utility/CheckSum.hpp>
 #include <opm/common/utility/MemPacker.hpp>
 
 #include <boost/date_time/gregorian/gregorian_types.hpp>
@@ -28,6 +30,17 @@
 namespace Opm {
 namespace Serialization {
 namespace detail {
+
+template<>
+struct CheckSum<false,boost::gregorian::date>
+{
+    template<class CheckSummer>
+    static void checkSum(const boost::gregorian::date& data, CheckSummer& checksum)
+    {
+        CheckSum<false, std::string>::checkSum(boost::gregorian::to_simple_string(data),
+                                               checksum);
+    }
+};
 
 template<>
 struct Packing<false,boost::gregorian::date>

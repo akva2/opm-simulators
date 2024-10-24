@@ -76,7 +76,7 @@ template<class T>
 std::tuple<T,int,int> PackUnpack(T& in)
 {
     Opm::Serialization::MemPacker packer;
-    Opm::Serializer ser(packer);
+    Opm::Serializer ser(packer, true);
     ser.pack(in);
     const size_t pos1 = ser.position();
     T out{};
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(SingleWellState)
     Opm::ParallelWellInfo<double> dummy;
     auto data_out = Opm::SingleWellState<double>::serializationTestObject(dummy);
     Opm::Serialization::MemPacker packer;
-    Opm::Serializer ser(packer);
+    Opm::Serializer ser(packer, true);
     ser.pack(data_out);
     const size_t pos1 = ser.position();
     decltype(data_out) data_in("", dummy, false, 0.0, {}, Opm::PhaseUsage{}, 0.0);
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(WellContainer)
 {
     auto data_out = Opm::WellContainer<double>::serializationTestObject(1.0);
     Opm::Serialization::MemPacker packer;
-    Opm::Serializer ser(packer);
+    Opm::Serializer ser(packer, true);
     ser.pack(data_out);
     const size_t pos1 = ser.position();
     decltype(data_out) data_in;
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(WellState)
     Opm::ParallelWellInfo<double> dummy;
     auto data_out = Opm::WellState<double>::serializationTestObject(dummy);
     Opm::Serialization::MemPacker packer;
-    Opm::Serializer ser(packer);
+    Opm::Serializer ser(packer, true);
     ser.pack(data_out);
     const size_t pos1 = ser.position();
     decltype(data_out) data_in(dummy);
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(WGState)
     Opm::ParallelWellInfo<double> dummy;
     auto data_out = Opm::WGState<double>::serializationTestObject(dummy);
     Opm::Serialization::MemPacker packer;
-    Opm::Serializer ser(packer);
+    Opm::Serializer ser(packer, true);
     ser.pack(data_out);
     const size_t pos1 = ser.position();
     decltype(data_out) data_in(Opm::PhaseUsage{});
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(FlowGenericVanguard)
     auto in_params = Opm::FlowGenericVanguard::serializationTestParams();
     Opm::FlowGenericVanguard val1(std::move(in_params));
     Opm::Serialization::MemPacker packer;
-    Opm::Serializer ser(packer);
+    Opm::Serializer ser(packer, true);
     ser.pack(val1);
     const size_t pos1 = ser.position();
     Opm::FlowGenericVanguard::SimulationModelParams out_params;
@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(FlowGenericProblem)
         = Opm::FlowGenericProblem<GridView, Opm::BlackOilFluidSystem<double, Opm::BlackOilDefaultIndexTraits>>::
             serializationTestObject(eclState, schedule, gridView);
     Opm::Serialization::MemPacker packer;
-    Opm::Serializer ser(packer);
+    Opm::Serializer ser(packer, true);
     ser.pack(data_out);
     const size_t pos1 = ser.position();
     decltype(data_out) data_in(eclState, schedule, gridView);
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(MixingRateControls)
     using FS = Opm::BlackOilFluidSystem<double, Opm::BlackOilDefaultIndexTraits>;
     auto data_out = Opm::MixingRateControls<FS>::serializationTestObject(schedule);
     Opm::Serialization::MemPacker packer;
-    Opm::Serializer ser(packer);
+    Opm::Serializer ser(packer, true);
     ser.pack(data_out);
     const size_t pos1 = ser.position();
     decltype(data_out) data_in(schedule);
@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(FlowGenericProblemFem)
         = Opm::FlowGenericProblem<GridView, Opm::BlackOilFluidSystem<double, Opm::BlackOilDefaultIndexTraits>>::
             serializationTestObject(eclState, schedule, gridView);
     Opm::Serialization::MemPacker packer;
-    Opm::Serializer ser(packer);
+    Opm::Serializer ser(packer, true);
     ser.pack(data_out);
     const size_t pos1 = ser.position();
     decltype(data_out) data_in(eclState, schedule, gridView);
@@ -386,7 +386,7 @@ BOOST_AUTO_TEST_CASE(BlackoilWellModelGeneric)
                                                eclState, phase_usage, comm, false);
     data_out.setSerializationTestData();
     Opm::Serialization::MemPacker packer;
-    Opm::Serializer ser(packer);
+    Opm::Serializer ser(packer, true);
     ser.pack(data_out);
     const size_t pos1 = ser.position();
     Opm::BlackoilWellModelGenericTest data_in(schedule, summaryState,
@@ -458,7 +458,7 @@ BOOST_AUTO_TEST_CASE(FlowGenericTracerModel)
                                            double>
         ::serializationTestObject(gridView, eclState, mapper, dofMapper, centroids);
     Opm::Serialization::MemPacker packer;
-    Opm::Serializer ser(packer);
+    Opm::Serializer ser(packer, true);
     ser.pack(data_out);
     const size_t pos1 = ser.position();
     decltype(data_out) data_in(gridView, eclState, mapper, dofMapper, centroids);
@@ -495,7 +495,7 @@ BOOST_AUTO_TEST_CASE(FlowGenericTracerModelFem)
                                            double>
         ::serializationTestObject(gridView, eclState, mapper, dofMapper, centroids);
     Opm::Serialization::MemPacker packer;
-    Opm::Serializer ser(packer);
+    Opm::Serializer ser(packer, true);
     ser.pack(data_out);
     const size_t pos1 = ser.position();
     decltype(data_out) data_in(gridView, eclState, mapper, dofMapper, centroids);
@@ -549,7 +549,7 @@ BOOST_AUTO_TEST_CASE(TYPE) \
     Simulator sim; \
     auto data_out = Opm::TYPE<TT>::serializationTestObject(sim); \
     Opm::Serialization::MemPacker packer; \
-    Opm::Serializer ser(packer); \
+    Opm::Serializer ser(packer, true); \
     ser.pack(data_out); \
     const size_t pos1 = ser.position(); \
     decltype(data_out) data_in({}, sim, {}); \
@@ -570,7 +570,7 @@ BOOST_AUTO_TEST_CASE(AquiferNumerical)
     Simulator sim;
     auto data_out = Opm::AquiferNumerical<TT>::serializationTestObject(sim);
     Opm::Serialization::MemPacker packer;
-    Opm::Serializer ser(packer);
+    Opm::Serializer ser(packer, true);
     ser.pack(data_out);
     const size_t pos1 = ser.position();
     decltype(data_out) data_in({}, sim);
@@ -588,7 +588,7 @@ BOOST_AUTO_TEST_CASE(AquiferConstantFlux)
     Simulator sim;
     auto data_out = Opm::AquiferConstantFlux<TT>::serializationTestObject(sim);
     Opm::Serialization::MemPacker packer;
-    Opm::Serializer ser(packer);
+    Opm::Serializer ser(packer, true);
     ser.pack(data_out);
     const size_t pos1 = ser.position();
     decltype(data_out) data_in({}, sim, {});

@@ -39,7 +39,7 @@ public:
     HDF5Serializer(const std::string& fileName,
                    HDF5File::OpenMode mode,
                    Parallel::Communication comm)
-        : Serializer<Serialization::MemPacker>(m_packer_priv)
+        : Serializer<Serialization::MemPacker>(m_packer_priv, false)
         , m_h5file(fileName, mode, comm)
     {}
 
