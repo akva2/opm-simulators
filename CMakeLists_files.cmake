@@ -1136,6 +1136,7 @@ list (APPEND EXAMPLE_SOURCE_FILES
   examples/reservoir_ncp_ecfv.cpp
   examples/reservoir_ncp_vcfv.cpp
   examples/printvfp.cpp
+  examples/serialize_checksum.cpp
   examples/tutorial1.cpp
   examples/waterair_pvs_ni.cpp
 )
