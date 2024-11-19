@@ -205,6 +205,19 @@ init(std::vector<Scalar>& perf_depth,
     this->linSys_.init(numWellEq, baseif_.numPerfs(), baseif_.cells());
 }
 
+template<class FluidSystem, class Indices>
+std::vector<typename FluidSystem::Scalar>
+StandardWellEval<FluidSystem,Indices>::
+getPrimaryVars() const
+{
+    const int num_pri_vars = this->primary_variables_.numWellEq();
+    std::vector<Scalar> retval(num_pri_vars);
+    for (int ii = 0; ii < num_pri_vars; ++ii) {
+        retval[ii] = this->primary_variables_.value(ii);
+    }
+    return retval;
+}
+
 template<class Scalar>
 using FS = BlackOilFluidSystem<Scalar,BlackOilDefaultIndexTraits>;
 

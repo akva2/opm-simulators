@@ -2528,23 +2528,6 @@ namespace Opm
 
 
     template <typename TypeTag>
-    std::vector<typename StandardWell<TypeTag>::Scalar>
-    StandardWell<TypeTag>::
-    getPrimaryVars() const
-    {
-        const int num_pri_vars = this->primary_variables_.numWellEq();
-        std::vector<Scalar> retval(num_pri_vars);
-        for (int ii = 0; ii < num_pri_vars; ++ii) {
-            retval[ii] = this->primary_variables_.value(ii);
-        }
-        return retval;
-    }
-
-
-
-
-
-    template <typename TypeTag>
     int
     StandardWell<TypeTag>::
     setPrimaryVars(typename std::vector<Scalar>::const_iterator it)

@@ -96,6 +96,8 @@ protected:
                                              const SummaryState& summary_state,
                                              DeferredLogger& deferred_logger) const;
 
+    std::vector<Scalar> getPrimaryVars() const;
+
     PrimaryVariables primary_variables_; //!< Primary variables for well
 
     // the saturations in the well bore under surface conditions at the beginning of the time step
