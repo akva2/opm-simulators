@@ -218,6 +218,18 @@ getPrimaryVars() const
     return retval;
 }
 
+template<class FluidSystem, class Indices>
+int
+StandardWellEval<FluidSystem,Indices>::
+setPrimaryVars(typename std::vector<Scalar>::const_iterator it)
+{
+    const int num_pri_vars = this->primary_variables_.numWellEq();
+    for (int ii = 0; ii < num_pri_vars; ++ii) {
+        this->primary_variables_.setValue(ii, it[ii]);
+    }
+    return num_pri_vars;
+}
+
 template<class Scalar>
 using FS = BlackOilFluidSystem<Scalar,BlackOilDefaultIndexTraits>;
 

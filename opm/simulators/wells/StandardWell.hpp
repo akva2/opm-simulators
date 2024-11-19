@@ -257,7 +257,8 @@ namespace Opm
         std::vector<Scalar> getPrimaryVars() const override
         { return this->StdWellEval::getPrimaryVars(); }
 
-        int setPrimaryVars(typename std::vector<Scalar>::const_iterator it) override;
+        int setPrimaryVars(typename std::vector<Scalar>::const_iterator it) override
+        { return this->StdWellEval::setPrimaryVars(it); }
 
     protected:
         bool regularize_;

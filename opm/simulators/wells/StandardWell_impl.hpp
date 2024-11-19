@@ -2528,19 +2528,6 @@ namespace Opm
 
 
     template <typename TypeTag>
-    int
-    StandardWell<TypeTag>::
-    setPrimaryVars(typename std::vector<Scalar>::const_iterator it)
-    {
-        const int num_pri_vars = this->primary_variables_.numWellEq();
-        for (int ii = 0; ii < num_pri_vars; ++ii) {
-            this->primary_variables_.setValue(ii, it[ii]);
-        }
-        return num_pri_vars;
-    }
-
-
-    template <typename TypeTag>
     typename StandardWell<TypeTag>::Eval
     StandardWell<TypeTag>::
     connectionRateEnergy(const Scalar maxOilSaturation,

@@ -97,6 +97,7 @@ protected:
                                              DeferredLogger& deferred_logger) const;
 
     std::vector<Scalar> getPrimaryVars() const;
+    int setPrimaryVars(typename std::vector<Scalar>::const_iterator it);
 
     PrimaryVariables primary_variables_; //!< Primary variables for well
 
