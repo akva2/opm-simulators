@@ -118,6 +118,10 @@ public:
         : ParentType(simulator)
     {
 #if HAVE_MPI
+        numOverlap_ = Parameters::Get<Parameters::NumOverlap>();
+        addCorners_ = Parameters::Get<Parameters::AddCorners>();
+        partitionMethod_   = Dune::PartitionMethod(Parameters::Get<Parameters::PartitionMethod>());
+        serialPartitioning_ = Parameters::Get<Parameters::SerialPartitioning>();
         imbalanceTol_ = Parameters::Get<Parameters::ImbalanceTol<Scalar>>();
 
         zoltanImbalanceTolSet_ = Parameters::IsSet<Parameters::ZoltanImbalanceTol<Scalar>>();

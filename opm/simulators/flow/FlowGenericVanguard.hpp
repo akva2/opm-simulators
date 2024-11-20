@@ -257,6 +257,7 @@ public:
     bool ownersFirst() const
     { return ownersFirst_; }
 
+
 #if HAVE_MPI
     bool addCorners() const
     { return addCorners_; }
