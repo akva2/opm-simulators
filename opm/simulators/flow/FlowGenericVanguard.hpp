@@ -76,6 +76,7 @@ struct ActionParsingStrictness { static constexpr auto value = "normal"; };
 /// represented by one vertex in the graph, see GridEnums.hpp
 struct PartitionMethod { static constexpr int value = 3; };
 struct AddCorners { static constexpr bool value = false; };
+struct EdgeConformal { static constexpr bool value = false; };    
 struct NumOverlap { static constexpr int value = 1; };
 
 struct SchedRestart{ static constexpr bool value = false; };
@@ -262,6 +263,9 @@ public:
     bool addCorners() const
     { return addCorners_; }
 
+    bool edgeConformal() const
+    { return edgeConformal_; }
+
     int numOverlap() const
     { return numOverlap_; }
 
@@ -373,6 +377,7 @@ protected:
     bool ownersFirst_;
 #if HAVE_MPI
     bool addCorners_;
+    bool edgeConformal_;
     int numOverlap_;
     Dune::PartitionMethod partitionMethod_;
     bool serialPartitioning_;
