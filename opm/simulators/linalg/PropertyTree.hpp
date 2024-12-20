@@ -20,19 +20,17 @@
 #ifndef OPM_PROPERTYTREE_HEADER_INCLUDED
 #define OPM_PROPERTYTREE_HEADER_INCLUDED
 
+#include <functional>
 #include <iosfwd>
 #include <memory>
 #include <optional>
 
-namespace boost {
-namespace property_tree {
+namespace boost::property_tree {
     template<class T1, class T2, class T3> class basic_ptree;
     using ptree = basic_ptree<std::string,std::string,std::less<std::string>>;
 }
-}
 
-namespace Opm
-{
+namespace Opm {
 
 class PropertyTree {
 public:
@@ -50,8 +48,10 @@ public:
     template<class T>
     T get(const std::string& key, const T& defValue) const;
 
+    PropertyTree get_child(const std::string& key);
     PropertyTree get_child(const std::string& key) const;
 
+    std::optional<PropertyTree> get_child_optional(const std::string& key);
     std::optional<PropertyTree> get_child_optional(const std::string& key) const;
 
     PropertyTree& operator=(const PropertyTree& tree);
@@ -59,9 +59,10 @@ public:
     void write_json(std::ostream& os, bool pretty) const;
 
 protected:
-    PropertyTree(const boost::property_tree::ptree& tree);
+    PropertyTree(boost::property_tree::ptree& tree);
 
-    std::unique_ptr<boost::property_tree::ptree> tree_;
+    std::unique_ptr<boost::property_tree::ptree> tree_ptr_;
+    std::reference_wrapper<boost::property_tree::ptree> tree_;
 };
 
 
