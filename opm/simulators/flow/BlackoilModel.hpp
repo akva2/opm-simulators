@@ -47,6 +47,7 @@
 #include <opm/simulators/timestepping/SimulatorTimer.hpp>
 
 #include <opm/simulators/wells/BlackoilWellModel.hpp>
+#include <opm/simulators/wells/WellConnectionAuxiliaryModule.hpp>
 
 #include <opm/simulators/utils/ComponentName.hpp>
 #include <opm/simulators/utils/DeferredLoggingErrorHelpers.hpp>
@@ -230,7 +231,8 @@ namespace Opm {
         , grid_(simulator_.vanguard().grid())
         , phaseUsage_(phaseUsageFromDeck(eclState()))
         , param_( param )
-        , well_model_ (well_model)
+        , well_model_(well_model)
+        , well_model_wrap_(well_model, simulator.gridView().comm())
         , rst_conv_(simulator_.problem().eclWriter()->collectOnIORank().localIdxToGlobalIdxMapping(),
                     grid_.comm())
         , terminal_output_ (terminal_output)
@@ -451,8 +453,8 @@ namespace Opm {
                     // Apply the Schur complement of the well model to
                     // the reservoir linearized equations.
                     // Note that linearize may throw for MSwells.
-                    wellModel().linearize(simulator().model().linearizer().jacobian(),
-                                          simulator().model().linearizer().residual());
+                    well_model_wrap_.linearize(simulator().model().linearizer().jacobian(),
+                                               simulator().model().linearizer().residual());
 
                     // ---- Solve linear system ----
                     solveJacobianSystem(x);
@@ -476,7 +478,7 @@ namespace Opm {
                 // handling well state update before oscillation treatment is a decision based
                 // on observation to avoid some big performance degeneration under some circumstances.
                 // there is no theorectical explanation which way is better for sure.
-                wellModel().postSolve(x);
+                well_model_wrap_.postSolve(x);
 
                 if (param_.use_update_stabilization_) {
                     // Stabilize the nonlinear update.
@@ -530,7 +532,7 @@ namespace Opm {
             simulator_.problem().beginIteration();
             simulator_.model().linearizer().linearizeDomain();
             simulator_.problem().endIteration();
-            return wellModel().lastReport();
+            return well_model_wrap_.lastReport();
         }
 
         // compute the "relative" change of the solution between time steps
@@ -1180,7 +1182,8 @@ namespace Opm {
                                                   iteration, maxIter, B_avg, residual_norms);
             {
                 OPM_TIMEBLOCK(getWellConvergence);
-                report += wellModel().getWellConvergence(B_avg, /*checkWellGroupControls*/report.converged());
+                report += well_model_wrap_.getConvergence(B_avg,
+                                                          /*checkWellGroupControls*/report.converged());
             }
 
             checkCardPenalty(report, iteration);
@@ -1282,6 +1285,7 @@ namespace Opm {
 
         // Well Model
         BlackoilWellModel<TypeTag>& well_model_;
+        WellConnectionAuxiliaryModule<TypeTag, BlackoilWellModel<TypeTag>> well_model_wrap_;
 
         RSTConv rst_conv_; //!< Helper class for RPTRST CONV
 
@@ -1300,12 +1304,14 @@ namespace Opm {
         std::unique_ptr<BlackoilModelNldd<TypeTag>> nlddSolver_; //!< Non-linear DD solver
 
     public:
-        /// return the StandardWells object
         BlackoilWellModel<TypeTag>&
         wellModel() { return well_model_; }
 
         const BlackoilWellModel<TypeTag>&
         wellModel() const { return well_model_; }
+
+        WellConnectionAuxiliaryModule<TypeTag, BlackoilWellModel<TypeTag>>&
+        wellModelWrap() { return well_model_wrap_; }
 
         void beginReportStep()
         {
@@ -1454,6 +1460,7 @@ namespace Opm {
         ConvergenceReport::PenaltyCard total_penaltyCard_;
         double prev_distance_ = std::numeric_limits<double>::infinity();
         int prev_above_tolerance_ = 0;
+
     public:
         std::vector<bool> wasSwitched_;
     };

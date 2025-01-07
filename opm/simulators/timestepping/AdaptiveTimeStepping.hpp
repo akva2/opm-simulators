@@ -124,9 +124,10 @@ createController(const UnitSystem& unitSystem);
             \param tuningUpdater Function used to update TUNING parameters before each
                                  time step. ACTIONX might change tuning.
         */
-        template <class Solver>
+        template <class Solver, class WellModel>
         SimulatorReport step(const SimulatorTimer& simulatorTimer,
                              Solver& solver,
+                             WellModel& wellModel,
                              const bool isEvent,
                              const std::function<bool(const double, const double, const int)> tuningUpdater);
 

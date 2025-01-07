@@ -43,6 +43,7 @@
 #include <opm/simulators/flow/FlowBaseVanguard.hpp>
 #include <opm/simulators/flow/SubDomain.hpp>
 
+#include <opm/simulators/linalg/linalgproperties.hh>
 #include <opm/simulators/linalg/matrixblock.hh>
 
 #include <opm/simulators/timestepping/SimulatorReport.hpp>
@@ -66,7 +67,6 @@
 #include <opm/simulators/wells/StandardWell.hpp>
 #include <opm/simulators/wells/VFPInjProperties.hpp>
 #include <opm/simulators/wells/VFPProdProperties.hpp>
-#include <opm/simulators/wells/WellConnectionAuxiliaryModule.hpp>
 #include <opm/simulators/wells/WellGroupHelpers.hpp>
 #include <opm/simulators/wells/WellInterface.hpp>
 #include <opm/simulators/wells/WellProdIndexCalculator.hpp>
@@ -87,9 +87,8 @@ template<class Scalar> class WellContributions;
 
         /// Class for handling the blackoil well model.
         template<typename TypeTag>
-        class BlackoilWellModel : public WellConnectionAuxiliaryModule<TypeTag, BlackoilWellModel<TypeTag>>
-                                , public BlackoilWellModelGeneric<GetPropType<TypeTag,
-                                                                              Properties::Scalar>>
+        class BlackoilWellModel : public BlackoilWellModelGeneric<GetPropType<TypeTag,
+                                                                  Properties::Scalar>>
         {
         public:
             // ---------      Types      ---------
@@ -104,8 +103,6 @@ template<class Scalar> class WellContributions;
             using GlobalEqVector = GetPropType<TypeTag, Properties::GlobalEqVector>;
             using SparseMatrixAdapter = GetPropType<TypeTag, Properties::SparseMatrixAdapter>;
             using ModelParameters = BlackoilModelParameters<Scalar>;
-
-            using WellConnectionModule = WellConnectionAuxiliaryModule<TypeTag, BlackoilWellModel<TypeTag>>;
 
             constexpr static std::size_t pressureVarIndex = GetPropType<TypeTag, Properties::Indices>::pressureSwitchIdx;
 

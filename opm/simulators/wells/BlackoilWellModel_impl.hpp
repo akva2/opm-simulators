@@ -69,12 +69,11 @@ namespace Opm {
     template<typename TypeTag>
     BlackoilWellModel<TypeTag>::
     BlackoilWellModel(Simulator& simulator, const PhaseUsage& phase_usage)
-        : WellConnectionModule(*this, simulator.gridView().comm())
-        , BlackoilWellModelGeneric<Scalar>(simulator.vanguard().schedule(),
-                                            simulator.vanguard().summaryState(),
-                                            simulator.vanguard().eclState(),
-                                            phase_usage,
-                                            simulator.gridView().comm())
+        : BlackoilWellModelGeneric<Scalar>(simulator.vanguard().schedule(),
+                                           simulator.vanguard().summaryState(),
+                                           simulator.vanguard().eclState(),
+                                           phase_usage,
+                                           simulator.gridView().comm())
         , simulator_(simulator)
         , gaslift_(this->terminal_output_, this->phase_usage_)
     {
@@ -162,7 +161,7 @@ namespace Opm {
         this->initial_step_ = true;
 
         // add the eWoms auxiliary module for the wells to the list
-        simulator_.model().addAuxiliaryModule(this);
+        //simulator_.model().addAuxiliaryModule(this);
 
         is_cell_perforated_.resize(local_num_cells_, false);
     }
@@ -609,7 +608,7 @@ namespace Opm {
     template<typename TypeTag>
     const SimulatorReportSingle&
     BlackoilWellModel<TypeTag>::
-    lastReport() const {return last_report_; }
+    lastReport() const { return last_report_; }
 
 
 

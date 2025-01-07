@@ -88,11 +88,12 @@ void AdaptiveTimeStepping<TypeTag>::registerParameters()
 }
 
 template<class TypeTag>
-template<class Solver>
+template<class Solver, class WellModel>
 SimulatorReport
 AdaptiveTimeStepping<TypeTag>::
 step(const SimulatorTimer& simulatorTimer,
      Solver& solver,
+     WellModel& wellModel,
      const bool isEvent,
      const std::function<bool(const double, const double, const int)> tuningUpdater)
 {
@@ -331,8 +332,9 @@ step(const SimulatorTimer& simulatorTimer,
                     // Close all consistently failing wells that are not under group control
                     std::vector<std::string> shut_wells;
                     for (const auto& well : failing_wells) {
-                        bool was_shut = solver.model().wellModel().forceShutWellByName(
-                                                    well, substepTimer.simulationTimeElapsed(), /*dont_shut_grup_wells =*/ true);
+                        bool was_shut = wellModel.forceShutWellByName(well,
+                                                                      substepTimer.simulationTimeElapsed(),
+                                                                      /*dont_shut_grup_wells =*/ true);
                         if (was_shut) {
                             shut_wells.push_back(well);
                         }
@@ -340,8 +342,9 @@ step(const SimulatorTimer& simulatorTimer,
                     // If no wells are closed we also try to shut wells under group control
                     if (shut_wells.empty()) {
                         for (const auto& well : failing_wells) {
-                            bool was_shut = solver.model().wellModel().forceShutWellByName(
-                                                    well, substepTimer.simulationTimeElapsed(), /*dont_shut_grup_wells =*/ false);
+                            bool was_shut = wellModel.forceShutWellByName(well,
+                                                                          substepTimer.simulationTimeElapsed(),
+                                                                          /*dont_shut_grup_wells =*/ false);
                             if (was_shut) {
                                 shut_wells.push_back(well);
                             }

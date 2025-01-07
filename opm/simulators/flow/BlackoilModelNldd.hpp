@@ -352,7 +352,6 @@ public:
     }
 
 private:
-
     //! \brief Solve the equation system for a single domain.
     std::pair<SimulatorReportSingle, ConvergenceReport>
     solveDomain(const Domain& domain,
@@ -401,9 +400,9 @@ private:
         // but not done the Schur complement for the wells yet.
         detailTimer.reset();
         detailTimer.start();
-        model_.wellModel().linearizeDomain(domain,
-                                           modelSimulator.model().linearizer().jacobian(),
-                                           modelSimulator.model().linearizer().residual());
+        model_.wellModelWrap().linearizeDomain(domain,
+                                               modelSimulator.model().linearizer().jacobian(),
+                                               modelSimulator.model().linearizer().residual());
         const double tt1 = detailTimer.stop();
         report.assemble_time += tt1;
         report.assemble_time_well += tt1;
@@ -423,7 +422,7 @@ private:
             detailTimer.reset();
             detailTimer.start();
             this->solveJacobianSystemDomain(domain, x);
-            model_.wellModel().postSolveDomain(x, domain);
+            model_.wellModelWrap().postSolveDomain(x, domain);
             if (damping_factor != 1.0) {
                 x *= damping_factor;
             }
@@ -462,9 +461,9 @@ private:
             // reservoir linearized equations
             detailTimer.reset();
             detailTimer.start();
-            model_.wellModel().linearizeDomain(domain,
-                                               modelSimulator.model().linearizer().jacobian(),
-                                               modelSimulator.model().linearizer().residual());
+            model_.wellModelWrap().linearizeDomain(domain,
+                                                   modelSimulator.model().linearizer().jacobian(),
+                                                   modelSimulator.model().linearizer().residual());
             const double tt2 = detailTimer.stop();
             report.assemble_time += tt2;
             report.assemble_time_well += tt2;

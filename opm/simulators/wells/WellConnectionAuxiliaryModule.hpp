@@ -25,6 +25,9 @@
 
 #include <opm/simulators/flow/SubDomain.hpp>
 
+#include <opm/simulators/timestepping/SimulatorReport.hpp>
+#include <opm/simulators/timestepping/ConvergenceReport.hpp>
+
 #include <opm/simulators/utils/DeferredLoggingErrorHelpers.hpp>
 #include <opm/simulators/utils/ParallelCommunication.hpp>
 
@@ -46,6 +49,7 @@ public:
         ::Opm::BaseAuxiliaryModule<TypeTag>::NeighborSet;
 
     using Domain = SubDomain<Grid>;
+    using Scalar = GetPropType<TypeTag, Properties::Scalar>;
 
     WellConnectionAuxiliaryModule(Model& model, Parallel::Communication comm)
         : model_(model)
@@ -145,6 +149,17 @@ public:
     void serialize(Restarter& /* res*/)
     {
         // TODO (?)
+    }
+
+    // called at the end of a report step
+    const SimulatorReportSingle& lastReport() const
+    { return model_.lastReport(); }
+
+    // Check if well equations is converged.
+   ConvergenceReport getConvergence(const std::vector<Scalar>& B_avg,
+                                    const bool checkWellGroupControls = false) const
+    {
+       return model_.getWellConvergence(B_avg, checkWellGroupControls);
     }
 
 private:
