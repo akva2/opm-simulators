@@ -83,7 +83,7 @@ public:
     /*!
      * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(Scalar)
      */
-    NcpPrimaryVariables(Scalar value) : ParentType(value)
+    explicit NcpPrimaryVariables(Scalar value) : ParentType(value)
     {}
 
     /*!

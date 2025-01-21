@@ -83,7 +83,7 @@ public:
     /*!
      * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(Scalar)
      */
-    BlackOilRateVector(Scalar value) : ParentType(Toolbox::createConstant(value))
+    explicit BlackOilRateVector(Scalar value) : ParentType(Toolbox::createConstant(value))
     {}
 
     /*!

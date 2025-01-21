@@ -69,7 +69,7 @@ public:
      * \copydoc
      * ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(Scalar)
      */
-    NcpBoundaryRateVector(const Evaluation& value) : ParentType(value)
+    explicit NcpBoundaryRateVector(const Evaluation& value) : ParentType(value)
     {}
 
     /*!

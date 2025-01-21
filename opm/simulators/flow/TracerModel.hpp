@@ -94,7 +94,7 @@ class TracerModel : public GenericTracerModel<GetPropType<TypeTag, Properties::G
     enum { gasPhaseIdx = FluidSystem::gasPhaseIdx };
 
 public:
-    TracerModel(Simulator& simulator)
+    explicit TracerModel(Simulator& simulator)
         : BaseType(simulator.vanguard().gridView(),
                    simulator.vanguard().eclState(),
                    simulator.vanguard().cartesianIndexMapper(),
@@ -890,7 +890,7 @@ protected:
           serializer(concentration_);
       }
 
-      TracerBatch(int phaseIdx = 0) : phaseIdx_(phaseIdx) {}
+      explicit TracerBatch(int phaseIdx = 0) : phaseIdx_(phaseIdx) {}
 
       int numTracer() const {return idx_.size(); }
 

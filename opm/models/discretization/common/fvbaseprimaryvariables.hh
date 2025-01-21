@@ -66,7 +66,7 @@ public:
     /*!
      * \brief Construction from a scalar value
      */
-    FvBasePrimaryVariables(Scalar value)
+    explicit FvBasePrimaryVariables(Scalar value)
         : ParentType(value)
     { }
 

@@ -67,7 +67,7 @@ public:
      * \copydoc
      * ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(Scalar)
      */
-    FlashBoundaryRateVector(const Evaluation& value) : ParentType(value)
+    explicit FlashBoundaryRateVector(const Evaluation& value) : ParentType(value)
     {}
 
     /*!

@@ -70,7 +70,7 @@ public:
      * \param value The scalar value to which all components of the
      *              boundary rate vector will be set.
      */
-    ImmiscibleBoundaryRateVector(const Evaluation& value)
+    explicit ImmiscibleBoundaryRateVector(const Evaluation& value)
         : ParentType(value)
     {}
 

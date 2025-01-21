@@ -80,7 +80,7 @@ public:
     /*!
      * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(Scalar)
      */
-    FlashPrimaryVariables(Scalar value) : ParentType(value)
+    explicit FlashPrimaryVariables(Scalar value) : ParentType(value)
     {
         Opm::Valgrind::CheckDefined(value);
         Opm::Valgrind::SetDefined(*this);

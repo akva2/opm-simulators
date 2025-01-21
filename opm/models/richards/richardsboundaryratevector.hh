@@ -64,7 +64,7 @@ public:
      * \copydoc
      * ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(Scalar)
      */
-    RichardsBoundaryRateVector(const Evaluation& value)
+    explicit RichardsBoundaryRateVector(const Evaluation& value)
         : ParentType(value)
     {}
 

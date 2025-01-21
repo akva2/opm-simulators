@@ -63,7 +63,7 @@ public:
      *
      * \param value The scalar value to which all entries of the vector will be set.
      */
-    DiscreteFracturePrimaryVariables(Scalar value) : ParentType(value)
+    explicit DiscreteFracturePrimaryVariables(Scalar value) : ParentType(value)
     {}
 
     /*!

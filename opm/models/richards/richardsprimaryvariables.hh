@@ -81,7 +81,7 @@ public:
     /*!
      * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(Scalar)
      */
-    RichardsPrimaryVariables(Scalar value) : ParentType(value)
+    explicit RichardsPrimaryVariables(Scalar value) : ParentType(value)
     {}
 
     /*!

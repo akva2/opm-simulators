@@ -78,7 +78,7 @@ public:
     /*!
      * \copydoc ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(Scalar)
      */
-    BlackOilBoundaryRateVector(Scalar value) : ParentType(value)
+    explicit BlackOilBoundaryRateVector(Scalar value) : ParentType(value)
     {}
 
     /*!
