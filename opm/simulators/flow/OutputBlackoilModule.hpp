@@ -206,61 +206,61 @@ public:
             const auto& model = problem.geoMechModel();
             for (unsigned dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++dofIdx) {
                 unsigned globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
-                if (!this->mechPotentialForce_.empty()) {
+                if (!this->mech_.potentialForce_.empty()) {
                     // assume all mechanical things should be written
-                    this->mechPotentialForce_[globalDofIdx] = model.mechPotentialForce(globalDofIdx);
-                    this->mechPotentialPressForce_[globalDofIdx] = model.mechPotentialPressForce(globalDofIdx);
-                    this->mechPotentialTempForce_[globalDofIdx] = model.mechPotentialTempForce(globalDofIdx);
+                    this->mech_.potentialForce_[globalDofIdx] = model.mechPotentialForce(globalDofIdx);
+                    this->mech_.potentialPressForce_[globalDofIdx] = model.mechPotentialPressForce(globalDofIdx);
+                    this->mech_.potentialTempForce_[globalDofIdx] = model.mechPotentialTempForce(globalDofIdx);
 
                     auto disp = model.disp(globalDofIdx,/*include_fracture*/true); 
-                    this->dispX_[globalDofIdx] = disp[0];
-                    this->dispY_[globalDofIdx] = disp[1];
-                    this->dispZ_[globalDofIdx] = disp[2];
+                    this->mech_.dispX_[globalDofIdx] = disp[0];
+                    this->mech_.dispY_[globalDofIdx] = disp[1];
+                    this->mech_.dispZ_[globalDofIdx] = disp[2];
                     //total stress is not stored but calulated result is voit notation
                     auto stress = model.stress(globalDofIdx,/*include_fracture*/true);
-                    this->stressXX_[globalDofIdx] = stress[0];
-                    this->stressYY_[globalDofIdx] = stress[1];
-                    this->stressZZ_[globalDofIdx] = stress[2];
+                    this->mech_.stressXX_[globalDofIdx] = stress[0];
+                    this->mech_.stressYY_[globalDofIdx] = stress[1];
+                    this->mech_.stressZZ_[globalDofIdx] = stress[2];
                     // voight notation
-                    this->stressXY_[globalDofIdx] = stress[5];
-                    this->stressXZ_[globalDofIdx] = stress[4];
-                    this->stressYZ_[globalDofIdx] = stress[3];
+                    this->mech_.stressXY_[globalDofIdx] = stress[5];
+                    this->mech_.stressXZ_[globalDofIdx] = stress[4];
+                    this->mech_.stressYZ_[globalDofIdx] = stress[3];
                     
                     auto strain = model.strain(globalDofIdx,/*include_fracture*/true);
-                    this->strainXX_[globalDofIdx] = strain[0];
-                    this->strainYY_[globalDofIdx] = strain[1];
-                    this->strainZZ_[globalDofIdx] = strain[2];
+                    this->mech_.strainXX_[globalDofIdx] = strain[0];
+                    this->mech_.strainYY_[globalDofIdx] = strain[1];
+                    this->mech_.strainZZ_[globalDofIdx] = strain[2];
                     // voight notation
-                    this->strainXY_[globalDofIdx] = strain[5];
-                    this->strainXZ_[globalDofIdx] = strain[4];
-                    this->strainYZ_[globalDofIdx] = strain[3];
+                    this->mech_.strainXY_[globalDofIdx] = strain[5];
+                    this->mech_.strainXZ_[globalDofIdx] = strain[4];
+                    this->mech_.strainYZ_[globalDofIdx] = strain[3];
 
                     auto delstress = model.delstress(globalDofIdx);//not including fracture
-                    this->delstressXX_[globalDofIdx] = delstress[ 0];
-                    this->delstressYY_[globalDofIdx] = delstress[ 1];
-                    this->delstressZZ_[globalDofIdx] = delstress[ 2];
+                    this->mech_.delstressXX_[globalDofIdx] = delstress[ 0];
+                    this->mech_.delstressYY_[globalDofIdx] = delstress[ 1];
+                    this->mech_.delstressZZ_[globalDofIdx] = delstress[ 2];
                     // voight notation                             
-                    this->delstressXY_[globalDofIdx] = delstress[ 5];
-                    this->delstressXZ_[globalDofIdx] = delstress[ 4];
-                    this->delstressYZ_[globalDofIdx] = delstress[ 3];
+                    this->mech_.delstressXY_[globalDofIdx] = delstress[ 5];
+                    this->mech_.delstressXZ_[globalDofIdx] = delstress[ 4];
+                    this->mech_.delstressYZ_[globalDofIdx] = delstress[ 3];
 
                     auto linstress = model.linstress(globalDofIdx);;
-                    this->linstressXX_[globalDofIdx] = linstress[ 0];
-                    this->linstressYY_[globalDofIdx] = linstress[ 1];
-                    this->linstressZZ_[globalDofIdx] = linstress[ 2];
+                    this->mech_.linstressXX_[globalDofIdx] = linstress[ 0];
+                    this->mech_.linstressYY_[globalDofIdx] = linstress[ 1];
+                    this->mech_.linstressZZ_[globalDofIdx] = linstress[ 2];
                     // voight notation                             
-                    this->linstressXY_[globalDofIdx] = linstress[ 5];
-                    this->linstressXZ_[globalDofIdx] = linstress[ 4];
-                    this->linstressYZ_[globalDofIdx] = linstress[ 3];
+                    this->mech_.linstressXY_[globalDofIdx] = linstress[ 5];
+                    this->mech_.linstressXZ_[globalDofIdx] = linstress[ 4];
+                    this->mech_.linstressYZ_[globalDofIdx] = linstress[ 3];
 
                     auto fracstress = model.fractureStress(globalDofIdx);//is the tresagii stress which make rock fracture
-                    this->fracstressXX_[globalDofIdx] = fracstress[ 0];
-                    this->fracstressYY_[globalDofIdx] = fracstress[ 1];
-                    this->fracstressZZ_[globalDofIdx] = fracstress[ 2];
+                    this->mech_.fracstressXX_[globalDofIdx] = fracstress[ 0];
+                    this->mech_.fracstressYY_[globalDofIdx] = fracstress[ 1];
+                    this->mech_.fracstressZZ_[globalDofIdx] = fracstress[ 2];
                     // voight notation                             
-                    this->fracstressXY_[globalDofIdx] = fracstress[ 5];
-                    this->fracstressXZ_[globalDofIdx] = fracstress[ 4];
-                    this->fracstressYZ_[globalDofIdx] = fracstress[ 3];
+                    this->mech_.fracstressXY_[globalDofIdx] = fracstress[ 5];
+                    this->mech_.fracstressXZ_[globalDofIdx] = fracstress[ 4];
+                    this->mech_.fracstressYZ_[globalDofIdx] = fracstress[ 3];
                 }
             }
         }
