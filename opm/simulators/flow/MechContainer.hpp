@@ -26,6 +26,9 @@
 #ifndef OPM_MECH_CONTAINER_HPP
 #define OPM_MECH_CONTAINER_HPP
 
+#include <cstddef>
+#include <map>
+#include <string>
 #include <vector>
 
 namespace Opm {
@@ -36,6 +39,9 @@ class MechContainer
     using ScalarBuffer = std::vector<Scalar>;
 
 public:
+    void allocate(const std::size_t bufferSize,
+                  std::map<std::string, int>& rstKeywords);
+
     ScalarBuffer potentialForce_;
     ScalarBuffer potentialPressForce_;
     ScalarBuffer potentialTempForce_;
