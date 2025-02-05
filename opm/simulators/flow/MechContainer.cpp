@@ -70,19 +70,7 @@ allocate(const std::size_t bufferSize,
 
     resizeAndRegister(strain_, "STRAIN");
     resizeAndRegister(stress_, "STRESS");
-
-    this->delstressXX_.resize(bufferSize, 0.0);
-    rstKeywords["DELSTRXX"] = 0;
-    this->delstressYY_.resize(bufferSize, 0.0);
-    rstKeywords["DELSTRYY"] = 0;
-    this->delstressZZ_.resize(bufferSize, 0.0);
-    rstKeywords["DELSTRZZ"] = 0;
-    this->delstressXY_.resize(bufferSize, 0.0);
-    rstKeywords["DELSTRXY"] = 0;
-    this->delstressXZ_.resize(bufferSize, 0.0);
-    rstKeywords["DELSTRXZ"] = 0;
-    this->delstressYZ_.resize(bufferSize, 0.0);
-    rstKeywords["DELSTRYZ"] = 0;
+    resizeAndRegister(delstress_, "DELSTR");
 
     this->fracstressXX_.resize(bufferSize,0.0);
     rstKeywords["FRCSTRXX"] = 0;
@@ -129,12 +117,7 @@ void MechContainer<Scalar>::
 assignDelStress(const unsigned globalDofIdx,
                 const Dune::FieldVector<Scalar,6>& delStress)
 {
-    this->delstressXX_[globalDofIdx] = delStress[0];
-    this->delstressYY_[globalDofIdx] = delStress[1];
-    this->delstressZZ_[globalDofIdx] = delStress[2];
-    this->delstressYZ_[globalDofIdx] = delStress[3];
-    this->delstressXZ_[globalDofIdx] = delStress[4];
-    this->delstressXY_[globalDofIdx] = delStress[5];
+    this->delstress_.assign(globalDofIdx, VoigtContainer<Scalar>(delStress));
 }
 
 template<class Scalar>
@@ -186,12 +169,7 @@ outputRestart(data::Solution& sol) const
     };
 
     const auto solutionVectors = std::array{
-        DataEntry{"DELSTRXX", UnitSystem::measure::pressure, &delstressXX_},
-        DataEntry{"DELSTRYY", UnitSystem::measure::pressure, &delstressYY_},
-        DataEntry{"DELSTRZZ", UnitSystem::measure::pressure, &delstressZZ_},
-        DataEntry{"DELSTRXY", UnitSystem::measure::pressure, &delstressXY_},
-        DataEntry{"DELSTRXZ", UnitSystem::measure::pressure, &delstressXZ_},
-        DataEntry{"DELSTRYZ", UnitSystem::measure::pressure, &delstressYZ_},
+        DataEntry{"DELSTR",   UnitSystem::measure::pressure, &delstress_},
         DataEntry{"DISP",     UnitSystem::measure::length,   &disp_},
         DataEntry{"STRAIN",   UnitSystem::measure::identity, &strain_},
         DataEntry{"STRESS",   UnitSystem::measure::length,   &stress_},
