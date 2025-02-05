@@ -206,7 +206,7 @@ public:
             const auto& model = problem.geoMechModel();
             for (unsigned dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++dofIdx) {
                 unsigned globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
-                if (!this->mech_.potentialForce_.empty()) {
+                if (this->mech_.allocated()) {
                     // assume all mechanical things should be written
                     this->mech_.assignPotentialForces(globalDofIdx,
                                                       model.mechPotentialForce(globalDofIdx),

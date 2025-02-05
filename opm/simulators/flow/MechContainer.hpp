@@ -74,6 +74,9 @@ public:
 
     void outputRestart(data::Solution& sol) const;
 
+    bool allocated() const
+    { return allocated_; }
+
     bool allocated_ = false;
     ScalarBuffer potentialForce_;
     ScalarBuffer potentialPressForce_;
