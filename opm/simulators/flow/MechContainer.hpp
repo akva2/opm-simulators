@@ -80,12 +80,7 @@ public:
     VoigtArray<Scalar> strain_;
     VoigtArray<Scalar> stress_;
     VoigtArray<Scalar> delstress_;
-    ScalarBuffer linstressXX_;
-    ScalarBuffer linstressYY_;
-    ScalarBuffer linstressZZ_;
-    ScalarBuffer linstressXY_;
-    ScalarBuffer linstressXZ_;
-    ScalarBuffer linstressYZ_;
+    VoigtArray<Scalar> linstress_;
     ScalarBuffer fracstressXX_;
     ScalarBuffer fracstressYY_;
     ScalarBuffer fracstressZZ_;
