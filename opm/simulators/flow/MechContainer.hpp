@@ -54,6 +54,9 @@ public:
                                const Scalar pressForce,
                                const Scalar tempForce);
 
+    void assignDelStress(const unsigned globalDofIdx,
+                         const Dune::FieldVector<Scalar,6>& delStress);
+
     void assignDisplacement(const unsigned globalDofIdx,
                             const Dune::FieldVector<Scalar,3>& disp);
 

@@ -223,14 +223,8 @@ public:
                     this->mech_.assignStrain(globalDofIdx,
                                              model.strain(globalDofIdx,/*include_fracture*/true));
 
-                    auto delstress = model.delstress(globalDofIdx);//not including fracture
-                    this->mech_.delstressXX_[globalDofIdx] = delstress[ 0];
-                    this->mech_.delstressYY_[globalDofIdx] = delstress[ 1];
-                    this->mech_.delstressZZ_[globalDofIdx] = delstress[ 2];
-                    // voight notation                             
-                    this->mech_.delstressXY_[globalDofIdx] = delstress[ 5];
-                    this->mech_.delstressXZ_[globalDofIdx] = delstress[ 4];
-                    this->mech_.delstressYZ_[globalDofIdx] = delstress[ 3];
+                    this->mech_.assignDelStress(globalDofIdx,
+                                                model.delstress(globalDofIdx)); // not including fracture
 
                     auto linstress = model.linstress(globalDofIdx);;
                     this->mech_.linstressXX_[globalDofIdx] = linstress[ 0];
