@@ -55,6 +55,9 @@ public:
     void assignDisplacement(const unsigned globalDofIdx,
                             const Dune::FieldVector<Scalar,3>& disp);
 
+    void assignStress(const unsigned globalDofIdx,
+                      const Dune::FieldVector<Scalar,6>& stress);
+
     void outputRestart(data::Solution& sol) const;
 
     bool allocated_ = false;

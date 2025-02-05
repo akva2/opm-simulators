@@ -216,16 +216,10 @@ public:
                     this->mech_.assignDisplacement(globalDofIdx,
                                                    model.disp(globalDofIdx,/*include_fracture*/true));
 
-                    //total stress is not stored but calulated result is voit notation
-                    auto stress = model.stress(globalDofIdx,/*include_fracture*/true);
-                    this->mech_.stressXX_[globalDofIdx] = stress[0];
-                    this->mech_.stressYY_[globalDofIdx] = stress[1];
-                    this->mech_.stressZZ_[globalDofIdx] = stress[2];
-                    // voight notation
-                    this->mech_.stressXY_[globalDofIdx] = stress[5];
-                    this->mech_.stressXZ_[globalDofIdx] = stress[4];
-                    this->mech_.stressYZ_[globalDofIdx] = stress[3];
-                    
+                    // total stress is not stored but calulated result is voigt notation
+                    this->mech_.assignStress(globalDofIdx,
+                                             model.stress(globalDofIdx,/*include_fracture*/true));;
+
                     auto strain = model.strain(globalDofIdx,/*include_fracture*/true);
                     this->mech_.strainXX_[globalDofIdx] = strain[0];
                     this->mech_.strainYY_[globalDofIdx] = strain[1];
