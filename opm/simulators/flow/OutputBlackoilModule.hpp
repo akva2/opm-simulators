@@ -208,9 +208,10 @@ public:
                 unsigned globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
                 if (!this->mech_.potentialForce_.empty()) {
                     // assume all mechanical things should be written
-                    this->mech_.potentialForce_[globalDofIdx] = model.mechPotentialForce(globalDofIdx);
-                    this->mech_.potentialPressForce_[globalDofIdx] = model.mechPotentialPressForce(globalDofIdx);
-                    this->mech_.potentialTempForce_[globalDofIdx] = model.mechPotentialTempForce(globalDofIdx);
+                    this->mech_.assignPotentialForces(globalDofIdx,
+                                                      model.mechPotentialForce(globalDofIdx),
+                                                      model.mechPotentialPressForce(globalDofIdx),
+                                                      model.mechPotentialTempForce(globalDofIdx));
 
                     auto disp = model.disp(globalDofIdx,/*include_fracture*/true); 
                     this->mech_.dispX_[globalDofIdx] = disp[0];
