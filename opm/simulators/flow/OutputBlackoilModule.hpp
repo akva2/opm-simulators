@@ -229,14 +229,9 @@ public:
                     this->mech_.assignLinStress(globalDofIdx,
                                                 model.linstress(globalDofIdx));
 
-                    auto fracstress = model.fractureStress(globalDofIdx);//is the tresagii stress which make rock fracture
-                    this->mech_.fracstressXX_[globalDofIdx] = fracstress[ 0];
-                    this->mech_.fracstressYY_[globalDofIdx] = fracstress[ 1];
-                    this->mech_.fracstressZZ_[globalDofIdx] = fracstress[ 2];
-                    // voight notation                             
-                    this->mech_.fracstressXY_[globalDofIdx] = fracstress[ 5];
-                    this->mech_.fracstressXZ_[globalDofIdx] = fracstress[ 4];
-                    this->mech_.fracstressYZ_[globalDofIdx] = fracstress[ 3];
+                    // is the tresagii stress which make rock fracture
+                    this->mech_.assignFracStress(globalDofIdx,
+                                                 model.fractureStress(globalDofIdx));
                 }
             }
         }
