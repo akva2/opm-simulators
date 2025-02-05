@@ -213,10 +213,9 @@ public:
                                                       model.mechPotentialPressForce(globalDofIdx),
                                                       model.mechPotentialTempForce(globalDofIdx));
 
-                    auto disp = model.disp(globalDofIdx,/*include_fracture*/true); 
-                    this->mech_.dispX_[globalDofIdx] = disp[0];
-                    this->mech_.dispY_[globalDofIdx] = disp[1];
-                    this->mech_.dispZ_[globalDofIdx] = disp[2];
+                    this->mech_.assignDisplacement(globalDofIdx,
+                                                   model.disp(globalDofIdx,/*include_fracture*/true));
+
                     //total stress is not stored but calulated result is voit notation
                     auto stress = model.stress(globalDofIdx,/*include_fracture*/true);
                     this->mech_.stressXX_[globalDofIdx] = stress[0];

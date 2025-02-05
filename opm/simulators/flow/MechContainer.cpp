@@ -129,6 +129,16 @@ assignPotentialForces(const unsigned globalDofIdx,
 
 template<class Scalar>
 void MechContainer<Scalar>::
+assignDisplacement(const unsigned globalDofIdx,
+                   const Dune::FieldVector<Scalar,3>& disp)
+{
+    this->dispX_[globalDofIdx] = disp[0];
+    this->dispY_[globalDofIdx] = disp[1];
+    this->dispZ_[globalDofIdx] = disp[2];
+}
+
+template<class Scalar>
+void MechContainer<Scalar>::
 outputRestart(data::Solution& sol) const
 {
     if (!allocated_) {

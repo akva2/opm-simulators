@@ -26,6 +26,8 @@
 #ifndef OPM_MECH_CONTAINER_HPP
 #define OPM_MECH_CONTAINER_HPP
 
+#include <dune/common/fvector.hh>
+
 #include <cstddef>
 #include <map>
 #include <string>
@@ -48,6 +50,9 @@ public:
                                const Scalar force,
                                const Scalar pressForce,
                                const Scalar tempForce);
+
+    void assignDisplacement(const unsigned globalDofIdx,
+                            const Dune::FieldVector<Scalar,3>& disp);
 
     void outputRestart(data::Solution& sol) const;
 
