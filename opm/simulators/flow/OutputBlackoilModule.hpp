@@ -226,14 +226,8 @@ public:
                     this->mech_.assignDelStress(globalDofIdx,
                                                 model.delstress(globalDofIdx)); // not including fracture
 
-                    auto linstress = model.linstress(globalDofIdx);;
-                    this->mech_.linstressXX_[globalDofIdx] = linstress[ 0];
-                    this->mech_.linstressYY_[globalDofIdx] = linstress[ 1];
-                    this->mech_.linstressZZ_[globalDofIdx] = linstress[ 2];
-                    // voight notation                             
-                    this->mech_.linstressXY_[globalDofIdx] = linstress[ 5];
-                    this->mech_.linstressXZ_[globalDofIdx] = linstress[ 4];
-                    this->mech_.linstressYZ_[globalDofIdx] = linstress[ 3];
+                    this->mech_.assignLinStress(globalDofIdx,
+                                                model.linstress(globalDofIdx));
 
                     auto fracstress = model.fractureStress(globalDofIdx);//is the tresagii stress which make rock fracture
                     this->mech_.fracstressXX_[globalDofIdx] = fracstress[ 0];
