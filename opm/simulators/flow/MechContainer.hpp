@@ -57,6 +57,9 @@ public:
     void assignDisplacement(const unsigned globalDofIdx,
                             const Dune::FieldVector<Scalar,3>& disp);
 
+    void assignStrain(const unsigned globalDofIdx,
+                      const Dune::FieldVector<Scalar,6>& strain);
+
     void assignStress(const unsigned globalDofIdx,
                       const Dune::FieldVector<Scalar,6>& stress);
 
