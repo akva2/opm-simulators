@@ -84,12 +84,7 @@ public:
     VoigtArray<Scalar> stress_;
     VoigtArray<Scalar> delstress_;
     VoigtArray<Scalar> linstress_;
-    ScalarBuffer fracstressXX_;
-    ScalarBuffer fracstressYY_;
-    ScalarBuffer fracstressZZ_;
-    ScalarBuffer fracstressXY_;
-    ScalarBuffer fracstressXZ_;
-    ScalarBuffer fracstressYZ_;
+    VoigtArray<Scalar> fracstress_;
 };
 
 } // namespace Opm
