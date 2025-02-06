@@ -28,7 +28,7 @@
 
 #include <dune/common/fvector.hh>
 
-#include <opm/simulators/utils/VoigtArray.hpp>
+#include <opm/simulators/utils/SymmTensor.hpp>
 
 #include <array>
 #include <cstddef>
@@ -55,22 +55,22 @@ public:
                                const Scalar tempForce);
 
     void assignDelStress(const unsigned globalDofIdx,
-                         const Dune::FieldVector<Scalar,6>& delStress);
+                         const SymmTensor<Scalar>& delStress);
 
     void assignDisplacement(const unsigned globalDofIdx,
                             const Dune::FieldVector<Scalar,3>& disp);
 
     void assignFracStress(const unsigned globalDofIdx,
-                          const Dune::FieldVector<Scalar,6>& fracStress);
+                          const SymmTensor<Scalar>& fracStress);
 
     void assignLinStress(const unsigned globalDofIdx,
-                         const Dune::FieldVector<Scalar,6>& linStress);
+                         const SymmTensor<Scalar>& linStress);
 
     void assignStrain(const unsigned globalDofIdx,
-                      const Dune::FieldVector<Scalar,6>& strain);
+                      const SymmTensor<Scalar>& strain);
 
     void assignStress(const unsigned globalDofIdx,
-                      const Dune::FieldVector<Scalar,6>& stress);
+                      const SymmTensor<Scalar>& stress);
 
     void outputRestart(data::Solution& sol) const;
 

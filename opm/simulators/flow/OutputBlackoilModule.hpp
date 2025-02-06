@@ -854,7 +854,7 @@ public:
                             if constexpr (getPropValue<TypeTag, Properties::EnableMech>()) {
                             const auto& model = problem.geoMechModel();
                             auto stress = model.stress(globalDofIdx,/*include_fracture*/true);
-                            val.second = stress[0];
+                            val.second = stress[VoigtIndex::XX];
                             }
                         }
                     else if (key.first == "BSTRSSYY")
@@ -862,7 +862,7 @@ public:
                             if constexpr (getPropValue<TypeTag, Properties::EnableMech>()) {
                             const auto& model = problem.geoMechModel();
                             auto stress = model.stress(globalDofIdx,/*include_fracture*/true);
-                            val.second = stress[1];
+                            val.second = stress[VoigtIndex::YY];
                             }
                         }
                     else if (key.first == "BSTRSSZZ")
@@ -870,7 +870,7 @@ public:
                             if constexpr (getPropValue<TypeTag, Properties::EnableMech>()) {
                             const auto& model = problem.geoMechModel();
                             auto stress = model.stress(globalDofIdx,/*include_fracture*/true);
-                            val.second = stress[2];
+                            val.second = stress[VoigtIndex::ZZ];
                             }
                         }
                     else if (key.first == "BSTRSSXY")
@@ -878,7 +878,7 @@ public:
                             if constexpr (getPropValue<TypeTag, Properties::EnableMech>()) {
                             const auto& model = problem.geoMechModel();
                             auto stress = model.stress(globalDofIdx,/*include_fracture*/true);
-                            val.second = stress[5];
+                            val.second = stress[VoigtIndex::XY];
                             }
                         }
                     else if (key.first == "BSTRSSXZ")
@@ -886,7 +886,7 @@ public:
                             if constexpr (getPropValue<TypeTag, Properties::EnableMech>()) {
                             const auto& model = problem.geoMechModel();
                             auto stress = model.stress(globalDofIdx,/*include_fracture*/true);
-                            val.second = stress[4];
+                            val.second = stress[VoigtIndex::XZ];
                             }
                         }
                     else if (key.first == "BSTRSSYZ")
@@ -894,7 +894,7 @@ public:
                             if constexpr (getPropValue<TypeTag, Properties::EnableMech>()) {
                             const auto& model = problem.geoMechModel();
                             auto stress = model.stress(globalDofIdx,/*include_fracture*/true);
-                            val.second = stress[3];
+                            val.second = stress[VoigtIndex::YZ];
                             }
                         }
                     else if (key.first == "BWKR" || key.first == "BKRW")

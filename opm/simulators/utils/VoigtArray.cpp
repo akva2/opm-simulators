@@ -25,14 +25,6 @@
 
 namespace Opm {
 
-template<class T>
-template<class Array>
-VoigtContainer<T>::
-VoigtContainer(const Array& array)
-{
-    std::copy(array.begin(), array.end(), data_.begin());
-}
-
 template<class Scalar>
 VoigtArray<Scalar>::
 VoigtArray(const std::size_t size)
@@ -72,9 +64,8 @@ operator()(const VoigtIndex idx, const std::size_t i)
 }
 
 #define INSTANTIATE_TYPE(T)                                                    \
+    template class VoigtContainer<T>;                                          \
     template class VoigtArray<T>;                                              \
-    template VoigtContainer<T>::VoigtContainer(const std::array<T,6>&);        \
-    template VoigtContainer<T>::VoigtContainer(const Dune::FieldVector<T,6>&);
 
 INSTANTIATE_TYPE(double)
 
