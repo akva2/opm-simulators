@@ -71,8 +71,6 @@ protected:
     std::array<T, 6> data_{};
 };
 
-template<class T> using SymmTensor = VoigtContainer<T>;
-
 template<class Scalar>
 class VoigtArray : public VoigtContainer<std::vector<Scalar>>
 {
