@@ -23,17 +23,6 @@
 
 #include <algorithm>
 
-namespace {
-    static constexpr auto unique_indices = std::array{
-        Opm::VoigtIndex::XX,
-        Opm::VoigtIndex::YY,
-        Opm::VoigtIndex::ZZ,
-        Opm::VoigtIndex::YZ,
-        Opm::VoigtIndex::XZ,
-        Opm::VoigtIndex::XY
-    };
-}
-
 namespace Opm {
 
 template<class T>
@@ -63,7 +52,7 @@ template<class Scalar>
 void VoigtArray<Scalar>::
 assign(const std::size_t i, const VoigtContainer<Scalar>& array)
 {
-    for (const auto idx : unique_indices) {
+    for (const auto idx : this->unique_indices) {
         (*this)[idx][i] = array[idx];
     }
 }

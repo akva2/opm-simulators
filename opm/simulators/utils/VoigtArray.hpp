@@ -20,6 +20,7 @@
 #ifndef OPM_UTIL_VOIGT_ARRAY_HPP
 #define OPM_UTIL_VOIGT_ARRAY_HPP
 
+#include <algorithm>
 #include <array>
 #include <vector>
 
@@ -35,10 +36,28 @@ template<class T>
 class VoigtContainer
 {
 public:
-    VoigtContainer() = default;
+    static constexpr auto unique_indices = std::array{
+        Opm::VoigtIndex::XX,
+        Opm::VoigtIndex::YY,
+        Opm::VoigtIndex::ZZ,
+        Opm::VoigtIndex::YZ,
+        Opm::VoigtIndex::XZ,
+        Opm::VoigtIndex::XY
+    };
 
-    template<class Array>
-    VoigtContainer(const Array& array);
+    static constexpr auto diag_indices = std::array{
+        Opm::VoigtIndex::XX,
+        Opm::VoigtIndex::YY,
+        Opm::VoigtIndex::ZZ,
+    };
+
+    VoigtContainer() = default;
+    VoigtContainer(std::initializer_list<T> value)
+    {
+        std::copy_n(value.begin(),
+                    std::min(std::size_t{6}, value.size()),
+                    data_.begin());
+    }
 
     const T& operator[](const VoigtIndex idx) const
     { return data_[static_cast<std::underlying_type_t<VoigtIndex>>(idx)]; }
