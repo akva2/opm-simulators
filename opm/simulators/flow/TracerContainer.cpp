@@ -31,27 +31,32 @@
 
 #include <opm/output/data/Solution.hpp>
 
+#include <algorithm>
+
 namespace Opm {
 
 template<class FluidSystem>
 void TracerContainer<FluidSystem>::
-allocate(const unsigned bufferSize,
-         const std::vector<bool>& enableSolTracers)
+allocate(const unsigned bufferSize)
 {
-    const unsigned numTracers = eclState_.tracer().size();
-    if (numTracers > 0) {
+    const auto& tracers = eclState_.tracer();
+    if (!tracers.empty()) {
         allocated_ = true;
-        freeConcentrations_.resize(numTracers);
-        for (unsigned tracerIdx = 0; tracerIdx < numTracers; ++tracerIdx) {
-            freeConcentrations_[tracerIdx].resize(bufferSize, 0.0);
-        }
-        solConcentrations_.resize(numTracers);
-        for (unsigned tracerIdx = 0; tracerIdx < numTracers; ++tracerIdx)
-        {
-            if (enableSolTracers[tracerIdx]) {
-                solConcentrations_[tracerIdx].resize(bufferSize, 0.0);
-            }
-        }
+        freeConcentrations_.resize(tracers.size());
+        solConcentrations_.resize(tracers.size());
+        std::for_each(tracers.begin(), tracers.end(),
+                      [idx = 0, bufferSize, this](const auto& tracer) mutable
+                      {
+                          freeConcentrations_[idx].resize(bufferSize, 0.0);
+                          if (((tracer.phase == Phase::GAS && FluidSystem::enableDissolvedGas()) ||
+                              (tracer.phase == Phase::OIL && FluidSystem::enableVaporizedOil())) &&
+                              (tracer.solution_concentration.has_value() ||
+                               tracer.solution_tvdp.has_value()))
+                          {
+                              solConcentrations_[idx].resize(bufferSize, 0.0);
+                          }
+                          ++idx;
+                      });
     }
 }
 

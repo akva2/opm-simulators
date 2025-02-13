@@ -188,7 +188,6 @@ public:
                              problem.materialLawManager()->enablePCHysteresis(),
                              problem.materialLawManager()->enableNonWettingHysteresis(),
                              problem.materialLawManager()->enableWettingHysteresis(),
-                             problem.tracerModel().enableSolTracers(),
                              problem.eclWriter()->getOutputNnc().size());
     }
 

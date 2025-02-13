@@ -44,8 +44,7 @@ public:
         : eclState_(eclState)
     {}
 
-    void allocate(const unsigned bufferSize,
-                  const std::vector<bool>& enableSolTracers);
+    void allocate(const unsigned bufferSize);
 
     void outputRestart(data::Solution& sol);
 

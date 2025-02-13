@@ -756,7 +756,6 @@ doAllocBuffers(const unsigned bufferSize,
                const bool     enablePCHysteresis,
                const bool     enableNonWettingHysteresis,
                const bool     enableWettingHysteresis,
-               const std::vector<bool>& enableSolTracers,
                const unsigned numOutputNnc,
                std::map<std::string, int> rstKeywords)
 {
@@ -1186,7 +1185,7 @@ doAllocBuffers(const unsigned bufferSize,
     }
 
     // tracers
-    tracerC_.allocate(bufferSize, enableSolTracers);
+    tracerC_.allocate(bufferSize);
 
     if (rstKeywords["RESIDUAL"] > 0) {
         rstKeywords["RESIDUAL"] = 0;

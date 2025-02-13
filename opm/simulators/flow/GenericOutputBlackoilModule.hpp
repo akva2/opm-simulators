@@ -331,7 +331,6 @@ protected:
                         const bool enablePCHysteresis = false,
                         const bool enableNonWettingHysteresis = false,
                         const bool enableWettingHysteresis = false,
-                        const std::vector<bool>& enableSolTracers = {},
                         unsigned numOutputNnc = 0,
                         std::map<std::string, int> rstKeywords = {});
 
