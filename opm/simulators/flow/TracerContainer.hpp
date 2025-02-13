@@ -30,6 +30,7 @@
 
 namespace Opm {
 
+namespace data { class Solution; }
 class EclipseState;
 
 template<class FluidSystem>
@@ -45,6 +46,8 @@ public:
 
     void allocate(const unsigned bufferSize,
                   const std::vector<bool>& enableSolTracers);
+
+    void outputRestart(data::Solution& sol);
 
     bool allocated_ = false;
     std::vector<ScalarBuffer> freeConcentrations_;

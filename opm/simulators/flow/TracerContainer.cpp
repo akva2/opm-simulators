@@ -29,6 +29,8 @@
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
 #include <opm/material/fluidsystems/GenericOilGasWaterFluidSystem.hpp>
 
+#include <opm/output/data/Solution.hpp>
+
 namespace Opm {
 
 template<class FluidSystem>
@@ -51,6 +53,35 @@ allocate(const unsigned bufferSize,
             }
         }
     }
+}
+
+template<class FluidSystem>
+void TracerContainer<FluidSystem>::
+outputRestart(data::Solution& sol)
+{
+    if (!this->allocated_) {
+        return;
+    }
+
+    const auto& tracers = this->eclState_.tracer();
+    std::for_each(tracers.begin(), tracers.end(),
+                    [idx = 0, &sol, this](const auto& tracer) mutable
+                    {
+                        sol.insert(tracer.fname(),
+                                   UnitSystem::measure::identity,
+                                   std::move(freeConcentrations_[idx]),
+                                   data::TargetType::RESTART_TRACER_SOLUTION);
+
+                        if (!solConcentrations_[idx].empty()) {
+                            sol.insert(tracer.sname(),
+                                       UnitSystem::measure::identity,
+                                       std::move(solConcentrations_[idx]),
+                                       data::TargetType::RESTART_TRACER_SOLUTION);
+                        }
+                        ++idx;
+                    });
+
+    this->allocated_ = false;
 }
 
 template<class T> using FS = BlackOilFluidSystem<T,BlackOilDefaultIndexTraits>;
