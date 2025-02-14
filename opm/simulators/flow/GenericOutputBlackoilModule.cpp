@@ -774,6 +774,9 @@ doAllocBuffers(const unsigned bufferSize,
         norst = 0;
     }
 
+    // We always output oil pressure
+    rstKeywords["PRES"] = 0;
+
     // Fluid in place
     this->computeFip_ = this->fipC_.allocate(bufferSize,
                                              summaryConfig_,
@@ -861,84 +864,95 @@ doAllocBuffers(const unsigned bufferSize,
         return;
     }
 
-    // Always output saturation of active phases
-    for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-        if (! FluidSystem::phaseIsActive(phaseIdx)) {
-            continue;
-        }
+    enum class FieldPhaseType {
+        None, // one kw for all fields
+        GWO, // append GWO to kw name
+        GasWaterOil, // append gas/water/oil to kw name
+        FGasWaterOil, // first letter of kw then apply gas/water/oil
+    };
 
-        this->saturation_[phaseIdx].resize(bufferSize, 0.0);
-    }
-
-    // And oil pressure
-    fluidPressure_.resize(bufferSize, 0.0);
-    rstKeywords["PRES"] = 0;
-    rstKeywords["PRESSURE"] = 0;
+    struct EnableEntry {
+        std::variant<ScalarBuffer*,
+                     std::array<ScalarBuffer, numPhases>*> data; // data to resize
+        std::string_view kw; // Field keyword
+        bool cond; // Condition on which to resize field
+        bool optional = false; // True if field keyword need to be in map
+        FieldPhaseType phaseType = FieldPhaseType::GasWaterOil; // how phase type is encoded in kw
+    };
+    const auto& oilvap = schedule_[std::max(reportStepNum, 0u)].oilvap();
+    const auto& simConfig = eclState_.getSimulationConfig();
+    using OilVapP = OilVaporizationProperties::OilVaporization;
+    auto entries = std::vector<EnableEntry>{
+        {&saturation_, "S", true},
+        {&fluidPressure_,   "PRESSURE", true},
+        // If TEMP is set in RPTRST we output temperature even if THERMAL
+        // is not activated
+        {&temperature_, "TEMP", enableEnergy_ || rstKeywords["TEMP"] > 0},
+        {&rs_,   "RS", FluidSystem::enableDissolvedGas()},
+        {&rsw_,  "RSW", FluidSystem::enableDissolvedGasInWater()},
+        {&rv_,   "RV", FluidSystem::enableVaporizedOil()},
+        {&rvw_,  "RVW", FluidSystem::enableVaporizedWater()},
+        {&drsdtcon_,     "", oilvap.drsdtConvective()},
+        {&sSol_,     "", enableSolvent_},
+        {&rswSol_,     "", enableSolvent_ && simConfig.hasDISGASW()},
+        {&cPolymer_,     "", enablePolymer_},
+        {&cFoam_,     "", enableFoam_},
+        {&cSalt_,     "", enableBrine_},
+        {&pSalt_,     "", enableSaltPrecipitation_},
+        {&permFact_,     "", enableSaltPrecipitation_},
+        {&soMax_,     "", oilvap.getType() == OilVapP::VAPPARS},
+        {&soMax_,     "", hysteresisConfig &&
+                          hysteresisConfig->enableNonWettingHysteresis() &&
+                          FluidSystem::phaseIsActive(oilPhaseIdx) &&
+                          FluidSystem::phaseIsActive(waterPhaseIdx)},
+        {&sgmax_,     "", hysteresisConfig &&
+                          hysteresisConfig->enableNonWettingHysteresis() &&
+                          FluidSystem::phaseIsActive(oilPhaseIdx) &&
+                          FluidSystem::phaseIsActive(gasPhaseIdx)},
+        {&swMax_,     "", hysteresisConfig &&
+                          hysteresisConfig->enableWettingHysteresis() &&
+                          FluidSystem::phaseIsActive(oilPhaseIdx) &&
+                          FluidSystem::phaseIsActive(waterPhaseIdx)},
+        {&shmax_,      "", hysteresisConfig &&
+                           hysteresisConfig->enableWettingHysteresis() &&
+                           FluidSystem::phaseIsActive(oilPhaseIdx) &&
+                           FluidSystem::phaseIsActive(gasPhaseIdx)},
+        {&swmin_,      "", hysteresisConfig &&
+                           hysteresisConfig->enablePCHysteresis() &&
+                           FluidSystem::phaseIsActive(oilPhaseIdx) &&
+                           FluidSystem::phaseIsActive(waterPhaseIdx)},
+        {&somin_,      "", hysteresisConfig &&
+                           hysteresisConfig->enablePCHysteresis() &&
+                           FluidSystem::phaseIsActive(oilPhaseIdx) &&
+                           FluidSystem::phaseIsActive(gasPhaseIdx)},
+        {&ppcw_,  "PPCW", eclState_.fieldProps().has_double("SWATINIT")},
+        {&gasDissolutionFactor_, "RSSAT", FluidSystem::enableDissolvedGas(), true},
+        {&oilVaporizationFactor_, "RSSAT", FluidSystem::enableVaporizedOil(), true},
+        {&gasDissolutionFactorInWater_, "RSWSAT", FluidSystem::enableDissolvedGasInWater(), true},
+        {&waterVaporizationFactor_, "RVWSAT", FluidSystem::enableVaporizedWater(), true},
+        {&invB_, "B", true, true, FieldPhaseType::GWO},
+        {&rPorV_, "RPORV", true, true},
+        {&density_, "DEN", true, true, FieldPhaseType::GWO},
+        {&viscosity_, "VISC", true, true, FieldPhaseType::FGasWaterOil},
+        {&relativePermeability_, "KR", true, true, FieldPhaseType::GWO},
+        {&pcgw_, "PCOG", FluidSystem::phaseIsActive(oilPhaseIdx) &&
+                         FluidSystem::phaseIsActive(gasPhaseIdx), true},
+        {&pcgw_, "PCGW", FluidSystem::phaseIsActive(gasPhaseIdx) &&
+                         FluidSystem::phaseIsActive(waterPhaseIdx), true},
+        {&pcow_, "PCOW", FluidSystem::phaseIsActive(oilPhaseIdx) &&
+                         FluidSystem::phaseIsActive(waterPhaseIdx), true},
+        {&bubblePointPressure_, "PBPD", true, true},
+        {&dewPointPressure_, "PBPD", true, true},
+        {&residual_, "RESIDUAL", true, true, FieldPhaseType::None},
+        {&rockCompPorvMultiplier_, "ROCKC", true, true},
+        {&rockCompTransMultiplier_, "ROCKC", true, true},
+        {&swMax_, "ROCKC", true, true},
+        {&minimumOilPressure_, "ROCKC", true, true},
+        {&overburdenPressure_, "ROCKC", true, true},
+    };
 
     if (enableMech_ && eclState_.runspec().mech()) {
         this->mech_.allocate(bufferSize, rstKeywords);
-    }
-
-    // If TEMP is set in RPTRST we output temperature even if THERMAL
-    // is not activated
-    if (enableEnergy_ || rstKeywords["TEMP"] > 0) {
-        this->temperature_.resize(bufferSize, 0.0);
-        rstKeywords["TEMP"] = 0;
-    }
-
-    if (FluidSystem::phaseIsActive(oilPhaseIdx)) {
-        rstKeywords["SOIL"] = 0;
-    }
-    if (FluidSystem::phaseIsActive(gasPhaseIdx)) {
-        rstKeywords["SGAS"] = 0;
-    }
-    if (FluidSystem::phaseIsActive(waterPhaseIdx)) {
-        rstKeywords["SWAT"] = 0;
-    }
-
-    if (FluidSystem::enableDissolvedGas()) {
-        rs_.resize(bufferSize, 0.0);
-        rstKeywords["RS"] = 0;
-    }
-    if (FluidSystem::enableDissolvedGasInWater()) {
-        rsw_.resize(bufferSize, 0.0);
-        rstKeywords["RSW"] = 0;
-    }
-    if (FluidSystem::enableVaporizedOil()) {
-        rv_.resize(bufferSize, 0.0);
-        rstKeywords["RV"] = 0;
-    }
-    if (FluidSystem::enableVaporizedWater()) {
-        rvw_.resize(bufferSize, 0.0);
-        rstKeywords["RVW"] = 0;
-    }
-
-    if (schedule_[reportStepNum].oilvap().drsdtConvective()) {
-        drsdtcon_.resize(bufferSize, 0.0);
-    }
-
-    if (enableSolvent_) {
-        sSol_.resize(bufferSize, 0.0);
-        if (eclState_.getSimulationConfig().hasDISGASW()) {
-            rswSol_.resize(bufferSize, 0.0);
-        }
-    }
-
-    if (enablePolymer_) {
-        cPolymer_.resize(bufferSize, 0.0);
-    }
-
-    if (enableFoam_) {
-        cFoam_.resize(bufferSize, 0.0);
-    }
-
-    if (enableBrine_) {
-        cSalt_.resize(bufferSize, 0.0);
-    }
-
-    if (enableSaltPrecipitation_) {
-        pSalt_.resize(bufferSize, 0.0);
-        permFact_.resize(bufferSize, 0.0);
     }
 
     if (enableExtbo_) {
@@ -947,88 +961,6 @@ doAllocBuffers(const unsigned bufferSize,
 
     if (enableMICP_) {
         this->micpC_.allocate(bufferSize);
-    }
-
-    const bool vapparsActive = schedule_[std::max(reportStepNum, 0u)].oilvap().getType() ==
-                                  OilVaporizationProperties::OilVaporization::VAPPARS;
-    if (vapparsActive) {
-        soMax_.resize(bufferSize, 0.0);
-    }
-
-    if (hysteresisConfig && hysteresisConfig->enableNonWettingHysteresis()) {
-        if (FluidSystem::phaseIsActive(oilPhaseIdx)){
-            if (FluidSystem::phaseIsActive(waterPhaseIdx)){
-                soMax_.resize(bufferSize, 0.0);
-            }
-            if (FluidSystem::phaseIsActive(gasPhaseIdx)){
-                sgmax_.resize(bufferSize, 0.0);
-            }
-        } else {
-            //TODO add support for gas-water 
-        }
-    }
-    if (hysteresisConfig && hysteresisConfig->enableWettingHysteresis()) {
-        if (FluidSystem::phaseIsActive(oilPhaseIdx)){
-            if (FluidSystem::phaseIsActive(waterPhaseIdx)){
-                swMax_.resize(bufferSize, 0.0);
-            }
-            if (FluidSystem::phaseIsActive(gasPhaseIdx)){
-                shmax_.resize(bufferSize, 0.0);
-            }
-        } else {
-            //TODO add support for gas-water 
-        }
-    }
-    if (hysteresisConfig && hysteresisConfig->enablePCHysteresis()) {
-        if (FluidSystem::phaseIsActive(oilPhaseIdx)){
-            if (FluidSystem::phaseIsActive(waterPhaseIdx)){
-                swmin_.resize(bufferSize, 0.0);
-            }
-            if (FluidSystem::phaseIsActive(gasPhaseIdx)){
-                somin_.resize(bufferSize, 0.0);
-            }
-        } else {
-            //TODO add support for gas-water 
-        }
-    }
-
-    if (eclState_.fieldProps().has_double("SWATINIT")) {
-        ppcw_.resize(bufferSize, 0.0);
-        rstKeywords["PPCW"] = 0;
-    }
-
-    if (FluidSystem::enableDissolvedGas() && rstKeywords["RSSAT"] > 0) {
-        rstKeywords["RSSAT"] = 0;
-        gasDissolutionFactor_.resize(bufferSize, 0.0);
-    }
-    if (FluidSystem::enableVaporizedOil() && rstKeywords["RVSAT"] > 0) {
-        rstKeywords["RVSAT"] = 0;
-        oilVaporizationFactor_.resize(bufferSize, 0.0);
-    }
-    if (FluidSystem::enableDissolvedGasInWater() && rstKeywords["RSWSAT"] > 0) {
-        rstKeywords["RSWSAT"] = 0;
-        gasDissolutionFactorInWater_.resize(bufferSize, 0.0);
-    }
-    if (FluidSystem::enableVaporizedWater() && rstKeywords["RVWSAT"] > 0) {
-        rstKeywords["RVWSAT"] = 0;
-        waterVaporizationFactor_.resize(bufferSize, 0.0);
-    }
-
-    if (FluidSystem::phaseIsActive(waterPhaseIdx) && rstKeywords["BW"] > 0) {
-        rstKeywords["BW"] = 0;
-        invB_[waterPhaseIdx].resize(bufferSize, 0.0);
-    }
-    if (FluidSystem::phaseIsActive(oilPhaseIdx) && rstKeywords["BO"] > 0) {
-        rstKeywords["BO"] = 0;
-        invB_[oilPhaseIdx].resize(bufferSize, 0.0);
-    }
-    if (FluidSystem::phaseIsActive(gasPhaseIdx) && rstKeywords["BG"] > 0) {
-        rstKeywords["BG"] = 0;
-        invB_[gasPhaseIdx].resize(bufferSize, 0.0);
-    }
-    if (rstKeywords["RPORV"] > 0) {
-        rstKeywords["RPORV"] = 0;
-        rPorV_.resize(bufferSize, 0.0);
     }
 
     enableFlows_ = false;
@@ -1106,104 +1038,8 @@ doAllocBuffers(const unsigned bufferSize,
         }
     }
 
-    if (auto& den = rstKeywords["DEN"]; den > 0) {
-        den = 0;
-        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-            if (!FluidSystem::phaseIsActive(phaseIdx)) {
-                continue;
-            }
-
-            this->density_[phaseIdx].resize(bufferSize, 0.0);
-        }
-    }
-
-    if (auto& deng = rstKeywords["DENG"]; (deng > 0) && FluidSystem::phaseIsActive(gasPhaseIdx)) {
-        deng = 0;
-        this->density_[gasPhaseIdx].resize(bufferSize, 0.0);
-    }
-
-    if (auto& deno = rstKeywords["DENO"]; (deno > 0) && FluidSystem::phaseIsActive(oilPhaseIdx)) {
-        deno = 0;
-        this->density_[oilPhaseIdx].resize(bufferSize, 0.0);
-    }
-
-    if (auto& denw = rstKeywords["DENW"]; (denw > 0) && FluidSystem::phaseIsActive(waterPhaseIdx)) {
-        denw = 0;
-        this->density_[waterPhaseIdx].resize(bufferSize, 0.0);
-    }
-
-    const bool hasVWAT = (rstKeywords["VISC"] > 0) || (rstKeywords["VWAT"] > 0);
-    const bool hasVOIL = (rstKeywords["VISC"] > 0) || (rstKeywords["VOIL"] > 0);
-    const bool hasVGAS = (rstKeywords["VISC"] > 0) || (rstKeywords["VGAS"] > 0);
-    rstKeywords["VISC"] = 0;
-
-    if (FluidSystem::phaseIsActive(waterPhaseIdx) && hasVWAT) {
-        rstKeywords["VWAT"] = 0;
-        viscosity_[waterPhaseIdx].resize(bufferSize, 0.0);
-    }
-    if (FluidSystem::phaseIsActive(oilPhaseIdx) && hasVOIL > 0) {
-        rstKeywords["VOIL"] = 0;
-        viscosity_[oilPhaseIdx].resize(bufferSize, 0.0);
-    }
-    if (FluidSystem::phaseIsActive(gasPhaseIdx) && hasVGAS > 0) {
-        rstKeywords["VGAS"] = 0;
-        viscosity_[gasPhaseIdx].resize(bufferSize, 0.0);
-    }
-
-    if (FluidSystem::phaseIsActive(waterPhaseIdx) && rstKeywords["KRW"] > 0) {
-        rstKeywords["KRW"] = 0;
-        relativePermeability_[waterPhaseIdx].resize(bufferSize, 0.0);
-    }
-    if (FluidSystem::phaseIsActive(oilPhaseIdx) && rstKeywords["KRO"] > 0) {
-        rstKeywords["KRO"] = 0;
-        relativePermeability_[oilPhaseIdx].resize(bufferSize, 0.0);
-    }
-    if (FluidSystem::phaseIsActive(gasPhaseIdx) && rstKeywords["KRG"] > 0) {
-        rstKeywords["KRG"] = 0;
-        relativePermeability_[gasPhaseIdx].resize(bufferSize, 0.0);
-    }
-
-    if (FluidSystem::phaseIsActive(gasPhaseIdx) && FluidSystem::phaseIsActive(waterPhaseIdx) && rstKeywords["PCGW"] > 0) {
-        rstKeywords["PCGW"] = 0;
-        pcgw_.resize(bufferSize, 0.0);
-    }
-    if (FluidSystem::phaseIsActive(oilPhaseIdx) && FluidSystem::phaseIsActive(waterPhaseIdx) && rstKeywords["PCOW"] > 0) {
-        rstKeywords["PCOW"] = 0;
-        pcow_.resize(bufferSize, 0.0);
-    }
-    if (FluidSystem::phaseIsActive(oilPhaseIdx) && FluidSystem::phaseIsActive(gasPhaseIdx) && rstKeywords["PCOG"] > 0) {
-        rstKeywords["PCOG"] = 0;
-        pcog_.resize(bufferSize, 0.0);
-    }
-
-    if (rstKeywords["PBPD"] > 0)  {
-        rstKeywords["PBPD"] = 0;
-        bubblePointPressure_.resize(bufferSize, 0.0);
-        dewPointPressure_.resize(bufferSize, 0.0);
-    }
-
     // tracers
     this->tracerC_.allocate(bufferSize);
-
-    if (rstKeywords["RESIDUAL"] > 0) {
-        rstKeywords["RESIDUAL"] = 0;
-        for (int phaseIdx = 0; phaseIdx <  numPhases; ++phaseIdx)
-        {
-            if (FluidSystem::phaseIsActive(phaseIdx)) {
-                this->residual_[phaseIdx].resize(bufferSize, 0.0);
-            }
-        }
-    }
-
-    // ROCKC
-    if (rstKeywords["ROCKC"] > 0) {
-        rstKeywords["ROCKC"] = 0;
-        rockCompPorvMultiplier_.resize(bufferSize, 0.0);
-        rockCompTransMultiplier_.resize(bufferSize, 0.0);
-        swMax_.resize(bufferSize, 0.0);
-        minimumOilPressure_.resize(bufferSize, 0.0);
-        overburdenPressure_.resize(bufferSize, 0.0);
-    }
 
     //Warn for any unhandled keyword
     if (log) {
