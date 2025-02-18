@@ -59,6 +59,7 @@
 #include <array>
 #include <cassert>
 #include <cstddef>
+#include <execution>
 #include <functional>
 #include <stdexcept>
 #include <string>
@@ -272,8 +273,7 @@ public:
         using PhaseArray = std::array<ScalarBuffer,numPhases>;
         struct Entry
         {
-            std::variant<ScalarBuffer*,
-                         PhaseArray*> data;
+            std::variant<ScalarBuffer*, PhaseArray*> data;
             std::variant<ScalarExtractFunc, PhaseExtractFunc> extractor;
             bool condition = true;
         };
@@ -286,9 +286,11 @@ public:
             Entry{&this->saturation_,    [](const unsigned phase, const ExtractContext& ectx)
                                          { return getValue(ectx.fs.saturation(phase)); }},
             Entry{&this->invB_,          [](const unsigned phase, const ExtractContext& ectx)
-                                         { return getValue(ectx.fs.invB(phase)); }},
+                                         { return getValue(ectx.fs.invB(phase)); },
+                                         elemCtx.simulator().episodeIndex() >= 0},
             Entry{&this->density_,       [](const unsigned phase, const ExtractContext& ectx)
-                                         { return getValue(ectx.fs.density(phase)); }},
+                                         { return getValue(ectx.fs.density(phase)); },
+                                         elemCtx.simulator().episodeIndex() >= 0},
             Entry{&this->relativePermeability_,
                                          [](const unsigned phase, const ExtractContext& ectx)
                                          { return getValue(ectx.intQuants.relativePermeability(phase)); }},
@@ -303,7 +305,8 @@ public:
                                             else {
                                                 return getValue(ectx.fs.viscosity(phaseIdx));
                                             }
-                                         }},
+                                         },
+                                         elemCtx.simulator().episodeIndex() >= 0},
             Entry{&this->residual_,      [&modelResid](const unsigned phaseIdx, const ExtractContext& ectx)
                                          {
                                             const unsigned sIdx = FluidSystem::solventComponentIndex(phaseIdx);
@@ -379,13 +382,17 @@ public:
                                              return totVolume * getValue(ectx.intQuants.porosity());
                                          }},
             Entry{&this->rs_,            [](const ExtractContext& ectx)
-                                         { return getValue(ectx.fs.Rs()); }},
+                                         { return getValue(ectx.fs.Rs()); },
+                                         elemCtx.simulator().episodeIndex() >= 0},
             Entry{&this->rv_,            [](const ExtractContext& ectx)
-                                         { return getValue(ectx.fs.Rv()); }},
+                                         { return getValue(ectx.fs.Rv()); },
+                                         elemCtx.simulator().episodeIndex() >= 0},
             Entry{&this->rsw_,           [](const ExtractContext& ectx)
-                                         { return getValue(ectx.fs.Rsw()); }},
+                                         { return getValue(ectx.fs.Rsw()); },
+                                         elemCtx.simulator().episodeIndex() >= 0},
             Entry{&this->rvw_,           [](const ExtractContext& ectx)
-                                         { return getValue(ectx.fs.Rvw()); }},
+                                         { return getValue(ectx.fs.Rvw()); },
+                                         elemCtx.simulator().episodeIndex() >= 0},
             Entry{&this->ppcw_,          [&matLawManager](const ExtractContext& ectx)
                                          { return matLawManager->oilWaterScaledEpsInfoDrainage(ectx.globalDofIdx).maxPcow; }},
             Entry{&this->drsdtcon_,      [&problem](const ExtractContext& ectx)
@@ -534,24 +541,16 @@ public:
             // Volume factors, densities and viscosities need to be recalculated with the updated rs and rv values.
             Entry{&this->rv_,         [&problem](const ExtractContext& ectx)
                                       { return problem.initialFluidState(ectx.globalDofIdx).Rv(); },
-                                      elemCtx.simulator().episodeIndex() < 0 &&
-                                      FluidSystem::phaseIsActive(oilPhaseIdx) &&
-                                      FluidSystem::phaseIsActive(gasPhaseIdx)},
+                                      elemCtx.simulator().episodeIndex() < 0},
             Entry{&this->rs_,         [&problem](const ExtractContext& ectx)
                                       { return problem.initialFluidState(ectx.globalDofIdx).Rs(); },
-                                      elemCtx.simulator().episodeIndex() < 0 &&
-                                      FluidSystem::phaseIsActive(oilPhaseIdx) &&
-                                      FluidSystem::phaseIsActive(gasPhaseIdx)},
+                                      elemCtx.simulator().episodeIndex() < 0},
             Entry{&this->rsw_,        [&problem](const ExtractContext& ectx)
                                       { return problem.initialFluidState(ectx.globalDofIdx).Rsw(); },
-                                      elemCtx.simulator().episodeIndex() < 0 &&
-                                      FluidSystem::phaseIsActive(oilPhaseIdx) &&
-                                      FluidSystem::phaseIsActive(gasPhaseIdx)},
+                                      elemCtx.simulator().episodeIndex() < 0},
             Entry{&this->rvw_,        [&problem](const ExtractContext& ectx)
                                       { return problem.initialFluidState(ectx.globalDofIdx).Rvw(); },
-                                      elemCtx.simulator().episodeIndex() < 0 &&
-                                      FluidSystem::phaseIsActive(oilPhaseIdx) &&
-                                      FluidSystem::phaseIsActive(gasPhaseIdx)},
+                                      elemCtx.simulator().episodeIndex() < 0},
             // re-compute the volume factors, viscosities and densities if asked for
             Entry{&this->density_,    [&problem](const unsigned phase, const ExtractContext& ectx)
                                       {
@@ -559,27 +558,21 @@ public:
                                           return FluidSystem::density(fsInitial,
                                                                       phase,
                                                                       ectx.intQuants.pvtRegionIndex());
-                                       }, elemCtx.simulator().episodeIndex() < 0 &&
-                                          FluidSystem::phaseIsActive(oilPhaseIdx) &&
-                                          FluidSystem::phaseIsActive(gasPhaseIdx)},
+                                      }, elemCtx.simulator().episodeIndex() < 0},
             Entry{&this->invB_,       [&problem](const unsigned phase, const ExtractContext& ectx)
                                       {
                                           const auto& fsInitial = problem.initialFluidState(ectx.globalDofIdx);
                                           return FluidSystem::inverseFormationVolumeFactor(fsInitial,
                                                                                            phase,
                                                                                            ectx.intQuants.pvtRegionIndex());
-                                       }, elemCtx.simulator().episodeIndex() < 0 &&
-                                          FluidSystem::phaseIsActive(oilPhaseIdx) &&
-                                          FluidSystem::phaseIsActive(gasPhaseIdx)},
+                                      }, elemCtx.simulator().episodeIndex() < 0 },
             Entry{&this->viscosity_,  [&problem](const unsigned phase, const ExtractContext& ectx)
                                       {
                                           const auto& fsInitial = problem.initialFluidState(ectx.globalDofIdx);
                                           return FluidSystem::viscosity(fsInitial,
                                                                         phase,
                                                                         ectx.intQuants.pvtRegionIndex());
-                                       }, elemCtx.simulator().episodeIndex() < 0 &&
-                                          FluidSystem::phaseIsActive(oilPhaseIdx) &&
-                                          FluidSystem::phaseIsActive(gasPhaseIdx)},
+                                      }, elemCtx.simulator().episodeIndex() < 0},
         };
 
         for (unsigned dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++dofIdx) {
@@ -609,7 +602,7 @@ public:
                 }
             }
 
-            std::for_each(extractors.begin(), extractors.end(),
+            std::for_each(std::execution::par_unseq, extractors.begin(), extractors.end(),
                           [&fs, &ectx](const auto& entry)
                           {
                               std::visit(VisitorOverloadSet{

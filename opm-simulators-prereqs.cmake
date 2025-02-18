@@ -64,6 +64,7 @@ set (opm-simulators_DEPS
   "Damaris 1.9"
   "HDF5"
   "Tracy"
+  "TBB"
   )
 
 find_package_deps(opm-simulators)
