@@ -89,6 +89,7 @@ class OutputBlackOilModule : public GenericOutputBlackoilModule<GetPropType<Type
     using MaterialLawParams = GetPropType<TypeTag, Properties::MaterialLawParams>;
     using IntensiveQuantities = GetPropType<TypeTag, Properties::IntensiveQuantities>;
     using FluidSystem = GetPropType<TypeTag, Properties::FluidSystem>;
+    using FluidState = typename IntensiveQuantities::FluidState;
     using GridView = GetPropType<TypeTag, Properties::GridView>;
     using Element = typename GridView::template Codim<0>::Entity;
     using ElementIterator = typename GridView::template Codim<0>::Iterator;
@@ -248,8 +249,6 @@ public:
         for (unsigned dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++dofIdx) {
             const auto& intQuants = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0);
             const auto& fs = intQuants.fluidState();
-
-            using FluidState = std::remove_cv_t<std::remove_reference_t<decltype(fs)>>;
 
             const unsigned globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
             const unsigned pvtRegionIdx = elemCtx.primaryVars(dofIdx, /*timeIdx=*/0).pvtRegionIndex();
@@ -1283,9 +1282,6 @@ private:
             const auto& up = elemCtx
                 .intensiveQuantities(extQuant.upstreamIndex(oilPhaseIdx), timeIdx);
 
-            using FluidState = std::remove_cv_t<std::remove_reference_t<
-                decltype(up.fluidState())>>;
-
             const auto pvtReg = up.pvtRegionIndex();
 
             const auto bO = getValue(getInvB_<FluidSystem, FluidState, Scalar>
@@ -1309,9 +1305,6 @@ private:
             const auto& up = elemCtx
                 .intensiveQuantities(extQuant.upstreamIndex(gasPhaseIdx), timeIdx);
 
-            using FluidState = std::remove_cv_t<std::remove_reference_t<
-                decltype(up.fluidState())>>;
-
             const auto pvtReg = up.pvtRegionIndex();
 
             const auto bG = getValue(getInvB_<FluidSystem, FluidState, Scalar>
@@ -1334,9 +1327,6 @@ private:
         if (FluidSystem::phaseIsActive(waterPhaseIdx)) {
             const auto& up = elemCtx
                 .intensiveQuantities(extQuant.upstreamIndex(waterPhaseIdx), timeIdx);
-
-            using FluidState = std::remove_cv_t<std::remove_reference_t<
-                decltype(up.fluidState())>>;
 
             const auto pvtReg = up.pvtRegionIndex();
 
