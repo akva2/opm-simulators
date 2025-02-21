@@ -70,7 +70,7 @@ class FIBlackOilModel : public BlackOilModel<TypeTag>
 public:
     explicit FIBlackOilModel(Simulator& simulator)
         : BlackOilModel<TypeTag>(simulator)
-        , element_chunks_(this->gridView_, ThreadManager::maxThreads())
+        , element_chunks_(this->gridView_, Dune::Partitions::all, ThreadManager::maxThreads())
     {
     }
 
@@ -193,7 +193,7 @@ public:
     }
 
 protected:
-    ElementChunks<GridView> element_chunks_;
+    ElementChunks<GridView, Dune::Partitions::All> element_chunks_;
 };
 
 } // namespace Opm

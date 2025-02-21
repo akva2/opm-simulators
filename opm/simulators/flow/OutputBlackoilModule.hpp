@@ -98,6 +98,7 @@ class OutputBlackOilModule : public GenericOutputBlackoilModule<GetPropType<Type
     using BaseType = GenericOutputBlackoilModule<FluidSystem>;
     using Indices = GetPropType<TypeTag, Properties::Indices>;
     using Dir = FaceDir::DirEnum;
+    using BlockExtractor = detail::BlockExtractor<TypeTag>;
     using Extractor = detail::Extractor<TypeTag>;
 
     static constexpr int conti0EqIdx = Indices::conti0EqIdx;
@@ -780,6 +781,8 @@ public:
                 );
             }
         }
+
+        this->setupBlockExtractors_();
     }
 
     //! \brief Clear list of active element-level data extractors
@@ -801,7 +804,7 @@ public:
             assert(0);
         }
 
-        const auto& matLawManager = simulator_.problem().materialLawManager();
+        const auto& matLawManager = this->simulator_.problem().materialLawManager();
 
         typename Extractor::HysteresisParams hysterParams;
         for (unsigned dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++dofIdx) {
@@ -1708,8 +1711,377 @@ private:
         return xoG * pv * rhoo * so / mM;
     }
 
+    void setupBlockExtractors_()
+    {
+        using Entry = typename BlockExtractor::Entry;
+        using ExtractContext = typename BlockExtractor::Context;
+        using PhaseEntry = typename BlockExtractor::PhaseEntry;
+        using ScalarEntry = typename BlockExtractor::ScalarEntry;
+        using ScalarFunc = typename BlockExtractor::ScalarFunc;
+
+        using namespace std::string_view_literals;
+
+        const auto handlers = std::array{
+            Entry{PhaseEntry{std::array{"BWSAT"sv, "BOSAT"sv, "BGSAT"sv,
+                                        "BSWAT"sv, "BSOIL"sv, "BSGAS"sv},
+                             [](const unsigned phaseIdx, const ExtractContext& ectx)
+                             {
+                                 return getValue(ectx.fs.saturation(phaseIdx));
+                             }
+                  }
+            },
+            Entry{ScalarEntry{"BNSAT",
+                              [](const ExtractContext& ectx)
+                              {
+                                  return ectx.intQuants.solventSaturation().value();
+                              }
+                  }
+            },
+            Entry{ScalarEntry{std::vector{"BPR"sv, "BPRESSUR"sv},
+                              [](const ExtractContext& ectx)
+                              {
+                                  if (FluidSystem::phaseIsActive(oilPhaseIdx)) {
+                                      return getValue(ectx.fs.pressure(oilPhaseIdx));
+                                  }
+                                  else if (FluidSystem::phaseIsActive(gasPhaseIdx)) {
+                                      return getValue(ectx.fs.pressure(gasPhaseIdx));
+                                  }
+                                  else { //if (FluidSystem::phaseIsActive(waterPhaseIdx))
+                                      return getValue(ectx.fs.pressure(waterPhaseIdx));
+                                  }
+                              }
+                  }
+            },
+            Entry{ScalarEntry{std::vector{"BTCFNHEA"sv, "BTEMP"sv},
+                              [](const ExtractContext& ectx)
+                              {
+                                  if (FluidSystem::phaseIsActive(oilPhaseIdx)) {
+                                      return getValue(ectx.fs.temperature(oilPhaseIdx));
+                                  }
+                                  else if (FluidSystem::phaseIsActive(gasPhaseIdx)) {
+                                      return getValue(ectx.fs.temperature(gasPhaseIdx));
+                                  }
+                                  else { //if (FluidSystem::phaseIsActive(waterPhaseIdx))
+                                      return getValue(ectx.fs.temperature(waterPhaseIdx));
+                                  }
+                              }
+                  }
+            },
+            Entry{PhaseEntry{std::array{"BWKR"sv, "BOKR"sv, "BGKR"sv,
+                                        "BKRW"sv, "BKRO"sv, "BKRG"sv},
+                            [](const unsigned phaseIdx, const ExtractContext& ectx)
+                            {
+                                return getValue(ectx.intQuants.relativePermeability(phaseIdx));
+                            }
+                  }
+            },
+            Entry{ScalarEntry{"BKROG",
+                              [&problem = simulator_.problem()](const ExtractContext& ectx)
+                              {
+                                  const auto& materialParams =
+                                      problem.materialLawParams(ectx.elemCtx,
+                                                                ectx.dofIdx,
+                                                                /* timeIdx = */ 0);
+                                  return getValue(MaterialLaw::template
+                                                    relpermOilInOilGasSystem<Evaluation>(materialParams,
+                                                                                         ectx.fs));
+                              }
+                 }
+            },
+            // Entry{{"BKROW"},
+            //       [&problem = simulator_.problem()](const ExtractContext& ectx)
+            //       {
+            //           const auto& materialParams = problem.materialLawParams(ectx.elemCtx,
+            //                                                                    ectx.dofIdx,
+            //                                                                    /* timeIdx = */ 0);
+            //           return getValue(MaterialLaw::template
+            //                                           relpermOilInOilWaterSystem<Evaluation>(materialParams,
+            //                                                                                  ectx.fs));
+            //       }
+            // },
+            // Entry{{"BWPC"},
+            //       [](const ExtractContext& ectx)
+            //       {
+            //           return getValue(ectx.fs.pressure(oilPhaseIdx)) -
+            //                  getValue(ectx.fs.pressure(waterPhaseIdx));
+            //       }
+            // },
+            // Entry{{"BGPC"},
+            //       [](const ExtractContext& ectx)
+            //       {
+            //           return getValue(ectx.fs.pressure(gasPhaseIdx)) -
+            //                  getValue(ectx.fs.pressure(oilPhaseIdx));
+            //       }
+            // },
+            // Entry{{"BWPR"},
+            //       [](const ExtractContext& ectx)
+            //       {
+            //           return getValue(ectx.fs.pressure(waterPhaseIdx));
+            //       }
+            // },
+            // Entry{{"BGPR"},
+            //       [](const ExtractContext& ectx)
+            //       {
+            //           return getValue(ectx.fs.pressure(gasPhaseIdx));
+            //       }
+            // },
+            // Entry{{"BVWAT", "BVOIL", "BVGAS",
+            //        "BWVIS", "BOVIS", "BGVIS"},
+            //       [](const unsigned phaseIdx, const ExtractContext& ectx)
+            //       {
+            //           return getValue(ectx.fs.viscosity(phaseIdx));
+            //       }
+            // },
+            //  Entry{{"BWDEN", "BODEN", "BGDEN",
+            //         "BDENW", "BDENO", "BDENG"},
+            //       [](const unsigned phaseIdx, const ExtractContext& ectx)
+            //       {
+            //           return getValue(ectx.fs.density(phaseIdx));
+            //       }
+            // },
+            //  Entry{{"BFLOWI"},
+            //       [&flowsC = this->flowsC_](const ExtractContext& ectx)
+            //       {
+            //           return flowsC.getFlow(ectx.globalDofIdx, Dir::XPlus, waterCompIdx);
+            //       }
+            // },
+            // Entry{{"BFLOWJ"},
+            //       [&flowsC = this->flowsC_](const ExtractContext& ectx)
+            //       {
+            //           return flowsC.getFlow(ectx.globalDofIdx, Dir::YPlus, waterCompIdx);
+            //       }
+            // },
+            // Entry{{"BFLOWK"},
+            //       [&flowsC = this->flowsC_](const ExtractContext& ectx)
+            //       {
+            //           return flowsC.getFlow(ectx.globalDofIdx, Dir::ZPlus, waterCompIdx);
+            //       }
+            // },
+            // Entry{{"BRPV"},
+            //       [&model = simulator_.model()](const ExtractContext& ectx)
+            //       {
+            //            return getValue(ectx.intQuants.porosity()) *
+            //                   model.dofTotalVolume(ectx.globalDofIdx);
+            //       }
+            // },
+            // Entry{{"BOPV"},
+            //       [&model = simulator_.model()](const ExtractContext& ectx)
+            //       {
+            //            return getValue(ectx.fs.saturation(oilPhaseIdx)) *
+            //                   getValue(ectx.intQuants.porosity()) *
+            //                   model.dofTotalVolume(ectx.globalDofIdx);
+            //       }
+            // },
+            // Entry{{"BWPV"},
+            //       [&model = simulator_.model()](const ExtractContext& ectx)
+            //       {
+            //            return getValue(ectx.fs.saturation(waterPhaseIdx)) *
+            //                   getValue(ectx.intQuants.porosity()) *
+            //                   model.dofTotalVolume(ectx.globalDofIdx);
+            //       }
+            // },
+            // Entry{{"BGPV"},
+            //       [&model = simulator_.model()](const ExtractContext& ectx)
+            //       {
+            //            return getValue(ectx.fs.saturation(gasPhaseIdx)) *
+            //                   getValue(ectx.intQuants.porosity()) *
+            //                   model.dofTotalVolume(ectx.globalDofIdx);
+            //       }
+            // },
+            // Entry{{"BRS"},
+            //       [](const ExtractContext& ectx)
+            //       {
+            //           return getValue(ectx.fs.Rs());
+            //       }
+            // },
+            // Entry{{"BRV"},
+            //       [](const ExtractContext& ectx)
+            //       {
+            //           return getValue(ectx.fs.Rv());
+            //       }
+            // },
+            // Entry{{"BOIP"},
+            //       [&model = simulator_.model()](const ExtractContext& ectx)
+            //       {
+            //           return (getValue(ectx.fs.invB(oilPhaseIdx)) *
+            //                   getValue(ectx.fs.saturation(oilPhaseIdx)) +
+            //                   getValue(ectx.fs.Rv()) *
+            //                   getValue(ectx.fs.invB(gasPhaseIdx)) *
+            //                   getValue(ectx.fs.saturation(gasPhaseIdx))) *
+            //                  model.dofTotalVolume(ectx.globalDofIdx) *
+            //                  getValue(ectx.intQuants.porosity());
+            //       }
+            // },
+            // Entry{{"BGIP"},
+            //       [&model = simulator_.model()](const ExtractContext& ectx)
+            //       {
+            //           Scalar result = getValue(ectx.fs.invB(gasPhaseIdx)) *
+            //                           getValue(ectx.fs.saturation(gasPhaseIdx));
+
+            //           if (FluidSystem::phaseIsActive(oilPhaseIdx)) {
+            //                result += getValue(ectx.fs.Rs()) * getValue(ectx.fs.invB(oilPhaseIdx)) *
+            //                          getValue(ectx.fs.saturation(oilPhaseIdx));
+            //           }
+            //           else {
+            //               result += getValue(ectx.fs.Rsw()) * getValue(ectx.fs.invB(waterPhaseIdx)) *
+            //                         getValue(ectx.fs.saturation(waterPhaseIdx));
+            //           }
+
+            //           return result *
+            //                  model.dofTotalVolume(ectx.globalDofIdx) *
+            //                  getValue(ectx.intQuants.porosity());
+            //       }
+            // },
+            // Entry{{"BWIP"},
+            //       [&model = simulator_.model()](const ExtractContext& ectx)
+            //       {
+            //           return getValue(ectx.fs.invB(waterPhaseIdx)) *
+            //                  getValue(ectx.fs.saturation(waterPhaseIdx)) *
+            //                  model.dofTotalVolume(ectx.globalDofIdx) *
+            //                  getValue(ectx.intQuants.porosity());
+            //       }
+            // },
+            // Entry{{"BOIPL"},
+            //       [&model = simulator_.model()](const ExtractContext& ectx)
+            //       {
+            //           return getValue(ectx.fs.invB(oilPhaseIdx)) *
+            //                  getValue(ectx.fs.saturation(oilPhaseIdx)) *
+            //                  model.dofTotalVolume(ectx.globalDofIdx) *
+            //                  getValue(ectx.intQuants.porosity());
+            //       }
+            // },
+            // Entry{{"BGIPL"},
+            //       [&model = simulator_.model()](const ExtractContext& ectx)
+            //       {
+            //           Scalar result;
+            //           if (!FluidSystem::phaseIsActive(oilPhaseIdx)) {
+            //                 result = getValue(ectx.fs.Rsw()) *
+            //                          getValue(ectx.fs.invB(waterPhaseIdx)) *
+            //                          getValue(ectx.fs.saturation(waterPhaseIdx));
+            //           }
+            //           else {
+            //               result  = getValue(ectx.fs.Rs()) *
+            //                         getValue(ectx.fs.invB(oilPhaseIdx)) *
+            //                         getValue(ectx.fs.saturation(oilPhaseIdx));
+            //           }
+            //           return result *
+            //                  model.dofTotalVolume(ectx.globalDofIdx) *
+            //                  getValue(ectx.intQuants.porosity());
+            //       }
+            // },
+            // Entry{{"BGIPG"},
+            //       [&model = simulator_.model()](const ExtractContext& ectx)
+            //       {
+            //           return getValue(ectx.fs.invB(gasPhaseIdx)) *
+            //                  getValue(ectx.fs.saturation(gasPhaseIdx)) *
+            //                  model.dofTotalVolume(ectx.globalDofIdx) *
+            //                  getValue(ectx.intQuants.porosity());
+            //       }
+            // },
+            // Entry{{"BOIPG"},
+            //       [&model = simulator_.model()](const ExtractContext& ectx)
+            //       {
+            //           return getValue(ectx.fs.Rv()) *
+            //                  getValue(ectx.fs.invB(gasPhaseIdx)) *
+            //                  getValue(ectx.fs.saturation(gasPhaseIdx)) *
+            //                  getValue(ectx.fs.saturation(gasPhaseIdx)) *
+            //                  model.dofTotalVolume(ectx.globalDofIdx) *
+            //                  getValue(ectx.intQuants.porosity());
+            //       }
+            // },
+            Entry{PhaseEntry{std::array{"BPPW"sv, "BPPO"sv, "BPPG"sv},
+                             [&simConfig = this->eclState_.getSimulationConfig(),
+                              &grav = this->simulator_.problem().gravity(),
+                              &regionAvgDensity = *this->regionAvgDensity_,
+                              &problem = this->simulator_.problem(),
+                              &regions = this->regions_](const unsigned phaseIdx, const ExtractContext& ectx)
+                             {
+                                 auto phase = RegionPhasePoreVolAverage::Phase{};
+                                 phase.ix = phaseIdx;
+
+                                // Note different region handling here.  FIPNUM is
+                                // one-based, but we need zero-based lookup in
+                                // DatumDepth.  On the other hand, pvtRegionIndex is
+                                // zero-based but we need one-based lookup in
+                                // RegionPhasePoreVolAverage.
+
+                                // Subtract one to convert FIPNUM to region index.
+                                const auto datum = simConfig.datumDepths()(regions["FIPNUM"][ectx.dofIdx] - 1);
+
+                                // Add one to convert region index to region ID.
+                                const auto region = RegionPhasePoreVolAverage::Region {
+                                    ectx.elemCtx.primaryVars(ectx.dofIdx, /*timeIdx=*/0).pvtRegionIndex() + 1
+                                };
+
+                                const auto density = regionAvgDensity.value("PVTNUM", phase, region);
+
+                                const auto press = getValue(ectx.fs.pressure(phase.ix));
+                                const auto dz = problem.dofCenterDepth(ectx.globalDofIdx) - datum;
+                                return press - density*dz*grav[GridView::dimensionworld - 1];
+                            }
+                  }
+            },
+        };
+
+        using StringViewVec = std::vector<std::string_view>;
+        std::for_each(handlers.begin(), handlers.end(),
+                      [&extractors = this->blockExtractors_,
+                       &blockData = this->blockData_](const Entry& handler)
+                       {
+                           const auto gen_handlers =
+                              std::visit(VisitorOverloadSet{
+                                            [](const typename BlockExtractor::ScalarEntry& entry)
+                                            {
+                                                StringViewVec res;
+                                                if (std::holds_alternative<std::string_view>(entry.kw)) {
+                                                    res.emplace_back(std::get<std::string_view>(entry.kw));
+                                                } else {
+                                                    res = std::get<StringViewVec>(entry.kw);
+                                                }
+                                                return res;
+                                            },
+                                            [](const typename BlockExtractor::PhaseEntry& entry)
+                                            {
+                                                return std::visit([](const auto& data)
+                                                                  {
+                                                                      StringViewVec res(data.begin(), data.end());
+                                                                      return res;
+                                                                  }, entry.kw);
+                                            }
+                                        }, handler);
+                            const auto it =
+                                std::find_if(gen_handlers.begin(), gen_handlers.end(),
+                                            [&blockData](const auto& entry)
+                                            {
+                                                return std::find_if(blockData.begin(),
+                                                                    blockData.end(),
+                                                                    [&entry](const auto& bd)
+                                                                    { return bd.first.first == entry; }) !=
+                                                       blockData.end();
+                                            });
+                              if (it != gen_handlers.end()) {
+                                  extractors.emplace(
+                                      *it,
+                                      std::visit(VisitorOverloadSet{
+                                                     [&handler](const ScalarEntry& entry)
+                                                     {
+                                                         return entry.extract;
+                                                     },
+                                                     [&it, &gen_handlers](const PhaseEntry& entry) -> ScalarFunc
+                                                     {
+                                                         const unsigned phase = std::distance(gen_handlers.begin(), it) % 3;
+                                                         return [phase, extract = entry.extract]
+                                                                (const ExtractContext& ectx)
+                                                                { return extract(phase, ectx); };
+                                                     }
+                                                 }, handler));
+                              }
+                          });
+    }
+
     const Simulator& simulator_;
     std::vector<typename Extractor::Entry> extractors_;
+    std::map<std::string, typename BlockExtractor::ScalarFunc> blockExtractors_;
 };
 
 } // namespace Opm

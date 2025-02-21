@@ -64,7 +64,7 @@ struct Extractor
         Scalar somin{}; //!< Min oil saturation
     };
 
-    //! \brief Context passed to extractor functions.
+    //! \brief Context passed to element extractor functions.
     struct Context
     {
         unsigned globalDofIdx; //!< Global degree-of-freedom index
@@ -180,6 +180,55 @@ struct Extractor
                           }, entry.data);
                       });
     }
+};
+
+//! \brief Wrapping struct holding types used for block-level data extraction.
+template<class TypeTag>
+struct BlockExtractor
+{
+    using ElementContext = GetPropType<TypeTag, Properties::ElementContext>;
+    using IntensiveQuantities = GetPropType<TypeTag, Properties::IntensiveQuantities>;
+    using Scalar = GetPropType<TypeTag, Properties::Scalar>;
+    using FluidState = typename IntensiveQuantities::FluidState;
+    using FluidSystem = GetPropType<TypeTag, Properties::FluidSystem>;
+    static constexpr int numPhases = FluidSystem::numPhases;
+
+    //! \brief Context passed to element extractor functions.
+    struct Context
+    {
+        unsigned globalDofIdx; //!< Global degree-of-freedom index
+        unsigned dofIdx;
+        const FluidState& fs;  //!< Fluid state for cell
+        const IntensiveQuantities& intQuants; //!< Intensive quantities for cell
+        const ElementContext& elemCtx;
+    };
+
+    /// Callback for extractors handling their own assignements
+    using AssignFunc = std::function<void(const Context&)>;
+
+    /// Callback for extractors assigned to a scalar buffer
+    /// Return value to store in buffer
+    using ScalarFunc = std::function<Scalar(const Context&)>;
+
+    /// Callback for extractors assigned to a phase buffer
+    /// Returns value to store in buffer for requested phase
+    using PhaseFunc = std::function<Scalar(const unsigned /*phase*/, const Context&)>;
+
+    struct ScalarEntry
+    {
+        std::variant<std::string_view, std::vector<std::string_view>> kw;
+        ScalarFunc extract;
+    };
+
+    struct PhaseEntry
+    {
+        std::variant<std::array<std::string_view,3>,
+                     std::array<std::string_view,6>> kw;
+        PhaseFunc extract;
+    };
+
+    //! \brief Descriptor for extractors
+    using Entry = std::variant<ScalarEntry, PhaseEntry>;
 };
 
 } // namespace Opm::detail
