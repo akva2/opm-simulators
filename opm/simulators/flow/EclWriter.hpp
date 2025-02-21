@@ -45,6 +45,7 @@
 
 #include <opm/models/blackoil/blackoilproperties.hh> // Properties::EnableMech, EnableTemperature, EnableSolvent
 #include <opm/models/common/multiphasebaseproperties.hh> // Properties::FluidSystem
+#include <opm/models/parallel/threadmanager.hpp>
 
 #include <opm/simulators/flow/CollectDataOnIORank.hpp>
 #include <opm/simulators/flow/countGlobalCells.hpp>
@@ -728,10 +729,15 @@ private:
             this->outputModule_->prepareDensityAccumulation();
             this->outputModule_->setupExtractors();
 
+            const int num_threads = ThreadManager::maxThreads();
+
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-            for (const auto& chunk : ElementChunks(gridView, Dune::Partitions::interior, 2)) {
+            for (const auto& chunk : ElementChunks(gridView,
+                                                   Dune::Partitions::interior,
+                                                   num_threads))
+            {
                 ElementContext elemCtx(simulator_);
                 for (const auto& elem : chunk) {
                     elemCtx.updatePrimaryStencil(elem);
