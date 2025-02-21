@@ -32,6 +32,9 @@
 
 #include <opm/common/TimingMacros.hpp> // OPM_TIMEBLOCK
 #include <opm/common/OpmLog/OpmLog.hpp>
+
+#include <opm/grid/utility/ElementChunks.hpp>
+
 #include <opm/input/eclipse/Schedule/RPTConfig.hpp>
 
 #include <opm/input/eclipse/Units/UnitSystem.hpp>
@@ -717,8 +720,6 @@ private:
                          isSubStep && !Parameters::Get<Parameters::EnableWriteAllSolutions>(),
                          log, /*isRestart*/ false);
 
-        ElementContext elemCtx(simulator_);
-
         OPM_BEGIN_PARALLEL_TRY_CATCH();
 
         {
@@ -726,18 +727,26 @@ private:
 
             this->outputModule_->prepareDensityAccumulation();
             this->outputModule_->setupExtractors();
-            for (const auto& elem : elements(gridView, Dune::Partitions::interior)) {
-                elemCtx.updatePrimaryStencil(elem);
-                elemCtx.updatePrimaryIntensiveQuantities(/*timeIdx=*/0);
 
-                this->outputModule_->processElement(elemCtx);
-                this->outputModule_->processElementBlockData(elemCtx);
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+            for (const auto& chunk : ElementChunks(gridView, Dune::Partitions::interior, 2)) {
+                ElementContext elemCtx(simulator_);
+                for (const auto& elem : chunk) {
+                    elemCtx.updatePrimaryStencil(elem);
+                    elemCtx.updatePrimaryIntensiveQuantities(/*timeIdx=*/0);
+
+                    this->outputModule_->processElement(elemCtx);
+                    this->outputModule_->processElementBlockData(elemCtx);
+                }
             }
             this->outputModule_->clearExtractors();
 
             this->outputModule_->accumulateDensityParallel();
         }
 
+        ElementContext elemCtx(simulator_);
         {
             OPM_TIMEBLOCK(prepareFluidInPlace);
 
