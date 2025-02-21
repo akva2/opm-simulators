@@ -33,6 +33,7 @@
 
 #include <opm/common/ErrorMacros.hpp>
 
+#include <opm/grid/CpGrid.hpp>
 #include <opm/grid/utility/ElementChunks.hpp>
 
 #include <opm/models/parallel/threadmanager.hpp>
@@ -41,14 +42,8 @@
 #include <cstddef>
 #include <stdexcept>
 #include <type_traits>
-#include <vector>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
-namespace Opm
-{
+namespace Opm {
 
 template <typename TypeTag>
 class FIBlackOilModel : public BlackOilModel<TypeTag>
@@ -69,7 +64,8 @@ class FIBlackOilModel : public BlackOilModel<TypeTag>
     // The chunked and threaded iteration over elements in this class assumes that the number
     // and order of elements is fixed, and is therefore constrained to only work with CpGrid.
     // For example, ALUGrid supports refinement and can not assume that.
-    static constexpr bool gridIsUnchanging = std::is_same_v<GetPropType<TypeTag, Properties::Grid>, Dune::CpGrid>;
+    static constexpr bool gridIsUnchanging =
+        std::is_same_v<GetPropType<TypeTag, Properties::Grid>, Dune::CpGrid>;
 
 public:
     explicit FIBlackOilModel(Simulator& simulator)
@@ -101,7 +97,8 @@ public:
                 elemCtx.updatePrimaryIntensiveQuantities(timeIdx);
             }
         }
-        OPM_END_PARALLEL_TRY_CATCH("InvalideAndUpdateIntensiveQuantities: state error", this->simulator_.vanguard().grid().comm());
+        OPM_END_PARALLEL_TRY_CATCH("InvalideAndUpdateIntensiveQuantities: state error",
+                                   this->simulator_.vanguard().grid().comm());
     }
 
     void invalidateAndUpdateIntensiveQuantitiesOverlap(unsigned timeIdx) const
@@ -131,7 +128,8 @@ public:
                 elemCtx.updatePrimaryIntensiveQuantities(/*timeIdx=*/0);
             }
         }
-        OPM_END_PARALLEL_TRY_CATCH("InvalideAndUpdateIntensiveQuantitiesOverlap: state error", this->simulator_.vanguard().grid().comm());
+        OPM_END_PARALLEL_TRY_CATCH("InvalideAndUpdateIntensiveQuantitiesOverlap: state error",
+                                   this->simulator_.vanguard().grid().comm());
     }
 
     template <class GridSubDomain>
@@ -184,7 +182,8 @@ public:
     {
         if (!this->enableIntensiveQuantityCache_) {
             OPM_THROW(std::logic_error,
-                      "Run without intensive quantites not enabled: Use --enable-intensive-quantity=true");
+                      "Run without intensive quantites not enabled: "
+                      "Use --enable-intensive-quantity=true");
         }
         const auto* intquant = this->cachedIntensiveQuantities(globalIdx, timeIdx);
         if (!intquant) {
@@ -196,5 +195,7 @@ public:
 protected:
     ElementChunks<GridView> element_chunks_;
 };
+
 } // namespace Opm
+
 #endif // FI_BLACK_OIL_MODEL_HPP
