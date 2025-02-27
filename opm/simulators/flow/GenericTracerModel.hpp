@@ -32,11 +32,12 @@
 
 #include <opm/grid/common/CartesianIndexMapper.hpp>
 
+#include <opm/input/eclipse/EclipseState/Phase.hpp>
+
 #include <opm/models/blackoil/blackoilmodel.hh>
 
+#include <opm/simulators/flow/TracerRate.hpp>
 #include <opm/simulators/linalg/matrixblock.hh>
-
-#include <opm/input/eclipse/EclipseState/Phase.hpp>
 
 #include <array>
 #include <cstddef>
@@ -88,12 +89,18 @@ public:
     /*!
     * \brief Return well tracer rates
     */
-    const std::map<std::pair<std::string, std::string>, Scalar>&
-    getWellTracerRates() const {return wellTracerRate_;}
-    const std::map<std::pair<std::string, std::string>, Scalar>&
-    getWellFreeTracerRates() const {return wellFreeTracerRate_;}
-    const std::map<std::pair<std::string, std::string>, Scalar>&
-    getWellSolTracerRates() const {return wellSolTracerRate_;}
+    const std::map<int, std::vector<TracerRate<Scalar>>>&
+    getWellTracerRates() const
+    { return wellTracerRate_; }
+
+    const std::map<int, std::vector<TracerRate<Scalar>>>&
+    getWellFreeTracerRates() const
+    { return wellFreeTracerRate_; }
+
+    const std::map<int, std::vector<TracerRate<Scalar>>>&
+    getWellSolTracerRates() const
+    { return wellSolTracerRate_; }
+
     const std::map<std::tuple<std::string, std::string, std::size_t>, Scalar>&
     getMswTracerRates() const {return mSwTracerRate_;}
 
@@ -145,10 +152,11 @@ protected:
     std::vector<TracerVectorSingle> freeTracerConcentration_;
     std::vector<TracerVectorSingle> solTracerConcentration_;
 
+    // [well_idx -> (name, rate)]
+    std::map<int, std::vector<TracerRate<Scalar>>> wellTracerRate_;
     // <wellName, tracerName> -> wellRate
-    std::map<std::pair<std::string, std::string>, Scalar> wellTracerRate_;
-    std::map<std::pair<std::string, std::string>, Scalar> wellFreeTracerRate_;
-    std::map<std::pair<std::string, std::string>, Scalar> wellSolTracerRate_;
+    std::map<int, std::vector<TracerRate<Scalar>>> wellFreeTracerRate_;
+    std::map<int, std::vector<TracerRate<Scalar>>> wellSolTracerRate_;
 
     // <wellName, tracerName, segNum> -> wellRate
     std::map<std::tuple<std::string, std::string, std::size_t>, Scalar> mSwTracerRate_;
