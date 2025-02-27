@@ -24,6 +24,7 @@
 #define OPM_TRACER_RATE_HPP
 
 #include <string>
+#include <unordered_map>
 
 namespace Opm {
 
@@ -47,6 +48,34 @@ struct TracerRate
     }
 
     bool operator==(const TracerRate& that) const
+    {
+        return
+               this->name == that.name
+            && this->rate == that.rate;
+    }
+};
+
+
+template<class Scalar>
+struct MswTracerRate
+{
+    std::string name{};
+    std::unordered_map<int,Scalar> rate{};
+
+    MswTracerRate() = default;
+
+    MswTracerRate(const std::string& n)
+        : name(n)
+    {}
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(name);
+        serializer(rate);
+    }
+
+    bool operator==(const MswTracerRate& that) const
     {
         return
                this->name == that.name

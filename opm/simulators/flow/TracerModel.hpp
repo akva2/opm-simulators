@@ -471,15 +471,15 @@ protected:
         auto& tracerRate = this->wellTracerRate_[eclWell.seqIndex()];
         auto& solTracerRate = this->wellTracerRate_[eclWell.seqIndex()];
         auto& freeTracerRate = this->wellFreeTracerRate_[eclWell.seqIndex()];
+        auto* mswTracerRate = eclWell.isMultiSegment() ? &this->mSwTracerRate_[eclWell.seqIndex()] : nullptr;
         for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
             tracerRate.emplace_back(this->name(tr.idx_[tIdx]), 0.0);
             freeTracerRate.emplace_back(this->wellfname(tr.idx_[tIdx]), 0.0);
             solTracerRate.emplace_back(this->wellsname(tr.idx_[tIdx]), 0.0);
             if (eclWell.isMultiSegment()) {
+                auto& wtr = mswTracerRate->emplace_back(this->name(tr.idx_[tIdx]));
                 for (std::size_t i = 0; i < eclWell.getConnections().size(); ++i) {
-                    this->mSwTracerRate_[std::make_tuple(eclWell.name(),
-                                         this->name(tr.idx_[tIdx]),
-                                         eclWell.getConnections().get(i).segment())] = 0.0;
+                    wtr.rate[eclWell.getConnections().get(i).segment()] = 0.0;
                 }
             }
         }
@@ -516,9 +516,7 @@ protected:
                     tracerRate[tIdx].rate += rate_f*wtracer[tIdx];
                     freeTracerRate[tIdx].rate += rate_f*wtracer[tIdx];
                     if (eclWell.isMultiSegment()) {
-                        this->mSwTracerRate_[std::make_tuple(eclWell.name(),
-                                             this->name(tr.idx_[tIdx]),
-                                             eclWell.getConnections().get(i).segment())] += rate_f*wtracer[tIdx];
+                        (*mswTracerRate)[tIdx].rate[eclWell.getConnections().get(i).segment()] += rate_f*wtracer[tIdx];
                     }
                 }
                 dfVol_[tr.phaseIdx_][I] -= rate_f * dt;
@@ -796,6 +794,7 @@ protected:
                 auto& tracerRate = this->wellTracerRate_[well_index];
                 auto& freeTracerRate = this->wellFreeTracerRate_[well_index];
                 auto& solTracerRate = this->wellSolTracerRate_[well_index];
+                auto* mswTracerRate = eclWell.isMultiSegment() ? &this->mSwTracerRate_[well_index] : nullptr;
                 for (std::size_t i = 0; i < ws.perf_data.size(); ++i) {
                     const auto I = ws.perf_data.cell_index[i];
                     const Scalar rate = wellPtr->volumetricSurfaceRateForConnection(I, tr.phaseIdx_);
@@ -818,9 +817,7 @@ protected:
                             tracerRate[tIdx].rate += rate_f * tr.concentration_[tIdx][I][0];
                             freeTracerRate[tIdx].rate += rate_f * tr.concentration_[tIdx][I][0];
                             if (eclWell.isMultiSegment()) {
-                                this->mSwTracerRate_[std::make_tuple(eclWell.name(),
-                                                     this->name(tr.idx_[tIdx]),
-                                                     eclWell.getConnections().get(i).segment())] +=
+                                (*mswTracerRate)[tIdx].rate[eclWell.getConnections().get(i).segment()] +=
                                     rate_f * tr.concentration_[tIdx][I][0];
                             }
                         }
@@ -831,9 +828,7 @@ protected:
                             tracerRate[tIdx].rate += rate_s * tr.concentration_[tIdx][I][1];
                             solTracerRate[tIdx].rate += rate_s * tr.concentration_[tIdx][I][1];
                             if (eclWell.isMultiSegment()) {
-                                this->mSwTracerRate_[std::make_tuple(eclWell.name(),
-                                                     this->name(tr.idx_[tIdx]),
-                                                     eclWell.getConnections().get(i).segment())] +=
+                                (*mswTracerRate)[tIdx].rate[eclWell.getConnections().get(i).segment()] +=
                                     rate_s * tr.concentration_[tIdx][I][1];
                             }
                         }
