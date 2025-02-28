@@ -573,23 +573,27 @@ protected:
         // Source term determined by sign of dsVol: if dsVol > 0 then ms -> mf, else mf -> ms
         for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
             if (dsVol >= 0) {
-                tr.residual_[tIdx][I][0] -= (dfVol / dt) * tr.concentration_[tIdx][I][0];
-                tr.residual_[tIdx][I][1] += (dfVol / dt) * tr.concentration_[tIdx][I][0];
+                const auto delta = (dfVol / dt) * tr.concentration_[tIdx][I][0];
+                tr.residual_[tIdx][I][0] -= delta;
+                tr.residual_[tIdx][I][1] += delta;
             }
             else {
-                tr.residual_[tIdx][I][0] += (dsVol / dt) * tr.concentration_[tIdx][I][1];
-                tr.residual_[tIdx][I][1] -= (dsVol / dt) * tr.concentration_[tIdx][I][1];
+                const auto delta = (dsVol / dt) * tr.concentration_[tIdx][I][1];
+                tr.residual_[tIdx][I][0] += delta;
+                tr.residual_[tIdx][I][1] -= delta;
             }
         }
 
         // Derivative matrix
         if (dsVol >= 0) {
-            (*tr.mat)[I][I][0][0] -= (dfVol / dt) * variable<TracerEvaluation>(1.0, 0).derivative(0);
-            (*tr.mat)[I][I][1][0] += (dfVol / dt) * variable<TracerEvaluation>(1.0, 0).derivative(0);
+            const auto delta = (dfVol / dt) * variable<TracerEvaluation>(1.0, 0).derivative(0);
+            (*tr.mat)[I][I][0][0] -= delta;
+            (*tr.mat)[I][I][1][0] += delta;
         }
         else {
-            (*tr.mat)[I][I][0][1] += (dsVol / dt) * variable<TracerEvaluation>(1.0, 0).derivative(0);
-            (*tr.mat)[I][I][1][1] -= (dsVol / dt) * variable<TracerEvaluation>(1.0, 0).derivative(0);
+            const auto delta = (dsVol / dt) * variable<TracerEvaluation>(1.0, 0).derivative(0);
+            (*tr.mat)[I][I][0][1] += delta;
+            (*tr.mat)[I][I][1][1] -= delta;
         }
     }
 
