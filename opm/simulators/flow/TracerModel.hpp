@@ -658,6 +658,20 @@ protected:
         }
     }
 
+    template<TracerTypeIdx Index, class TrRe>
+    void updateElem(TrRe& tr,
+                    const Scalar scvVolume,
+                    const unsigned globalDofIdx)
+    {
+        const Scalar vol1 = computeVolume_<Index>(tr.phaseIdx_, globalDofIdx, 0);
+        vol1_[tr.phaseIdx_][globalDofIdx][Index] = vol1 * scvVolume;
+        dVol_[tr.phaseIdx_][globalDofIdx][Index] = 0.0;
+        for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
+            tr.storageOfTimeIndex1_[tIdx][globalDofIdx][Index] =
+                vol1 * tr.concentrationInitial_[tIdx][globalDofIdx][Index];
+        }
+    }
+
     void updateStorageCache()
     {
         for (auto& tr : tbatch) {
@@ -672,22 +686,13 @@ protected:
             elemCtx.updatePrimaryIntensiveQuantities(/*timeIdx=*/0);
             const Scalar extrusionFactor = elemCtx.intensiveQuantities(/*dofIdx=*/ 0, /*timeIdx=*/0).extrusionFactor();
             const Scalar scvVolume = elemCtx.stencil(/*timeIdx=*/0).subControlVolume(/*dofIdx=*/ 0).volume() * extrusionFactor;
-            const int globalDofIdx = elemCtx.globalSpaceIndex(0, /*timeIdx=*/0);
+            const unsigned globalDofIdx = elemCtx.globalSpaceIndex(0, /*timeIdx=*/0);
             for (auto& tr : tbatch) {
                 if (tr.numTracer() == 0) {
                     continue;
                 }
-
-                const Scalar fVol1 = computeVolume_<Free>(tr.phaseIdx_, globalDofIdx, 0);
-                const Scalar sVol1 = computeVolume_<Solution>(tr.phaseIdx_, globalDofIdx, 0);
-                vol1_[tr.phaseIdx_][globalDofIdx][Free] = fVol1 * scvVolume;
-                vol1_[tr.phaseIdx_][globalDofIdx][Solution] = sVol1 * scvVolume;
-                dVol_[tr.phaseIdx_][globalDofIdx][Free] = 0.0;
-                dVol_[tr.phaseIdx_][globalDofIdx][Solution] = 0.0;
-                for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
-                    tr.storageOfTimeIndex1_[tIdx][globalDofIdx][Free] = fVol1 * tr.concentrationInitial_[tIdx][globalDofIdx][Free];
-                    tr.storageOfTimeIndex1_[tIdx][globalDofIdx][Solution] = sVol1 * tr.concentrationInitial_[tIdx][globalDofIdx][Solution];
-                }
+                updateElem<Free>(tr, scvVolume, globalDofIdx);
+                updateElem<Solution>(tr, scvVolume, globalDofIdx);
             }
         }
     }
