@@ -230,8 +230,8 @@ public:
 protected:
     // compute volume associated with free concentration
     Scalar computeFreeVolume_(const int tracerPhaseIdx,
-                              unsigned globalDofIdx,
-                              unsigned timeIdx)
+                              const unsigned globalDofIdx,
+                              const unsigned timeIdx) const
     {
         const auto& intQuants = simulator_.model().intensiveQuantities(globalDofIdx, timeIdx);
         const auto& fs = intQuants.fluidState();
@@ -246,8 +246,8 @@ protected:
 
     // compute volume associated with solution concentration
     Scalar computeSolutionVolume_(const int tracerPhaseIdx,
-                                  unsigned globalDofIdx,
-                                  unsigned timeIdx)
+                                  const unsigned globalDofIdx,
+                                  const unsigned timeIdx) const
     {
         const auto& intQuants = simulator_.model().intensiveQuantities(globalDofIdx, timeIdx);
         const auto& fs = intQuants.fluidState();
@@ -279,12 +279,12 @@ protected:
 
     }
 
-    void computeFreeFlux_(TracerEvaluation & freeFlux,
-                          bool & isUp,
+    void computeFreeFlux_(TracerEvaluation& freeFlux,
+                          bool& isUp,
                           const int tracerPhaseIdx,
                           const ElementContext& elemCtx,
-                          unsigned scvfIdx,
-                          unsigned timeIdx)
+                          const unsigned scvfIdx,
+                          const unsigned timeIdx) const
     {
         const auto& stencil = elemCtx.stencil(timeIdx);
         const auto& scvf = stencil.interiorFace(scvfIdx);
@@ -316,8 +316,8 @@ protected:
                          bool& isUp,
                          const int tracerPhaseIdx,
                          const ElementContext& elemCtx,
-                         unsigned scvfIdx,
-                         unsigned timeIdx)
+                         const unsigned scvfIdx,
+                         const unsigned timeIdx) const
     {
         const auto& stencil = elemCtx.stencil(timeIdx);
         const auto& scvf = stencil.interiorFace(scvfIdx);
