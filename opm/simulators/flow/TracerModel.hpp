@@ -380,6 +380,32 @@ protected:
         (*tr.mat)[I][I][Solution][Solution] += sVol.derivative(0) * scvVolume/dt;
     }
 
+    template<TracerTypeIdx Index, class TrRe>
+    void assembleTracerEquationFlux_(TrRe& tr,
+                                     const ElementContext& elemCtx,
+                                     unsigned scvfIdx,
+                                     unsigned I,
+                                     unsigned J,
+                                     const Scalar dt)
+    {
+        TracerEvaluation flux;
+        bool isUp;
+        computeFlux_<Index>(flux, isUp, tr.phaseIdx_, elemCtx, scvfIdx, 0);
+        dVol_[tr.phaseIdx_][I][Index] += flux.value() * dt;
+        const int globalUpIdx = isUp ? I : J;
+        for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
+            // Fluxes
+            tr.residual_[tIdx][I][Index] += flux.value() *
+                                            tr.concentration_[tIdx][globalUpIdx][Index]; // residual + flux
+        }
+
+        // Derivative matrix
+        if (isUp) {
+            (*tr.mat)[J][I][Index][Index] = -flux.derivative(0);
+            (*tr.mat)[I][I][Index][Index] += flux.derivative(0);
+        }
+    }
+
     template<class TrRe>
     void assembleTracerEquationFlux(TrRe& tr,
                                     const ElementContext& elemCtx,
@@ -392,31 +418,8 @@ protected:
             return;
         }
 
-        TracerEvaluation fFlux;
-        TracerEvaluation sFlux;
-        bool isUpF;
-        bool isUpS;
-        computeFlux_<Free>(fFlux, isUpF, tr.phaseIdx_, elemCtx, scvfIdx, 0);
-        computeFlux_<Solution>(sFlux, isUpS, tr.phaseIdx_, elemCtx, scvfIdx, 0);
-        dVol_[tr.phaseIdx_][I][Solution] += sFlux.value() * dt;
-        dVol_[tr.phaseIdx_][I][Free] += fFlux.value() * dt;
-        const int fGlobalUpIdx = isUpF ? I : J;
-        const int sGlobalUpIdx = isUpS ? I : J;
-        for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
-            // Free and solution fluxes
-            tr.residual_[tIdx][I][Free] += fFlux.value()*tr.concentration_[tIdx][fGlobalUpIdx][Free]; // residual + flux
-            tr.residual_[tIdx][I][Solution] += sFlux.value()*tr.concentration_[tIdx][sGlobalUpIdx][Solution]; // residual + flux
-        }
-
-        // Derivative matrix
-        if (isUpF){
-            (*tr.mat)[J][I][Free][Free] = -fFlux.derivative(0);
-            (*tr.mat)[I][I][Free][Free] += fFlux.derivative(0);
-        }
-        if (isUpS) {
-            (*tr.mat)[J][I][Solution][Solution] = -sFlux.derivative(0);
-            (*tr.mat)[I][I][Solution][Solution] += sFlux.derivative(0);
-        }
+        assembleTracerEquationFlux_<Free>(tr, elemCtx, scvfIdx, I, J, dt);
+        assembleTracerEquationFlux_<Solution>(tr, elemCtx, scvfIdx, I, J, dt);
     }
 
     template<class TrRe, class Well>
