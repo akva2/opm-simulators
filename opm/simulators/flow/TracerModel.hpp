@@ -228,6 +228,10 @@ public:
     }
 
 protected:
+    using TracerTypeIdx = typename BaseType::TracerTypeIdx;
+    using BaseType::Free;
+    using BaseType::Solution;
+
     // compute volume associated with free concentration
     Scalar computeFreeVolume_(const int tracerPhaseIdx,
                               const unsigned globalDofIdx,
@@ -384,38 +388,38 @@ protected:
         std::vector<Scalar> sStorageOfTimeIndex1(tr.numTracer());
         if (elemCtx.enableStorageCache()) {
             for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
-                fStorageOfTimeIndex1[tIdx] = tr.storageOfTimeIndex1_[tIdx][I][0];
-                sStorageOfTimeIndex1[tIdx] = tr.storageOfTimeIndex1_[tIdx][I][1];
+                fStorageOfTimeIndex1[tIdx] = tr.storageOfTimeIndex1_[tIdx][I][Free];
+                sStorageOfTimeIndex1[tIdx] = tr.storageOfTimeIndex1_[tIdx][I][Solution];
             }
         }
         else {
             const Scalar fVolume1 = computeFreeVolume_(tr.phaseIdx_, I1, 1);
             const Scalar sVolume1 = computeSolutionVolume_(tr.phaseIdx_, I1, 1);
             for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
-                fStorageOfTimeIndex1[tIdx] = fVolume1 * tr.concentration_[tIdx][I1][0];
-                sStorageOfTimeIndex1[tIdx] = sVolume1 * tr.concentration_[tIdx][I1][1];
+                fStorageOfTimeIndex1[tIdx] = fVolume1 * tr.concentration_[tIdx][I1][Free];
+                sStorageOfTimeIndex1[tIdx] = sVolume1 * tr.concentration_[tIdx][I1][Solution];
             }
         }
 
         const TracerEvaluation fVol = computeFreeVolume_(tr.phaseIdx_, I, 0) * variable<TracerEvaluation>(1.0, 0);
         const TracerEvaluation sVol = computeSolutionVolume_(tr.phaseIdx_, I, 0) * variable<TracerEvaluation>(1.0, 0);
-        dVol_[tr.phaseIdx_][I][1] += sVol.value() * scvVolume - vol1_[tr.phaseIdx_][I][1];
-        dVol_[tr.phaseIdx_][I][0] += fVol.value() * scvVolume - vol1_[tr.phaseIdx_][I][0];
+        dVol_[tr.phaseIdx_][I][Solution] += sVol.value() * scvVolume - vol1_[tr.phaseIdx_][I][Solution];
+        dVol_[tr.phaseIdx_][I][Free] += fVol.value() * scvVolume - vol1_[tr.phaseIdx_][I][Free];
         for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
             // Free part
-            const Scalar fStorageOfTimeIndex0 = fVol.value() * tr.concentration_[tIdx][I][0];
+            const Scalar fStorageOfTimeIndex0 = fVol.value() * tr.concentration_[tIdx][I][Free];
             const Scalar fLocalStorage = (fStorageOfTimeIndex0 - fStorageOfTimeIndex1[tIdx]) * scvVolume/dt;
-            tr.residual_[tIdx][I][0] += fLocalStorage; // residual + flux
+            tr.residual_[tIdx][I][Free] += fLocalStorage; // residual + flux
 
             // Solution part
-            const Scalar sStorageOfTimeIndex0 = sVol.value() * tr.concentration_[tIdx][I][1];
+            const Scalar sStorageOfTimeIndex0 = sVol.value() * tr.concentration_[tIdx][I][Solution];
             const Scalar sLocalStorage = (sStorageOfTimeIndex0 - sStorageOfTimeIndex1[tIdx]) * scvVolume/dt;
-            tr.residual_[tIdx][I][1] += sLocalStorage; // residual + flux
+            tr.residual_[tIdx][I][Solution] += sLocalStorage; // residual + flux
         }
 
         // Derivative matrix
-        (*tr.mat)[I][I][0][0] += fVol.derivative(0) * scvVolume/dt;
-        (*tr.mat)[I][I][1][1] += sVol.derivative(0) * scvVolume/dt;
+        (*tr.mat)[I][I][Free][Free] += fVol.derivative(0) * scvVolume/dt;
+        (*tr.mat)[I][I][Solution][Solution] += sVol.derivative(0) * scvVolume/dt;
     }
 
     template<class TrRe>
@@ -436,24 +440,24 @@ protected:
         bool isUpS;
         computeFreeFlux_(fFlux, isUpF, tr.phaseIdx_, elemCtx, scvfIdx, 0);
         computeSolFlux_(sFlux, isUpS, tr.phaseIdx_, elemCtx, scvfIdx, 0);
-        dVol_[tr.phaseIdx_][I][1] += sFlux.value() * dt;
-        dVol_[tr.phaseIdx_][I][0] += fFlux.value() * dt;
+        dVol_[tr.phaseIdx_][I][Solution] += sFlux.value() * dt;
+        dVol_[tr.phaseIdx_][I][Free] += fFlux.value() * dt;
         const int fGlobalUpIdx = isUpF ? I : J;
         const int sGlobalUpIdx = isUpS ? I : J;
         for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
             // Free and solution fluxes
-            tr.residual_[tIdx][I][0] += fFlux.value()*tr.concentration_[tIdx][fGlobalUpIdx][0]; // residual + flux
-            tr.residual_[tIdx][I][1] += sFlux.value()*tr.concentration_[tIdx][sGlobalUpIdx][1]; // residual + flux
+            tr.residual_[tIdx][I][Free] += fFlux.value()*tr.concentration_[tIdx][fGlobalUpIdx][Free]; // residual + flux
+            tr.residual_[tIdx][I][Solution] += sFlux.value()*tr.concentration_[tIdx][sGlobalUpIdx][Solution]; // residual + flux
         }
 
         // Derivative matrix
         if (isUpF){
-            (*tr.mat)[J][I][0][0] = -fFlux.derivative(0);
-            (*tr.mat)[I][I][0][0] += fFlux.derivative(0);
+            (*tr.mat)[J][I][Free][Free] = -fFlux.derivative(0);
+            (*tr.mat)[I][I][Free][Free] += fFlux.derivative(0);
         }
         if (isUpS) {
-            (*tr.mat)[J][I][1][1] = -sFlux.derivative(0);
-            (*tr.mat)[I][I][1][1] += sFlux.derivative(0);
+            (*tr.mat)[J][I][Solution][Solution] = -sFlux.derivative(0);
+            (*tr.mat)[I][I][Solution][Solution] += sFlux.derivative(0);
         }
     }
 
@@ -510,7 +514,7 @@ protected:
             if (rate_f > 0) {
                 for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
                     // Injection of free tracer only
-                    tr.residual_[tIdx][I][0] -= rate_f*wtracer[tIdx];
+                    tr.residual_[tIdx][I][Free] -= rate_f*wtracer[tIdx];
 
                     // Store _injector_ tracer rate for reporting
                     // (can be done here since WTRACER is constant)
@@ -520,7 +524,7 @@ protected:
                         (*mswTracerRate)[tIdx].rate[eclWell.getConnections().get(i).segment()] += rate_f*wtracer[tIdx];
                     }
                 }
-                dVol_[tr.phaseIdx_][I][0] -= rate_f * dt;
+                dVol_[tr.phaseIdx_][I][Free] -= rate_f * dt;
             }
             else if (rate_f < 0) {
                 for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
@@ -530,22 +534,22 @@ protected:
                     freeTracerRate[tIdx].rate += rate_f*wtracer[tIdx];
 
                     // Production of free tracer
-                    tr.residual_[tIdx][I][0] -= rate_f * tr.concentration_[tIdx][I][0];
+                    tr.residual_[tIdx][I][Free] -= rate_f * tr.concentration_[tIdx][I][Free];
                 }
-                dVol_[tr.phaseIdx_][I][0] -= rate_f * dt;
+                dVol_[tr.phaseIdx_][I][Free] -= rate_f * dt;
 
                 // Derivative matrix for free tracer producer
-                (*tr.mat)[I][I][0][0] -= rate_f * variable<TracerEvaluation>(1.0, 0).derivative(0);
+                (*tr.mat)[I][I][Free][Free] -= rate_f * variable<TracerEvaluation>(1.0, 0).derivative(0);
             }
             if (rate_s < 0) {
                 for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
                     // Production of solution tracer
-                    tr.residual_[tIdx][I][1] -= rate_s * tr.concentration_[tIdx][I][1];
+                    tr.residual_[tIdx][I][Solution] -= rate_s * tr.concentration_[tIdx][I][Solution];
                 }
-                dVol_[tr.phaseIdx_][I][1] -= rate_s * dt;
+                dVol_[tr.phaseIdx_][I][Solution] -= rate_s * dt;
 
                 // Derivative matrix for solution tracer producer
-                (*tr.mat)[I][I][1][1] -= rate_s * variable<TracerEvaluation>(1.0, 0).derivative(0);
+                (*tr.mat)[I][I][Solution][Solution] -= rate_s * variable<TracerEvaluation>(1.0, 0).derivative(0);
             }
         }
     }
@@ -567,33 +571,33 @@ protected:
             return;
         }
 
-        const Scalar& dsVol = dVol_[tr.phaseIdx_][I][1];
-        const Scalar& dfVol = dVol_[tr.phaseIdx_][I][0];
+        const Scalar& dsVol = dVol_[tr.phaseIdx_][I][Solution];
+        const Scalar& dfVol = dVol_[tr.phaseIdx_][I][Free];
 
         // Source term determined by sign of dsVol: if dsVol > 0 then ms -> mf, else mf -> ms
         for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
             if (dsVol >= 0) {
-                const auto delta = (dfVol / dt) * tr.concentration_[tIdx][I][0];
-                tr.residual_[tIdx][I][0] -= delta;
-                tr.residual_[tIdx][I][1] += delta;
+                const auto delta = (dfVol / dt) * tr.concentration_[tIdx][I][Free];
+                tr.residual_[tIdx][I][Free] -= delta;
+                tr.residual_[tIdx][I][Solution] += delta;
             }
             else {
-                const auto delta = (dsVol / dt) * tr.concentration_[tIdx][I][1];
-                tr.residual_[tIdx][I][0] += delta;
-                tr.residual_[tIdx][I][1] -= delta;
+                const auto delta = (dsVol / dt) * tr.concentration_[tIdx][I][Solution];
+                tr.residual_[tIdx][I][Free] += delta;
+                tr.residual_[tIdx][I][Solution] -= delta;
             }
         }
 
         // Derivative matrix
         if (dsVol >= 0) {
             const auto delta = (dfVol / dt) * variable<TracerEvaluation>(1.0, 0).derivative(0);
-            (*tr.mat)[I][I][0][0] -= delta;
-            (*tr.mat)[I][I][1][0] += delta;
+            (*tr.mat)[I][I][Free][Free] -= delta;
+            (*tr.mat)[I][I][Solution][Free] += delta;
         }
         else {
             const auto delta = (dsVol / dt) * variable<TracerEvaluation>(1.0, 0).derivative(0);
-            (*tr.mat)[I][I][0][1] += delta;
-            (*tr.mat)[I][I][1][1] -= delta;
+            (*tr.mat)[I][I][Free][Solution] += delta;
+            (*tr.mat)[I][I][Solution][Solution] -= delta;
         }
     }
 
@@ -638,8 +642,8 @@ protected:
                 // Dirichlet boundary conditions needed for the parallel matrix
                 for (const auto& tr : tbatch) {
                     if (tr.numTracer() != 0) {
-                        (*tr.mat)[I][I][0][0] = 1.;
-                        (*tr.mat)[I][I][1][1] = 1.;
+                        (*tr.mat)[I][I][Free][Free] = 1.;
+                        (*tr.mat)[I][I][Solution][Solution] = 1.;
                     }
                 }
                 continue;
@@ -712,13 +716,13 @@ protected:
 
                 const Scalar fVol1 = computeFreeVolume_(tr.phaseIdx_, globalDofIdx, 0);
                 const Scalar sVol1 = computeSolutionVolume_(tr.phaseIdx_, globalDofIdx, 0);
-                vol1_[tr.phaseIdx_][globalDofIdx][0] = fVol1 * scvVolume;
-                vol1_[tr.phaseIdx_][globalDofIdx][1] = sVol1 * scvVolume;
-                dVol_[tr.phaseIdx_][globalDofIdx][0] = 0.0;
-                dVol_[tr.phaseIdx_][globalDofIdx][1] = 0.0;
+                vol1_[tr.phaseIdx_][globalDofIdx][Free] = fVol1 * scvVolume;
+                vol1_[tr.phaseIdx_][globalDofIdx][Solution] = sVol1 * scvVolume;
+                dVol_[tr.phaseIdx_][globalDofIdx][Free] = 0.0;
+                dVol_[tr.phaseIdx_][globalDofIdx][Solution] = 0.0;
                 for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
-                    tr.storageOfTimeIndex1_[tIdx][globalDofIdx][0] = fVol1 * tr.concentrationInitial_[tIdx][globalDofIdx][0];
-                    tr.storageOfTimeIndex1_[tIdx][globalDofIdx][1] = sVol1 * tr.concentrationInitial_[tIdx][globalDofIdx][1];
+                    tr.storageOfTimeIndex1_[tIdx][globalDofIdx][Free] = fVol1 * tr.concentrationInitial_[tIdx][globalDofIdx][Free];
+                    tr.storageOfTimeIndex1_[tIdx][globalDofIdx][Solution] = sVol1 * tr.concentrationInitial_[tIdx][globalDofIdx][Solution];
                 }
             }
         }
@@ -763,22 +767,26 @@ protected:
                     }
 
                     constexpr Scalar tol_gas_sat = 1e-6;
-                    if (tr.concentration_[tIdx][globalDofIdx][0] - dx[tIdx][globalDofIdx][0] < 0.0|| Sf < tol_gas_sat) {
-                        tr.concentration_[tIdx][globalDofIdx][0] = 0.0;
+                    if (tr.concentration_[tIdx][globalDofIdx][Free] - dx[tIdx][globalDofIdx][Free] < 0.0 ||
+                        Sf < tol_gas_sat)
+                    {
+                        tr.concentration_[tIdx][globalDofIdx][Free] = 0.0;
                     }
                     else {
-                        tr.concentration_[tIdx][globalDofIdx][0] -= dx[tIdx][globalDofIdx][0];
+                        tr.concentration_[tIdx][globalDofIdx][Free] -= dx[tIdx][globalDofIdx][Free];
                     }
-                    if (tr.concentration_[tIdx][globalDofIdx][1] - dx[tIdx][globalDofIdx][1] < 0.0 || Ss < tol_gas_sat) {
-                        tr.concentration_[tIdx][globalDofIdx][1] = 0.0;
+                    if (tr.concentration_[tIdx][globalDofIdx][Solution] - dx[tIdx][globalDofIdx][Solution] < 0.0 ||
+                        Ss < tol_gas_sat)
+                    {
+                        tr.concentration_[tIdx][globalDofIdx][Solution] = 0.0;
                     }
                     else {
-                        tr.concentration_[tIdx][globalDofIdx][1] -= dx[tIdx][globalDofIdx][1];
+                        tr.concentration_[tIdx][globalDofIdx][Solution] -= dx[tIdx][globalDofIdx][Solution];
                     }
 
                     // Partition concentration into free and solution tracers for output
-                    this->freeTracerConcentration_[tr.idx_[tIdx]][globalDofIdx] = tr.concentration_[tIdx][globalDofIdx][0];
-                    this->solTracerConcentration_[tr.idx_[tIdx]][globalDofIdx] = tr.concentration_[tIdx][globalDofIdx][1];
+                    this->freeTracerConcentration_[tr.idx_[tIdx]][globalDofIdx] = tr.concentration_[tIdx][globalDofIdx][Free];
+                    this->solTracerConcentration_[tr.idx_[tIdx]][globalDofIdx] = tr.concentration_[tIdx][globalDofIdx][Solution];
                 }
             }
 
@@ -819,22 +827,22 @@ protected:
                     if (rate_f < 0) {
                         for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
                             // Store _producer_ free tracer rate for reporting
-                            tracerRate[tIdx].rate += rate_f * tr.concentration_[tIdx][I][0];
-                            freeTracerRate[tIdx].rate += rate_f * tr.concentration_[tIdx][I][0];
+                            tracerRate[tIdx].rate += rate_f * tr.concentration_[tIdx][I][Free];
+                            freeTracerRate[tIdx].rate += rate_f * tr.concentration_[tIdx][I][Free];
                             if (eclWell.isMultiSegment()) {
                                 (*mswTracerRate)[tIdx].rate[eclWell.getConnections().get(i).segment()] +=
-                                    rate_f * tr.concentration_[tIdx][I][0];
+                                    rate_f * tr.concentration_[tIdx][I][Free];
                             }
                         }
                     }
                     if (rate_s < 0) {
                         for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
                             // Store _producer_ solution tracer rate for reporting
-                            tracerRate[tIdx].rate += rate_s * tr.concentration_[tIdx][I][1];
-                            solTracerRate[tIdx].rate += rate_s * tr.concentration_[tIdx][I][1];
+                            tracerRate[tIdx].rate += rate_s * tr.concentration_[tIdx][I][Solution];
+                            solTracerRate[tIdx].rate += rate_s * tr.concentration_[tIdx][I][Solution];
                             if (eclWell.isMultiSegment()) {
                                 (*mswTracerRate)[tIdx].rate[eclWell.getConnections().get(i).segment()] +=
-                                    rate_s * tr.concentration_[tIdx][I][1];
+                                    rate_s * tr.concentration_[tIdx][I][Solution];
                             }
                         }
                     }
