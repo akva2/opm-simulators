@@ -159,14 +159,10 @@ public:
             }
 
             // resize free and solution volume storages
-            vol1_[this->tracerPhaseIdx_[tracerIdx]][Free].
+            vol1_[this->tracerPhaseIdx_[tracerIdx]].
                 resize(this->splitTracerConcentration_[Free][tracerIdx].size());
-            vol1_[this->tracerPhaseIdx_[tracerIdx]][Solution].
-                resize(this->splitTracerConcentration_[Solution][tracerIdx].size());
-            dVol_[this->tracerPhaseIdx_[tracerIdx]][Free].
+            dVol_[this->tracerPhaseIdx_[tracerIdx]].
                 resize(this->splitTracerConcentration_[Free][tracerIdx].size());
-            dVol_[this->tracerPhaseIdx_[tracerIdx]][Solution].
-                resize(this->splitTracerConcentration_[Solution][tracerIdx].size());
         }
 
         // will be valid after we move out of tracerMatrix_
@@ -916,8 +912,8 @@ protected:
     TracerBatch<TracerVector>& wat_;
     TracerBatch<TracerVector>& oil_;
     TracerBatch<TracerVector>& gas_;
-    std::array<std::array<std::vector<Scalar>, 3>, 2> vol1_;
-    std::array<std::array<std::vector<Scalar>, 3>, 2> dVol_;
+    std::array<std::vector<std::array<Scalar,2>>, numPhases> vol1_;
+    std::array<std::vector<std::array<Scalar,2>>, numPhases> dVol_;
 };
 
 } // namespace Opm
