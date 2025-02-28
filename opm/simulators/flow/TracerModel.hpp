@@ -779,6 +779,27 @@ protected:
                 auto& freeTracerRate = this->wellFreeTracerRate_[well_index];
                 auto& solTracerRate = this->wellSolTracerRate_[well_index];
                 auto* mswTracerRate = eclWell.isMultiSegment() ? &this->mSwTracerRate_[well_index] : nullptr;
+
+                auto assign = [&tr, &eclWell,
+                               &tracerRate, &mswTracerRate](const TracerTypeIdx index,
+                                                            const std::size_t i,
+                                                            const unsigned I,
+                                                            const Scalar rate,
+                                                            std::vector<TracerRate<Scalar>>& splitRate)
+                {
+                    if (rate < 0) {
+                        for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
+                            // Store _producer_ free tracer rate for reporting
+                            tracerRate[tIdx].rate += rate * tr.concentration_[tIdx][I][index];
+                            splitRate[tIdx].rate += rate * tr.concentration_[tIdx][I][index];
+                            if (eclWell.isMultiSegment()) {
+                                (*mswTracerRate)[tIdx].rate[eclWell.getConnections().get(i).segment()] +=
+                                    rate * tr.concentration_[tIdx][I][index];
+                            }
+                        }
+                    }
+                };
+
                 for (std::size_t i = 0; i < ws.perf_data.size(); ++i) {
                     const auto I = ws.perf_data.cell_index[i];
                     const Scalar rate = wellPtr->volumetricSurfaceRateForConnection(I, tr.phaseIdx_);
@@ -795,28 +816,8 @@ protected:
                     }
 
                     const Scalar rate_f = rate - rate_s;
-                    if (rate_f < 0) {
-                        for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
-                            // Store _producer_ free tracer rate for reporting
-                            tracerRate[tIdx].rate += rate_f * tr.concentration_[tIdx][I][Free];
-                            freeTracerRate[tIdx].rate += rate_f * tr.concentration_[tIdx][I][Free];
-                            if (eclWell.isMultiSegment()) {
-                                (*mswTracerRate)[tIdx].rate[eclWell.getConnections().get(i).segment()] +=
-                                    rate_f * tr.concentration_[tIdx][I][Free];
-                            }
-                        }
-                    }
-                    if (rate_s < 0) {
-                        for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
-                            // Store _producer_ solution tracer rate for reporting
-                            tracerRate[tIdx].rate += rate_s * tr.concentration_[tIdx][I][Solution];
-                            solTracerRate[tIdx].rate += rate_s * tr.concentration_[tIdx][I][Solution];
-                            if (eclWell.isMultiSegment()) {
-                                (*mswTracerRate)[tIdx].rate[eclWell.getConnections().get(i).segment()] +=
-                                    rate_s * tr.concentration_[tIdx][I][Solution];
-                            }
-                        }
-                    }
+                    assign(Free, i, I, rate_f, freeTracerRate);
+                    assign(Solution, i, I, rate_s, solTracerRate);
 
                     if (rate < 0) {
                         rateWellNeg += rate;
