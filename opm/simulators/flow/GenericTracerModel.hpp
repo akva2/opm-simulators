@@ -108,8 +108,7 @@ public:
     void serializeOp(Serializer& serializer)
     {
         serializer(tracerConcentration_);
-        serializer(freeTracerConcentration_);
-        serializer(solTracerConcentration_);
+        serializer(splitTracerConcentration_);
         serializer(wellTracerRate_);
         serializer(wellFreeTracerRate_);
         serializer(wellSolTracerRate_);
@@ -155,8 +154,7 @@ protected:
     std::vector<bool> enableSolTracers_;
     std::vector<TracerVector> tracerConcentration_;
     std::unique_ptr<TracerMatrix> tracerMatrix_;
-    std::vector<TracerVectorSingle> freeTracerConcentration_;
-    std::vector<TracerVectorSingle> solTracerConcentration_;
+    std::array<std::vector<TracerVectorSingle>, 2> splitTracerConcentration_;
 
     std::map<int, std::vector<TracerRate<Scalar>>> wellTracerRate_;
     std::map<int, std::vector<TracerRate<Scalar>>> wellFreeTracerRate_;

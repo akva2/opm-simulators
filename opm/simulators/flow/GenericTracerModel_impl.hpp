@@ -116,36 +116,36 @@ template<class Grid, class GridView, class DofMapper, class Stencil, class Fluid
 Scalar GenericTracerModel<Grid,GridView,DofMapper,Stencil,FluidSystem,Scalar>::
 freeTracerConcentration(int tracerIdx, int globalDofIdx) const
 {
-    if (freeTracerConcentration_.empty())
+    if (splitTracerConcentration_[Free].empty())
         return 0.0;
 
-    return freeTracerConcentration_[tracerIdx][globalDofIdx];
+    return splitTracerConcentration_[Free][tracerIdx][globalDofIdx];
 }
 
 template<class Grid, class GridView, class DofMapper, class Stencil, class FluidSystem, class Scalar>
 Scalar GenericTracerModel<Grid,GridView,DofMapper,Stencil,FluidSystem,Scalar>::
 solTracerConcentration(int tracerIdx, int globalDofIdx) const
 {
-    if (solTracerConcentration_.empty())
+    if (splitTracerConcentration_[Solution].empty())
         return 0.0;
 
-    return solTracerConcentration_[tracerIdx][globalDofIdx];
+    return splitTracerConcentration_[Solution][tracerIdx][globalDofIdx];
 }
 
 template<class Grid, class GridView, class DofMapper, class Stencil, class FluidSystem, class Scalar>
 void GenericTracerModel<Grid,GridView,DofMapper,Stencil,FluidSystem,Scalar>::
 setFreeTracerConcentration(int tracerIdx, int globalDofIdx, Scalar value)
 {
-    this->freeTracerConcentration_[tracerIdx][globalDofIdx] = value;
-    this->tracerConcentration_[tracerIdx][globalDofIdx][0] = value;
+    this->splitTracerConcentration_[Free][tracerIdx][globalDofIdx] = value;
+    this->tracerConcentration_[tracerIdx][globalDofIdx][Free] = value;
 }
 
 template<class Grid, class GridView, class DofMapper, class Stencil, class FluidSystem, class Scalar>
 void GenericTracerModel<Grid,GridView,DofMapper,Stencil,FluidSystem,Scalar>::
 setSolTracerConcentration(int tracerIdx, int globalDofIdx, Scalar value)
 {
-    this->solTracerConcentration_[tracerIdx][globalDofIdx] = value;
-    this->tracerConcentration_[tracerIdx][globalDofIdx][1] = value;
+    this->splitTracerConcentration_[Solution][tracerIdx][globalDofIdx] = value;
+    this->tracerConcentration_[tracerIdx][globalDofIdx][Solution] = value;
 }
 
 template<class Grid, class GridView, class DofMapper, class Stencil, class FluidSystem, class Scalar>
@@ -232,8 +232,8 @@ doInit(bool rst, std::size_t numGridDof,
     const std::size_t numTracers = tracers.size();
     enableSolTracers_.resize(numTracers);
     tracerConcentration_.resize(numTracers);
-    freeTracerConcentration_.resize(numTracers);
-    solTracerConcentration_.resize(numTracers);
+    splitTracerConcentration_[Free].resize(numTracers);
+    splitTracerConcentration_[Solution].resize(numTracers);
 
     // the phase where the tracer is
     tracerPhaseIdx_.resize(numTracers);
@@ -248,8 +248,8 @@ doInit(bool rst, std::size_t numGridDof,
             tracerPhaseIdx_[tracerIdx] = gasPhaseIdx;
 
         tracerConcentration_[tracerIdx].resize(numGridDof);
-        freeTracerConcentration_[tracerIdx].resize(numGridDof);
-        solTracerConcentration_[tracerIdx].resize(numGridDof);
+        splitTracerConcentration_[Free][tracerIdx].resize(numGridDof);
+        splitTracerConcentration_[Solution][tracerIdx].resize(numGridDof);
 
         if (rst)
             continue;
@@ -264,18 +264,18 @@ doInit(bool rst, std::size_t numGridDof,
             }
             for (std::size_t globalDofIdx = 0; globalDofIdx < numGridDof; ++globalDofIdx) {
                 int cartDofIdx = cartMapper_.cartesianIndex(globalDofIdx);
-                tracerConcentration_[tracerIdx][globalDofIdx][0] = free_concentration[cartDofIdx];
-                freeTracerConcentration_[tracerIdx][globalDofIdx] = free_concentration[cartDofIdx];
+                tracerConcentration_[tracerIdx][globalDofIdx][Free] = free_concentration[cartDofIdx];
+                splitTracerConcentration_[Free][tracerIdx][globalDofIdx] = free_concentration[cartDofIdx];
             }
         }
         // TVDPF keyword
         else if (tracer.free_tvdp.has_value()) {
             const auto& free_tvdp = tracer.free_tvdp.value();
             for (std::size_t globalDofIdx = 0; globalDofIdx < numGridDof; ++globalDofIdx) {
-                tracerConcentration_[tracerIdx][globalDofIdx][0] =
+                tracerConcentration_[tracerIdx][globalDofIdx][Free] =
                     free_tvdp.evaluate("TRACER_CONCENTRATION",
                                        centroids_(globalDofIdx)[2]);
-                freeTracerConcentration_[tracerIdx][globalDofIdx] =
+                splitTracerConcentration_[Free][tracerIdx][globalDofIdx] =
                     free_tvdp.evaluate("TRACER_CONCENTRATION",
                                        centroids_(globalDofIdx)[2]);
             }
@@ -284,8 +284,8 @@ doInit(bool rst, std::size_t numGridDof,
             OpmLog::warning(fmt::format("No TBLKF or TVDPF given for free tracer {}. "
                                         "Initial values set to zero. ", tracer.name));
             for (std::size_t globalDofIdx = 0; globalDofIdx < numGridDof; ++globalDofIdx) {
-                tracerConcentration_[tracerIdx][globalDofIdx][0] = 0.0;
-                freeTracerConcentration_[tracerIdx][globalDofIdx] = 0.0;
+                tracerConcentration_[tracerIdx][globalDofIdx][Free] = 0.0;
+                splitTracerConcentration_[Free][tracerIdx][globalDofIdx] = 0.0;
             }
         }
 
@@ -303,8 +303,8 @@ doInit(bool rst, std::size_t numGridDof,
                 }
                 for (std::size_t globalDofIdx = 0; globalDofIdx < numGridDof; ++globalDofIdx) {
                     int cartDofIdx = cartMapper_.cartesianIndex(globalDofIdx);
-                    tracerConcentration_[tracerIdx][globalDofIdx][1] = solution_concentration[cartDofIdx];
-                    solTracerConcentration_[tracerIdx][globalDofIdx] = solution_concentration[cartDofIdx];
+                    tracerConcentration_[tracerIdx][globalDofIdx][Solution] = solution_concentration[cartDofIdx];
+                    splitTracerConcentration_[Solution][tracerIdx][globalDofIdx] = solution_concentration[cartDofIdx];
                 }
             }
             // TVDPS keyword
@@ -312,10 +312,10 @@ doInit(bool rst, std::size_t numGridDof,
                 enableSolTracers_[tracerIdx] = true;
                 const auto& solution_tvdp = tracer.solution_tvdp.value();
                 for (std::size_t globalDofIdx = 0; globalDofIdx < numGridDof; ++globalDofIdx) {
-                    tracerConcentration_[tracerIdx][globalDofIdx][1] =
+                    tracerConcentration_[tracerIdx][globalDofIdx][Solution] =
                         solution_tvdp.evaluate("TRACER_CONCENTRATION",
                                             centroids_(globalDofIdx)[2]);
-                    solTracerConcentration_[tracerIdx][globalDofIdx] =
+                    splitTracerConcentration_[Solution][tracerIdx][globalDofIdx] =
                         solution_tvdp.evaluate("TRACER_CONCENTRATION",
                                             centroids_(globalDofIdx)[2]);
                 }
@@ -326,8 +326,8 @@ doInit(bool rst, std::size_t numGridDof,
                 OpmLog::warning(fmt::format("No TBLKS or TVDPS given for solution tracer {}. "
                                             "Initial values set to zero. ", tracer.name));
                 for (std::size_t globalDofIdx = 0; globalDofIdx < numGridDof; ++globalDofIdx) {
-                        tracerConcentration_[tracerIdx][globalDofIdx][1] = 0.0;
-                        solTracerConcentration_[tracerIdx][globalDofIdx] = 0.0;
+                    tracerConcentration_[tracerIdx][globalDofIdx][Solution] = 0.0;
+                    splitTracerConcentration_[Solution][tracerIdx][globalDofIdx] = 0.0;
                 }
             }
         }
@@ -335,8 +335,8 @@ doInit(bool rst, std::size_t numGridDof,
             // No solution tracers, default to zero
             enableSolTracers_[tracerIdx] = false;
             for (std::size_t globalDofIdx = 0; globalDofIdx < numGridDof; ++globalDofIdx) {
-                tracerConcentration_[tracerIdx][globalDofIdx][1] = 0.0;
-                solTracerConcentration_[tracerIdx][globalDofIdx] = 0.0;
+                tracerConcentration_[tracerIdx][globalDofIdx][Solution] = 0.0;
+                splitTracerConcentration_[Solution][tracerIdx][globalDofIdx] = 0.0;
             }
         }
     }

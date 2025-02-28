@@ -159,10 +159,14 @@ public:
             }
 
             // resize free and solution volume storages
-            vol1_[this->tracerPhaseIdx_[tracerIdx]][0].resize(this->freeTracerConcentration_[tracerIdx].size());
-            vol1_[this->tracerPhaseIdx_[tracerIdx]][1].resize(this->solTracerConcentration_[tracerIdx].size());
-            dVol_[this->tracerPhaseIdx_[tracerIdx]][0].resize(this->solTracerConcentration_[tracerIdx].size());
-            dVol_[this->tracerPhaseIdx_[tracerIdx]][1].resize(this->solTracerConcentration_[tracerIdx].size());
+            vol1_[this->tracerPhaseIdx_[tracerIdx]][Free].
+                resize(this->splitTracerConcentration_[Free][tracerIdx].size());
+            vol1_[this->tracerPhaseIdx_[tracerIdx]][Solution].
+                resize(this->splitTracerConcentration_[Solution][tracerIdx].size());
+            dVol_[this->tracerPhaseIdx_[tracerIdx]][Free].
+                resize(this->splitTracerConcentration_[Free][tracerIdx].size());
+            dVol_[this->tracerPhaseIdx_[tracerIdx]][Solution].
+                resize(this->splitTracerConcentration_[Solution][tracerIdx].size());
         }
 
         // will be valid after we move out of tracerMatrix_
