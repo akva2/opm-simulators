@@ -237,9 +237,9 @@ protected:
         const auto& fs = intQuants.fluidState();
 
         const Scalar phaseVolume =
-            decay<Scalar>(fs.saturation(tracerPhaseIdx))
-            *decay<Scalar>(fs.invB(tracerPhaseIdx))
-            *decay<Scalar>(intQuants.porosity());
+            decay<Scalar>(fs.saturation(tracerPhaseIdx)) *
+            decay<Scalar>(fs.invB(tracerPhaseIdx)) *
+            decay<Scalar>(intQuants.porosity());
 
         return max(phaseVolume, 1e-10);
     }
@@ -257,19 +257,19 @@ protected:
         // vaporized oil
         if (tracerPhaseIdx == FluidSystem::oilPhaseIdx && FluidSystem::enableVaporizedOil()) {
             phaseVolume =
-                decay<Scalar>(fs.saturation(FluidSystem::gasPhaseIdx))
-                * decay<Scalar>(fs.invB(FluidSystem::gasPhaseIdx))
-                * decay<Scalar>(fs.Rv())
-                * decay<Scalar>(intQuants.porosity());
+                decay<Scalar>(fs.saturation(FluidSystem::gasPhaseIdx)) *
+                decay<Scalar>(fs.invB(FluidSystem::gasPhaseIdx)) *
+                decay<Scalar>(fs.Rv()) *
+                decay<Scalar>(intQuants.porosity());
         }
 
         // dissolved gas
         else if (tracerPhaseIdx == FluidSystem::gasPhaseIdx && FluidSystem::enableDissolvedGas()) {
             phaseVolume =
-                decay<Scalar>(fs.saturation(FluidSystem::oilPhaseIdx))
-                * decay<Scalar>(fs.invB(FluidSystem::oilPhaseIdx))
-                * decay<Scalar>(fs.Rs())
-                * decay<Scalar>(intQuants.porosity());
+                decay<Scalar>(fs.saturation(FluidSystem::oilPhaseIdx)) *
+                decay<Scalar>(fs.invB(FluidSystem::oilPhaseIdx)) *
+                decay<Scalar>(fs.Rs()) *
+                decay<Scalar>(intQuants.porosity());
         }
         else {
             phaseVolume = 0.0;
@@ -298,8 +298,8 @@ protected:
         const auto& fs = intQuants.fluidState();
 
         const Scalar v =
-                decay<Scalar>(extQuants.volumeFlux(tracerPhaseIdx))
-                * decay<Scalar>(fs.invB(tracerPhaseIdx));
+                decay<Scalar>(extQuants.volumeFlux(tracerPhaseIdx)) *
+                decay<Scalar>(fs.invB(tracerPhaseIdx));
 
         const Scalar A = scvf.area();
         if (inIdx == upIdx) {
@@ -335,9 +335,9 @@ protected:
             const auto& intQuants = elemCtx.intensiveQuantities(upIdx, timeIdx);
             const auto& fs = intQuants.fluidState();
             v =
-                decay<Scalar>(fs.invB(FluidSystem::gasPhaseIdx))
-                * decay<Scalar>(extQuants.volumeFlux(FluidSystem::gasPhaseIdx))
-                * decay<Scalar>(fs.Rv());
+                decay<Scalar>(fs.invB(FluidSystem::gasPhaseIdx)) *
+                decay<Scalar>(extQuants.volumeFlux(FluidSystem::gasPhaseIdx)) *
+                decay<Scalar>(fs.Rv());
         }
         // dissolved gas
         else if (tracerPhaseIdx == FluidSystem::gasPhaseIdx && FluidSystem::enableDissolvedGas()) {
@@ -346,9 +346,9 @@ protected:
             const auto& intQuants = elemCtx.intensiveQuantities(upIdx, timeIdx);
             const auto& fs = intQuants.fluidState();
             v =
-                decay<Scalar>(fs.invB(FluidSystem::oilPhaseIdx))
-                * decay<Scalar>(extQuants.volumeFlux(FluidSystem::oilPhaseIdx))
-                * decay<Scalar>(fs.Rs());
+                decay<Scalar>(fs.invB(FluidSystem::oilPhaseIdx)) *
+                decay<Scalar>(extQuants.volumeFlux(FluidSystem::oilPhaseIdx)) *
+                decay<Scalar>(fs.Rs());
         }
         else {
             upIdx = 0;
@@ -512,7 +512,8 @@ protected:
                     // Injection of free tracer only
                     tr.residual_[tIdx][I][0] -= rate_f*wtracer[tIdx];
 
-                    // Store _injector_ tracer rate for reporting (can be done here since WTRACER is constant)
+                    // Store _injector_ tracer rate for reporting
+                    // (can be done here since WTRACER is constant)
                     tracerRate[tIdx].rate += rate_f*wtracer[tIdx];
                     freeTracerRate[tIdx].rate += rate_f*wtracer[tIdx];
                     if (eclWell.isMultiSegment()) {
@@ -523,13 +524,13 @@ protected:
             }
             else if (rate_f < 0) {
                 for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
-                    // Store _injector_ tracer rate for cross-flowing well connections (can be done here since WTRACER is constant)
+                    // Store _injector_ tracer rate for cross-flowing well connections
+                    // (can be done here since WTRACER is constant)
                     tracerRate[tIdx].rate += rate_f*wtracer[tIdx];
                     freeTracerRate[tIdx].rate += rate_f*wtracer[tIdx];
 
                     // Production of free tracer
                     tr.residual_[tIdx][I][0] -= rate_f * tr.concentration_[tIdx][I][0];
-
                 }
                 dfVol_[tr.phaseIdx_][I] -= rate_f * dt;
 
@@ -597,7 +598,7 @@ protected:
         // Note that we formulate the equations in terms of a concentration update
         // (compared to previous time step) and not absolute concentration.
         // This implies that current concentration (tr.concentration_[][]) contributes
-        // to the rhs both through storrage and flux terms.
+        // to the rhs both through storage and flux terms.
         // Compare also advanceTracerFields(...) below.
 
         OPM_TIMEBLOCK(tracerAssemble);
@@ -657,11 +658,11 @@ protected:
                 this->assembleTracerEquationVolume(tr, elemCtx, scvVolume, dt, I, I1);
             }
 
-            const std::size_t numInteriorFaces = elemCtx.numInteriorFaces(/*timIdx=*/0);
+            const std::size_t numInteriorFaces = elemCtx.numInteriorFaces(/*timeIdx=*/0);
             for (unsigned scvfIdx = 0; scvfIdx < numInteriorFaces; scvfIdx++) {
                 const auto& face = elemCtx.stencil(0).interiorFace(scvfIdx);
                 const unsigned j = face.exteriorIndex();
-                const unsigned J = elemCtx.globalSpaceIndex(/*dofIdx=*/ j, /*timIdx=*/0);
+                const unsigned J = elemCtx.globalSpaceIndex(/*dofIdx=*/ j, /*timeIdx=*/0);
                 for (auto& tr : tbatch) {
                     this->assembleTracerEquationFlux(tr, elemCtx, scvfIdx, I, J, dt);
                 }
@@ -844,9 +845,11 @@ protected:
 
                 //Scalar rateWellTotal = rateWellNeg + rateWellPos;
 
-                // TODO: Some inconsistencies here that perhaps should be clarified. The "offical" rate as reported below is
-                //  occasionally significant different from the sum over connections (as calculated above). Only observed
-                //  for small values, neglible for the rate itself, but matters when used to calculate tracer concentrations.
+                // TODO: Some inconsistencies here that perhaps should be clarified.
+                // The "offical" rate as reported below is occasionally significant
+                // different from the sum over connections (as calculated above). Only observed
+                // for small values, neglible for the rate itself, but matters when used to
+                // calculate tracer concentrations.
                 const Scalar official_well_rate_total =
                     simulator_.problem().wellModel().wellState().well(well_index).surface_rates[tr.phaseIdx_];
 
