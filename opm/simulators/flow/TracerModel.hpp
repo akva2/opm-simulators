@@ -720,6 +720,26 @@ protected:
 
             OPM_TIMEBLOCK(tracerPost);
 
+            auto limit = [&tr, &dx,
+                          &splitConcentration = this->splitTracerConcentration_]
+                          (TracerTypeIdx index,
+                           const Scalar S,
+                           const unsigned tIdx,
+                           const unsigned globalDofIdx)
+            {
+                constexpr Scalar tol_gas_sat = 1e-6;
+                if (tr.concentration_[tIdx][globalDofIdx][index] - dx[tIdx][globalDofIdx][index] < 0.0 ||
+                    S < tol_gas_sat)
+                {
+                    tr.concentration_[tIdx][globalDofIdx][index] = 0.0;
+                }
+                else {
+                    tr.concentration_[tIdx][globalDofIdx][index] -= dx[tIdx][globalDofIdx][index];
+                }
+                splitConcentration[index][tr.idx_[tIdx]][globalDofIdx] =
+                    tr.concentration_[tIdx][globalDofIdx][index];
+            };
+
             for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
                 for (std::size_t globalDofIdx = 0; globalDofIdx < tr.concentration_[tIdx].size(); ++globalDofIdx) {
                     // New concetration. Concentrations that are negative or where free/solution phase is not
@@ -728,6 +748,7 @@ protected:
                     const auto& fs = intQuants.fluidState();
                     const Scalar Sf = decay<Scalar>(fs.saturation(tr.phaseIdx_));
                     Scalar Ss = 0.0;
+
                     if (tr.phaseIdx_ == FluidSystem::gasPhaseIdx && FluidSystem::enableDissolvedGas()) {
                         Ss = decay<Scalar>(fs.saturation(FluidSystem::oilPhaseIdx));
                     }
@@ -735,27 +756,8 @@ protected:
                         Ss = decay<Scalar>(fs.saturation(FluidSystem::gasPhaseIdx));
                     }
 
-                    constexpr Scalar tol_gas_sat = 1e-6;
-                    if (tr.concentration_[tIdx][globalDofIdx][Free] - dx[tIdx][globalDofIdx][Free] < 0.0 ||
-                        Sf < tol_gas_sat)
-                    {
-                        tr.concentration_[tIdx][globalDofIdx][Free] = 0.0;
-                    }
-                    else {
-                        tr.concentration_[tIdx][globalDofIdx][Free] -= dx[tIdx][globalDofIdx][Free];
-                    }
-                    if (tr.concentration_[tIdx][globalDofIdx][Solution] - dx[tIdx][globalDofIdx][Solution] < 0.0 ||
-                        Ss < tol_gas_sat)
-                    {
-                        tr.concentration_[tIdx][globalDofIdx][Solution] = 0.0;
-                    }
-                    else {
-                        tr.concentration_[tIdx][globalDofIdx][Solution] -= dx[tIdx][globalDofIdx][Solution];
-                    }
-
-                    // Partition concentration into free and solution tracers for output
-                    this->freeTracerConcentration_[tr.idx_[tIdx]][globalDofIdx] = tr.concentration_[tIdx][globalDofIdx][Free];
-                    this->solTracerConcentration_[tr.idx_[tIdx]][globalDofIdx] = tr.concentration_[tIdx][globalDofIdx][Solution];
+                    limit(Free, Sf, tIdx, globalDofIdx);
+                    limit(Solution, Ss, tIdx, globalDofIdx);
                 }
             }
 
