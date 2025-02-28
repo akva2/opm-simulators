@@ -337,18 +337,16 @@ protected:
                                        unsigned I1)
     {
         // Storage terms at previous time step (timeIdx = 1)
-        std::vector<Scalar> storageOfTimeIndex1(tr.numTracer());
-        if (elemCtx.enableStorageCache()) {
-            for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
-                storageOfTimeIndex1[tIdx] = tr.storageOfTimeIndex1_[tIdx][I][Index];
+        auto storage1 = [&tr, this, &I, &I1,
+                         cache = elemCtx.enableStorageCache()](const unsigned tIdx)
+        {
+            if (cache) {
+                return tr.storageOfTimeIndex1_[tIdx][I][Index];
+            }  else {
+                const Scalar volume = computeVolume_<Index>(tr.phaseIdx_, I1, 1);
+                return volume * tr.concentration_[tIdx][I][Index];
             }
-        }
-        else {
-            const Scalar volume1 = computeVolume_<Index>(tr.phaseIdx_, I1, 1);
-            for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
-                storageOfTimeIndex1[tIdx] = volume1 * tr.concentration_[tIdx][I1][Index];
-            }
-        }
+        };
 
         const Scalar scdt = scvVolume / dt;
 
@@ -356,7 +354,7 @@ protected:
         dVol_[tr.phaseIdx_][I][Index] += vol.value() * scvVolume - vol1_[tr.phaseIdx_][I][Index];
         for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
             const Scalar storageOfTimeIndex0 = vol.value() * tr.concentration_[tIdx][I][Index];
-            const Scalar localStorage = (storageOfTimeIndex0 - storageOfTimeIndex1[tIdx]) * scdt;
+            const Scalar localStorage = (storageOfTimeIndex0 - storage1(tIdx)) * scdt;
             tr.residual_[tIdx][I][Index] += localStorage; // residual + flux
         }
 
