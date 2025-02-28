@@ -328,6 +328,42 @@ protected:
         }
     }
 
+    template<TracerTypeIdx Index, class TrRe>
+    void assembleTracerEquationVolume_(TrRe& tr,
+                                       const ElementContext& elemCtx,
+                                       const Scalar scvVolume,
+                                       const Scalar dt,
+                                       unsigned I,
+                                       unsigned I1)
+    {
+        // Storage terms at previous time step (timeIdx = 1)
+        std::vector<Scalar> storageOfTimeIndex1(tr.numTracer());
+        if (elemCtx.enableStorageCache()) {
+            for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
+                storageOfTimeIndex1[tIdx] = tr.storageOfTimeIndex1_[tIdx][I][Index];
+            }
+        }
+        else {
+            const Scalar volume1 = computeVolume_<Index>(tr.phaseIdx_, I1, 1);
+            for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
+                storageOfTimeIndex1[tIdx] = volume1 * tr.concentration_[tIdx][I1][Index];
+            }
+        }
+
+        const Scalar scdt = scvVolume / dt;
+
+        const TracerEvaluation vol = computeVolume_<Index>(tr.phaseIdx_, I, 0) * variable<TracerEvaluation>(1.0, 0);
+        dVol_[tr.phaseIdx_][I][Index] += vol.value() * scvVolume - vol1_[tr.phaseIdx_][I][Index];
+        for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
+            const Scalar storageOfTimeIndex0 = vol.value() * tr.concentration_[tIdx][I][Index];
+            const Scalar localStorage = (storageOfTimeIndex0 - storageOfTimeIndex1[tIdx]) * scdt;
+            tr.residual_[tIdx][I][Index] += localStorage; // residual + flux
+        }
+
+        // Derivative matrix
+        (*tr.mat)[I][I][Index][Index] += vol.derivative(0) * scdt;
+    }
+
     template<class TrRe>
     void assembleTracerEquationVolume(TrRe& tr,
                                       const ElementContext& elemCtx,
@@ -341,43 +377,8 @@ protected:
             return;
         }
 
-        // Storage terms at previous time step (timeIdx = 1)
-        std::vector<Scalar> fStorageOfTimeIndex1(tr.numTracer());
-        std::vector<Scalar> sStorageOfTimeIndex1(tr.numTracer());
-        if (elemCtx.enableStorageCache()) {
-            for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
-                fStorageOfTimeIndex1[tIdx] = tr.storageOfTimeIndex1_[tIdx][I][Free];
-                sStorageOfTimeIndex1[tIdx] = tr.storageOfTimeIndex1_[tIdx][I][Solution];
-            }
-        }
-        else {
-            const Scalar fVolume1 = computeVolume_<Free>(tr.phaseIdx_, I1, 1);
-            const Scalar sVolume1 = computeVolume_<Solution>(tr.phaseIdx_, I1, 1);
-            for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
-                fStorageOfTimeIndex1[tIdx] = fVolume1 * tr.concentration_[tIdx][I1][Free];
-                sStorageOfTimeIndex1[tIdx] = sVolume1 * tr.concentration_[tIdx][I1][Solution];
-            }
-        }
-
-        const TracerEvaluation fVol = computeVolume_<Free>(tr.phaseIdx_, I, 0) * variable<TracerEvaluation>(1.0, 0);
-        const TracerEvaluation sVol = computeVolume_<Solution>(tr.phaseIdx_, I, 0) * variable<TracerEvaluation>(1.0, 0);
-        dVol_[tr.phaseIdx_][I][Solution] += sVol.value() * scvVolume - vol1_[tr.phaseIdx_][I][Solution];
-        dVol_[tr.phaseIdx_][I][Free] += fVol.value() * scvVolume - vol1_[tr.phaseIdx_][I][Free];
-        for (int tIdx = 0; tIdx < tr.numTracer(); ++tIdx) {
-            // Free part
-            const Scalar fStorageOfTimeIndex0 = fVol.value() * tr.concentration_[tIdx][I][Free];
-            const Scalar fLocalStorage = (fStorageOfTimeIndex0 - fStorageOfTimeIndex1[tIdx]) * scvVolume/dt;
-            tr.residual_[tIdx][I][Free] += fLocalStorage; // residual + flux
-
-            // Solution part
-            const Scalar sStorageOfTimeIndex0 = sVol.value() * tr.concentration_[tIdx][I][Solution];
-            const Scalar sLocalStorage = (sStorageOfTimeIndex0 - sStorageOfTimeIndex1[tIdx]) * scvVolume/dt;
-            tr.residual_[tIdx][I][Solution] += sLocalStorage; // residual + flux
-        }
-
-        // Derivative matrix
-        (*tr.mat)[I][I][Free][Free] += fVol.derivative(0) * scvVolume/dt;
-        (*tr.mat)[I][I][Solution][Solution] += sVol.derivative(0) * scvVolume/dt;
+        assembleTracerEquationVolume_<Free>(tr, elemCtx, scvVolume, dt, I, I1);
+        assembleTracerEquationVolume_<Solution>(tr, elemCtx, scvVolume, dt, I, I1);
     }
 
     template<TracerTypeIdx Index, class TrRe>
