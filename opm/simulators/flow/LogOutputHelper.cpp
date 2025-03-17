@@ -680,9 +680,30 @@ void LogOutputHelper<Scalar>::beginProductionReport_() const
     const auto unitType = this->eclState_.getUnits().getType();
 
     std::ostringstream ss;
-    ss << "\n======================================================= PRODUCTION REPORT =======================================================\n"//=================== \n"
-       << ":  WELL  :  LOCATION :CTRL:    OIL    :   WATER   :    GAS    :   FLUID   :   WATER   : GAS/OIL  :  WAT/GAS   : BHP OR : THP OR :\n"// STEADY-ST PI       :\n"
-       << ":  NAME  :  (I,J,K)  :MODE:    RATE   :   RATE    :    RATE   :  RES.VOL. :    CUT    :  RATIO   :   RATIO    : CON.PR.: BLK.PR.:\n";// OR POTN OF PREF. PH:\n";
+    ss << fmt::format("\n{:=^{}}\n", " PRODUCTION REPORT ", 129)
+       << fmt::format(":{0:^8}:{1:^11}:{2:^4}:{3:^11}:{4:^11}:{5:^11}:{6:^11}:{7:^11}:{8:^10}:{9:^12}:{10:^8}:{11:^8}:\n",
+                      "WELL",
+                      "LOCATION",
+                      "CTRL",
+                      "OIL",
+                      "WATER",
+                      "GAS",
+                      "FLUID",
+                      "WATER",
+                      "GAS/OIL",
+                      "WAT/GAS",
+                      "BHP OR",
+                      "THP OR")
+       << fmt::format(":{0:^8}:{1:^11}:{2:^4}:{3:^11}:{3:^11}:{3:^11}:{4:^11}:{5:^11}:{6:^10}:{6:^12}:{7:^8}:{8:^8}:\n",
+                      "NAME",
+                      "(I,J,K)",
+                      "MODE",
+                      "RATE",
+                      "RES.VOL.",
+                      "CUT",
+                      "RATIO",
+                      "CON.PR.",
+                      "BLK.PR.");
 
     if (unitType == UnitSystem::UnitType::UNIT_TYPE_METRIC) {
         ss << ":        :           :    :  SCM/DAY  :  SCM/DAY  :  SCM/DAY  :  RCM/DAY  :  SCM/SCM  :  SCM/SCM :  SCM/SCM   :  BARSA :  BARSA :\n";//                    :\n";
@@ -692,7 +713,7 @@ void LogOutputHelper<Scalar>::beginProductionReport_() const
         ss << ":        :           :    :  SCC/HR   :  SCC/HR   :  SCC/HR   :    RCC    :  SCC/SCC  :  SCC/SCC :  SCC/SCC   :  ATMA  :  ATMA  :\n";//                    :\n";
     }
 
-    ss << "=================================================================================================================================";//===================";
+    ss << fmt::format("{:=>{}}", "", 129);
 
     OpmLog::note(ss.str());
 }
