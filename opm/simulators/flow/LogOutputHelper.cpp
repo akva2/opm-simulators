@@ -603,8 +603,12 @@ void LogOutputHelper<Scalar>::beginInjectionReport_() const
 template <typename Scalar>
 void LogOutputHelper<Scalar>::endInjectionReport_() const
 {
-    const auto ss = std::string { ":--------:-----------:------:------:------:-----------:-----------:-----------:-----------:--------:--------:" };
-
+    constexpr auto widths = std::array{8, 11, 6, 6, 6, 11, 11, 11, 11, 8, 8};
+    std::string ss;
+    std::for_each(widths.begin(), widths.end(),
+                  [&ss](const auto w)
+                  { ss += fmt::format(":{:->{}}", "", w); });
+    ss += ':';
     OpmLog::note(ss);
 }
 
