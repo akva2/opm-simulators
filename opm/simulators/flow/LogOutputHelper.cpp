@@ -327,9 +327,7 @@ fipResv(const Inplace& inplace, const std::string& name) const
         this->outputResvFluidInPlace_(current_values, reg);
     }
     
-    std::ostringstream ss;
-    ss << " ===========================================================================================";
-    OpmLog::note(ss.str());
+    OpmLog::note(fmt::format(" {:=^91}", ""));
 }
 
 
@@ -869,32 +867,37 @@ outputResvFluidInPlace_(std::unordered_map<Inplace::Phase, Scalar> cipr,
     std::ostringstream ss;
 
     if (reg == 0) {
-        ss << "\n                                                     ===================================\n";
-        if (units.getType() == UnitSystem::UnitType::UNIT_TYPE_METRIC) {
-            ss << "                                                     :  RESERVOIR VOLUMES      RM3     :\n";
-        } else if (units.getType() == UnitSystem::UnitType::UNIT_TYPE_FIELD) {
-            ss << "                                                     :  RESERVOIR VOLUMES      RB      :\n";
-        }
-        ss << " :---------:---------------:---------------:---------------:---------------:---------------:\n"
-           << " : REGION  :  TOTAL PORE   :  PORE VOLUME  :  PORE VOLUME  : PORE VOLUME   :  PORE VOLUME  :\n"
-           << " :         :   VOLUME      :  CONTAINING   :  CONTAINING   : CONTAINING    :  CONTAINING   :\n"
-           << " :         :               :     OIL       :    WATER      :    GAS        :  HYDRO-CARBON :\n"
-           << " :---------:---------------:---------------:---------------:---------------:---------------\n";
-
-        ss << std::right << std::fixed << std::setprecision(0) << " :"
-           << std::setw (8) <<  "FIELD" << " :";
-
+        const auto widths = std::array{9, 15, 15, 15, 15, 15};
+        ss << fmt::format("\n{: >{}}{:=>{}}", "", 53, "",  35)
+           << fmt::format("\n{: >{}} :  RESERVOIR VOLUMES {:^13}:\n",
+                          "",  52, units.name(UnitSystem::measure::volume))
+           << ' ' << formatBorder(widths) << '\n'
+           << fmt::format(" :{0:^9}:{1:^15}:{2:^15}:{2:^15}:{2:^15}:{2:^15}:\n",
+                          "REGION",
+                          "TOTAL PORE",
+                          "PORE VOLUME")
+           << fmt::format(" :{0:^9}:{1:^15}:{2:^15}:{2:^15}:{2:^15}:{2:^15}:\n",
+                          "",
+                          "VOLUME",
+                          "CONTAINING")
+           << fmt::format(" :{0:^9}:{0:^15}:{1:^15}:{2:^15}:{3:^15}:{4:^15}:\n",
+                          "",
+                          "OIL",
+                          "WATER",
+                          "GAS",
+                          "HYDRO-CARBON")
+           << ' ' << formatBorder(widths) << '\n'
+           << fmt::format(" :{:<9}:", "FIELD");
     } else {
-        ss << std::right << std::fixed << std::setprecision(0) << " :"
-           << std::setw (8) <<  reg << " :";
+        ss << fmt::format(" :{:<9}:", reg);
     }    
         
-    ss << std::setw(15) << cipr[Inplace::Phase::DynamicPoreVolume] << ":"
-       << std::setw(15) << cipr[Inplace::Phase::OilResVolume] << ":"
-       << std::setw(15) << cipr[Inplace::Phase::WaterResVolume] << ":"
-       << std::setw(15) << cipr[Inplace::Phase::GasResVolume] << ":"
-       << std::setw(15) << cipr[Inplace::Phase::OilResVolume] +
-                           cipr[Inplace::Phase::GasResVolume] << ":";
+    ss << fmt::format("{0:>15.0f}:{1:>15.0f}:{2:>15.0f}:{3:>15.0f}:{4:>15.0f}:",
+                      cipr[Inplace::Phase::DynamicPoreVolume],
+                      cipr[Inplace::Phase::OilResVolume],
+                      cipr[Inplace::Phase::WaterResVolume],
+                      cipr[Inplace::Phase::GasResVolume],
+                      cipr[Inplace::Phase::OilResVolume] + cipr[Inplace::Phase::GasResVolume]);
     
     OpmLog::note(ss.str());
 }
