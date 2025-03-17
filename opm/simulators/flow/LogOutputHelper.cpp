@@ -520,9 +520,25 @@ void LogOutputHelper<Scalar>::beginCumulativeReport_() const
 
     std::ostringstream ss;
 
-    ss << "\n=================================================== CUMULATIVE PRODUCTION/INJECTION REPORT =========================================\n"
-       << ":  WELL  :  LOCATION :  WELL  :CTRL:    OIL    :   WATER   :    GAS    :   Prod    :    OIL    :   WATER   :    GAS    :   INJ     :\n"
-       << ":  NAME  :  (I,J,K)  :  TYPE  :MODE:    PROD   :   PROD    :    PROD   :  RES.VOL. :    INJ    :   INJ     :    INJ    :  RES.VOL. :\n";
+    ss << fmt::format("\n{:=^{}}\n", " CUMULATIVE PRODUCTION/INJECTION TOTALS ", 132)
+       << fmt::format(":{0:^8}:{1:^11}:{0:^8}:{2:^4}:{3:^11}:{4:^11}:{5:^11}:{6:^11}:{3:^11}:{4:^11}:{5:^11}:{7:^11}:\n",
+                      "WELL",
+                      "LOCATION",
+                      "CTRL",
+                      "OIL",
+                      "WATER",
+                      "GAS",
+                      "Prod",
+                      "INJ")
+       << fmt::format(":{0:^8}:{1:^11}:{2:^8}:{3:^4}:{4:^11}:{4:^11}:{4:^11}:{5:^11}:{6:^11}:{6:^11}:{6:^11}:{5:^11}:\n",
+                      "NAME",
+                      "(I,J,K)",
+                      "TYPE",
+                      "MODE",
+                      "PROD",
+                      "RES.VOL.",
+                      "INJ");
+       // << ":  NAME  :  (I,J,K)  :  TYPE  :MODE:    PROD   :   PROD    :    PROD   :  RES.VOL. :    INJ    :   INJ     :    INJ    :  RES.VOL. :\n";
 
     if (unitType == UnitSystem::UnitType::UNIT_TYPE_METRIC) {
         ss << ":        :           :        :    :    MSCM   :   MSCM    :    MMSCM  :   MRCM    :    MSCM   :   MSCM    :    MMSCM  :   MRCM    :\n";
@@ -532,7 +548,7 @@ void LogOutputHelper<Scalar>::beginCumulativeReport_() const
         ss << ":        :           :        :    :     MSCC  :   MSCC    :    MMSCC  :   MRCC    :    MSCC   :   MSCC    :    MMSCC  :   MRCC    :\n";
     }
 
-    ss << "====================================================================================================================================";
+    ss << fmt::format("{:=>{}}", "", 132);
 
     OpmLog::note(ss.str());
 }
