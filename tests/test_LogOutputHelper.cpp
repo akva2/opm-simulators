@@ -329,9 +329,9 @@ BOOST_FIXTURE_TEST_CASE(FipResv, LogNoteFixture)
 BOOST_FIXTURE_TEST_CASE(Injection, LogNoteFixture)
 {
     const auto reference = std::string {
-        R"(=================================================== INJECTION REPORT ========================================
-:  WELL  :  LOCATION : CTRL : CTRL : CTRL :    OIL    :   WATER   :    GAS    :   FLUID   : BHP OR : THP OR :
-:  NAME  :  (I,J,K)  : MODE : MODE : MODE :    RATE   :   RATE    :    RATE   :  RES.VOL. : CON.PR.: BLK.PR.:
+        R"(============================================= INJECTION REPORT ==============================================
+:  WELL  : LOCATION  : CTRL : CTRL : CTRL :    OIL    :   WATER   :    GAS    :   FLUID   : BHP OR : THP OR :
+:  NAME  :  (I,J,K)  : MODE : MODE : MODE :   RATE    :   RATE    :   RATE    : RES.VOL.  :CON.PR. :BLK.PR. :
 :        :           : OIL  : WAT  : GAS  :  STB/DAY  :  STB/DAY  :  MSCF/DAY :  RB/DAY   :  PSIA  :  PSIA  :
 =============================================================================================================
 :FIELD   :           :      :      :      :        1.0:        2.0:        3.0:        4.0:        :        :
