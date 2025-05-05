@@ -27,117 +27,114 @@
 #include <dune/fem/space/common/restrictprolonginterface.hh>
 #endif
 
-namespace Opm
-{
-    template < class Grid, class Container >
+namespace Opm {
+    template <class Grid, class Container>
     class CopyRestrictProlong;
 
-    template < class Grid, class Container >
+    template <class Grid, class Container>
     struct CopyRestrictProlongTraits
     {
       using DomainFieldType = typename Grid::ctype;
-      using RestProlImp = CopyRestrictProlong< Grid, Container > ;
+      using RestProlImp = CopyRestrictProlong<Grid, Container>;
     };
 
-    template< class Grid, class Container >
+    template<class Grid, class Container>
     class CopyRestrictProlong
 #if HAVE_DUNE_FEM
-    : public Dune::Fem::RestrictProlongInterfaceDefault< CopyRestrictProlongTraits< Grid, Container > >
+        : public Dune::Fem::RestrictProlongInterfaceDefault<CopyRestrictProlongTraits<Grid, Container>>
 #endif
     {
-      using ThisType = CopyRestrictProlong< Grid, Container >;
+      using ThisType = CopyRestrictProlong<Grid, Container>;
 
       Container& container_;
+
     public:
-      using DomainFieldType = typename Grid::ctype;
+        using DomainFieldType = typename Grid::ctype;
 
-      explicit CopyRestrictProlong( Container& container )
-        : container_( container )
-      {}
+        explicit CopyRestrictProlong(Container& container)
+            : container_(container)
+        {}
 
-      /** \brief explicit set volume ratio of son and father
-       *
-       *  \param[in]  weight  volume of son / volume of father
-       *
-       *  \note If this ratio is set, it is assume to be constant.
-       */
-      template <class Field>
-      void setFatherChildWeight(const Field&) const
-      {}
+        /** \brief explicit set volume ratio of son and father
+         *
+         *  \param[in]  weight  volume of son / volume of father
+         *
+         *  \note If this ratio is set, it is assume to be constant.
+         */
+        template <class Field>
+        void setFatherChildWeight(const Field&) const
+        {}
 
-      //! restrict data to father
-      template< class Entity >
-      void restrictLocal ( const Entity& father, const Entity& son, bool initialize ) const
-      {
-        container_.resize();
-        assert( container_.codimension() == 0 );
-        if( initialize )
+        //! restrict data to father
+        template<class Entity>
+        void restrictLocal (const Entity& father, const Entity& son, bool initialize) const
         {
-          // copy values from son to father (only once)
-          container_[ father ] = container_[ son ];
+            container_.resize();
+            assert(container_.codimension() == 0);
+            if (initialize) {
+              // copy values from son to father (only once)
+              container_[father] = container_[son];
+            }
         }
-      }
 
-      //! restrict data to father
-      template< class Entity, class LocalGeometry >
-      void restrictLocal(const Entity& father,
-                         const Entity& son,
-                         const LocalGeometry&,
-                         bool initialize) const
-      { restrictLocal(father, son, initialize); }
+        //! restrict data to father
+        template<class Entity, class LocalGeometry>
+        void restrictLocal(const Entity& father,
+                           const Entity& son,
+                           const LocalGeometry&,
+                           bool initialize) const
+        { restrictLocal(father, son, initialize); }
 
-      //! prolong data to children
-      template< class Entity >
-      void prolongLocal(const Entity& father,
-                        const Entity& son,
-                        bool) const
-      {
-        container_.resize();
-        assert( container_.codimension() == 0 );
-        // copy values from father to son all sons
-        container_[ son ] = container_[ father ];
-      }
+        //! prolong data to children
+        template<class Entity>
+        void prolongLocal(const Entity& father,
+                          const Entity& son,
+                          bool) const
+        {
+            container_.resize();
+            assert(container_.codimension() == 0);
+            // copy values from father to son all sons
+            container_[son] = container_[father];
+        }
 
-      //! prolong data to children
-      template< class Entity, class LocalGeometry >
-      void prolongLocal(const Entity& father,
-                        const Entity& son,
-                        const LocalGeometry&,
-                        bool initialize) const
-      { prolongLocal(father, son, initialize); }
+        //! prolong data to children
+        template<class Entity, class LocalGeometry>
+        void prolongLocal(const Entity& father,
+                          const Entity& son,
+                          const LocalGeometry&,
+                          bool initialize) const
+        { prolongLocal(father, son, initialize); }
 
-      /** \brief add discrete function to communicator
-       *  \param[in]  comm  Communicator to add the discrete functions to
-       */
-      template< class Communicator >
-      void addToList(Communicator&)
-      {
-        // TODO
-      }
+        /** \brief add discrete function to communicator
+         *  \param[in]  comm  Communicator to add the discrete functions to
+         */
+        template<class Communicator>
+        void addToList(Communicator&)
+        {
+            // TODO
+        }
 
-      /** \brief add discrete function to load balancer
-       *  \param[in]  lb LoadBalancer to add the discrete functions to
-       */
-      template< class LoadBalancer >
-      void addToLoadBalancer(LoadBalancer&)
-      {
-        // TODO
-      }
-
+        /** \brief add discrete function to load balancer
+         *  \param[in]  lb LoadBalancer to add the discrete functions to
+         */
+        template<class LoadBalancer>
+        void addToLoadBalancer(LoadBalancer&)
+        {
+            // TODO
+        }
     };
-
 
     class EmptyRestrictProlong;
 
     struct EmptyRestrictProlongTraits
     {
-      using DomainFieldType = double               ;
-      using RestProlImp = EmptyRestrictProlong ;
+        using DomainFieldType = double;
+        using RestProlImp = EmptyRestrictProlong;
     };
 
     class EmptyRestrictProlong
 #if HAVE_DUNE_FEM
-    : public Dune::Fem::RestrictProlongInterfaceDefault< EmptyRestrictProlongTraits >
+        : public Dune::Fem::RestrictProlongInterfaceDefault< EmptyRestrictProlongTraits >
 #endif
     {
       using ThisType = EmptyRestrictProlong;
@@ -151,51 +148,51 @@ namespace Opm
        */
       template <class Field>
       void setFatherChildWeight(const Field&) const
-      { }
+      {}
 
       //! restrict data to father
-      template< class Entity >
+      template<class Entity>
       void restrictLocal(const Entity&,
                          const Entity&,
                          bool) const
-      { }
+      {}
 
       //! restrict data to father
-      template< class Entity, class LocalGeometry >
+      template<class Entity, class LocalGeometry>
       void restrictLocal(const Entity&,
                          const Entity&,
                          const LocalGeometry&,
                          bool) const
-      { }
+      {}
 
       //! prolong data to children
-      template< class Entity >
+      template<class Entity>
       void prolongLocal(const Entity&,
                         const Entity&,
                         bool) const
-      { }
+      {}
 
       //! prolong data to children
-      template< class Entity, class LocalGeometry >
+      template<class Entity, class LocalGeometry>
       void prolongLocal(const Entity&,
                         const Entity&,
                         const LocalGeometry&,
                         bool) const
-      { }
+      {}
 
       /** \brief add discrete function to communicator
        *  \param[in]  comm  Communicator to add the discrete functions to
        */
-      template< class Communicator >
+      template<class Communicator>
       void addToList(Communicator&)
-      { }
+      {}
 
       /** \brief add discrete function to load balancer
        *  \param[in]  lb LoadBalancer to add the discrete functions to
        */
-      template< class LoadBalancer >
+      template<class LoadBalancer>
       void addToLoadBalancer(LoadBalancer&)
-      { }
+      {}
     };
 
 } // namespace Opm
