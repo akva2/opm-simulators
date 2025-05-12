@@ -67,8 +67,9 @@ class FlashPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
     using EnergyModule = Opm::EnergyModule<TypeTag, getPropValue<TypeTag, Properties::EnableEnergy>()>;
 
 public:
-    FlashPrimaryVariables() : ParentType()
-    { Opm::Valgrind::SetDefined(*this); }
+    FlashPrimaryVariables()
+        : ParentType()
+    { Valgrind::SetDefined(*this); }
 
     /*!
      * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(Scalar)
@@ -113,7 +114,7 @@ public:
         // determine the phase presence.
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-                this->operator[](cTot0Idx + compIdx) +=
+                (*this)[cTot0Idx + compIdx] +=
                     fluidState.molarity(phaseIdx, compIdx) * fluidState.saturation(phaseIdx);
             }
         }
@@ -128,7 +129,7 @@ public:
     {
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
             os << "(c_tot," << FluidSystem::componentName(compIdx) << " = "
-               << this->operator[](cTot0Idx + compIdx);
+               << (*this)[cTot0Idx + compIdx];
         }
         os << ")" << std::flush;
     }
