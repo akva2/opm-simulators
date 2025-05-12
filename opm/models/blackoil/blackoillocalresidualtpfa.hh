@@ -348,8 +348,9 @@ public:
         FaceDir::DirEnum facedir = nbInfo.faceDir;
 
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            if (!FluidSystem::phaseIsActive(phaseIdx))
+            if (!FluidSystem::phaseIsActive(phaseIdx)) {
                 continue;
+            }
             // darcy flux calculation
             short dnIdx;
             //
@@ -707,8 +708,9 @@ public:
         MICPModule::addSource(source, problem, insideIntQuants, globalSpaceIdex);
 
         // scale the source term of the energy equation
-        if constexpr(enableEnergy)
+        if constexpr (enableEnergy) {
             source[Indices::contiEnergyEqIdx] *= getPropValue<TypeTag, Properties::BlackOilEnergyScalingFactor>();
+        }
     }
 
     static void computeSourceDense(RateVector& source,
@@ -724,8 +726,9 @@ public:
         MICPModule::addSource(source, problem, insideIntQuants, globalSpaceIdex);
 
         // scale the source term of the energy equation
-        if constexpr(enableEnergy)
+        if constexpr (enableEnergy) {
             source[Indices::contiEnergyEqIdx] *= getPropValue<TypeTag, Properties::BlackOilEnergyScalingFactor>();
+        }
     }
 
     /*!
@@ -744,8 +747,9 @@ public:
         MICPModule::addSource(source, elemCtx, dofIdx, timeIdx);
 
         // scale the source term of the energy equation
-        if constexpr(enableEnergy)
+        if constexpr (enableEnergy) {
             source[Indices::contiEnergyEqIdx] *= getPropValue<TypeTag, Properties::BlackOilEnergyScalingFactor>();
+        }
     }
 
     template <class UpEval, class FluidState>
