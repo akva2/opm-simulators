@@ -35,6 +35,7 @@
 
 #include <opm/models/io/vtkblackoilmicpmodule.hpp>
 
+#include <cmath>
 #include <memory>
 #include <numeric>
 #include <stdexcept>
