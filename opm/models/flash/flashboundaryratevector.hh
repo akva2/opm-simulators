@@ -60,14 +60,14 @@ class FlashBoundaryRateVector : public GetPropType<TypeTag, Properties::RateVect
     using Toolbox = Opm::MathToolbox<Evaluation>;
 
 public:
-    FlashBoundaryRateVector() : ParentType()
-    {}
+    FlashBoundaryRateVector() = default;
 
     /*!
      * \copydoc
      * ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(Scalar)
      */
-    FlashBoundaryRateVector(const Evaluation& value) : ParentType(value)
+    FlashBoundaryRateVector(const Evaluation& value)
+        : ParentType(value)
     {}
 
     /*!
