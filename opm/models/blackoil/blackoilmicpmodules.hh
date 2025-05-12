@@ -97,8 +97,9 @@ public:
      */
     static void registerParameters()
     {
-        if constexpr (enableMICP)
+        if constexpr (enableMICP) {
             VtkBlackOilMICPModule<TypeTag>::registerParameters();
+        }
     }
 
     /*!
@@ -107,17 +108,20 @@ public:
     static void registerOutputModules(Model& model,
                                       Simulator& simulator)
     {
-        if constexpr (enableMICP)
+        if constexpr (enableMICP) {
             model.addOutputModule(std::make_unique<VtkBlackOilMICPModule<TypeTag>>(simulator));
+        }
     }
 
     static bool eqApplies(unsigned eqIdx)
     {
-        if constexpr (enableMICP)
+        if constexpr (enableMICP) {
             return eqIdx == contiMicrobialEqIdx || eqIdx == contiOxygenEqIdx || eqIdx == contiUreaEqIdx 
                    || eqIdx == contiBiofilmEqIdx || eqIdx == contiCalciteEqIdx;
-        else
+        }
+        else {
             return false;
+        }
     }
 
     static Scalar eqWeight([[maybe_unused]] unsigned eqIdx)
@@ -202,10 +206,12 @@ public:
             const auto& extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
             unsigned focusIdx = elemCtx.focusDofIndex();
             unsigned upIdx = extQuants.upstreamIndex(waterPhaseIdx);
-            if (upIdx == focusIdx)
+            if (upIdx == focusIdx) {
                 addMICPFluxes_<Evaluation>(flux, elemCtx, scvfIdx, timeIdx);
-            else
+            }
+            else {
                 addMICPFluxes_<Scalar>(flux, elemCtx, scvfIdx, timeIdx);
+            }
         }
     }
 
@@ -258,10 +264,12 @@ public:
             // Schäfer et al (1998) https://doi.org/10.1016/S0169-7722(97)00060-0
             Evaluation k_g = mu * intQuants.oxygenConcentration() / (k_o + intQuants.oxygenConcentration());
             Evaluation k_c = mu_u * intQuants.ureaConcentration() / (k_u + intQuants.ureaConcentration());
-            if (intQuants.oxygenConcentration() < 0)
+            if (intQuants.oxygenConcentration() < 0) {
                 k_g = mu * intQuants.oxygenConcentration() / k_o;
-            if (intQuants.ureaConcentration() < 0)
+            }
+            if (intQuants.ureaConcentration() < 0) {
                 k_c = mu_u * intQuants.ureaConcentration() / k_u;
+            }
 
             // compute the processes
             source[Indices::contiMicrobialEqIdx] += intQuants.microbialConcentration() * intQuants.porosity() *
