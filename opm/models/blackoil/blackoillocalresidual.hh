@@ -41,6 +41,8 @@
 #include <opm/models/blackoil/blackoilproperties.hh>
 #include <opm/models/blackoil/blackoilsolventmodules.hh>
 
+#include <cassert>
+
 namespace Opm {
 /*!
  * \ingroup BlackOilModel
