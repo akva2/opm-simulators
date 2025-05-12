@@ -46,6 +46,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <stdexcept>
 #include <type_traits>
@@ -182,7 +183,7 @@ public:
         result.primaryVarsMeaningPressure_ = PressureMeaning::Pg;
         result.primaryVarsMeaningWater_ = WaterMeaning::Rsw;
         result.primaryVarsMeaningSolvent_ = SolventMeaning::Ss;
-        for (size_t i = 0; i < result.size(); ++i) {
+        for (std::size_t i = 0; i < result.size(); ++i) {
             result[i] = i+1;
         }
 
