@@ -246,8 +246,9 @@ public:
     std::string primaryVarName(unsigned pvIdx) const
     {
         const std::string& tmp = EnergyModule::primaryVarName(pvIdx);
-        if (tmp != "")
+        if (!tmp.empty()) {
             return tmp;
+        }
 
         std::ostringstream oss;
         if (Indices::cTot0Idx <= pvIdx && pvIdx < Indices::cTot0Idx
@@ -266,8 +267,9 @@ public:
     std::string eqName(unsigned eqIdx) const
     {
         const std::string& tmp = EnergyModule::eqName(eqIdx);
-        if (tmp != "")
+        if (!tmp.empty()) {
             return tmp;
+        }
 
         std::ostringstream oss;
         if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx
