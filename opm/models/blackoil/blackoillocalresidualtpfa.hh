@@ -46,6 +46,7 @@
 #include <opm/models/blackoil/blackoilsolventmodules.hh>
 
 #include <array>
+#include <cassert>
 #include <stdexcept>
 #include <string>
 
