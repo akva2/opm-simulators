@@ -55,6 +55,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <tuple>
 
 namespace Opm {
 template <class TypeTag>
