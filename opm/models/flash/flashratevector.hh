@@ -33,7 +33,6 @@
 #include <opm/models/common/energymodule.hh>
 #include <opm/material/common/Valgrind.hpp>
 
-
 namespace Opm {
 
 /*!
@@ -56,23 +55,26 @@ class FlashRateVector
     enum { numEq = getPropValue<TypeTag, Properties::NumEq>() };
 
     using ParentType = Dune::FieldVector<Evaluation, numEq>;
-    using EnergyModule = Opm::EnergyModule<TypeTag, getPropValue<TypeTag, Properties::EnableEnergy>()>;
+    using EnergyModule = ::Opm::EnergyModule<TypeTag, getPropValue<TypeTag, Properties::EnableEnergy>()>;
 
 public:
-    FlashRateVector() : ParentType()
-    { Opm::Valgrind::SetUndefined(*this); }
+    FlashRateVector()
+        : ParentType()
+    { Valgrind::SetUndefined(*this); }
 
     /*!
      * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(Scalar)
      */
-    explicit FlashRateVector(const Evaluation& value) : ParentType(value)
+    explicit FlashRateVector(const Evaluation& value)
+        : ParentType(value)
     {}
 
     /*!
      * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(const
      * ImmiscibleRateVector& )
      */
-    FlashRateVector(const FlashRateVector& value) : ParentType(value)
+    FlashRateVector(const FlashRateVector& value)
+        : ParentType(value)
     {}
 
     /*!
@@ -82,8 +84,9 @@ public:
     {
         // convert to molar rates
         ParentType molarRate(value);
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
             molarRate[conti0EqIdx + compIdx] /= FluidSystem::molarMass(compIdx);
+        }
 
         setMolarRate(molarRate);
     }
@@ -106,11 +109,12 @@ public:
     template <class FluidState, class RhsEval>
     void setVolumetricRate(const FluidState& fluidState, unsigned phaseIdx, const RhsEval& volume)
     {
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
             (*this)[conti0EqIdx + compIdx] =
-                fluidState.density(phaseIdx, compIdx)
-                * fluidState.moleFraction(phaseIdx, compIdx)
-                * volume;
+                fluidState.density(phaseIdx, compIdx) *
+                fluidState.moleFraction(phaseIdx, compIdx) *
+                volume;
+        }
 
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volume);
     }
@@ -121,8 +125,9 @@ public:
     template <class RhsEval>
     FlashRateVector& operator=(const RhsEval& value)
     {
-        for (unsigned i=0; i < this->size(); ++i)
+        for (unsigned i = 0; i < this->size(); ++i) {
             (*this)[i] = value;
+        }
         return *this;
     }
 
@@ -131,8 +136,9 @@ public:
      */
     FlashRateVector& operator=(const FlashRateVector& other)
     {
-        for (unsigned i=0; i < this->size(); ++i)
+        for (unsigned i = 0; i < this->size(); ++i) {
             (*this)[i] = other[i];
+        }
         return *this;
     }
 };
