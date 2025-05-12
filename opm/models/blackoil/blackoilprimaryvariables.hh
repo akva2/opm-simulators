@@ -43,7 +43,12 @@
 
 #include <opm/models/discretization/common/fvbaseprimaryvariables.hh>
 
+#include <algorithm>
+#include <array>
+#include <cassert>
 #include <cstdint>
+#include <stdexcept>
+#include <type_traits>
 
 namespace Opm::Parameters {
 
