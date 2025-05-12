@@ -179,8 +179,7 @@ public:
         this->setFreeFlow(context, bfIdx, timeIdx, fluidState);
 
         // we only allow fluxes in the direction opposite to the outer unit normal
-        for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-            Evaluation& val = this->operator[](eqIdx);
+        for (auto& val : *this) {
             val = Toolbox::min(0.0, val);
         }
     }
@@ -197,8 +196,7 @@ public:
         this->setFreeFlow(context, bfIdx, timeIdx, fluidState);
 
         // we only allow fluxes in the same direction as the outer unit normal
-        for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-            Evaluation& val = this->operator[](eqIdx);
+        for (auto& val : *this) {
             val = Toolbox::max(0.0, val);
         }
     }
