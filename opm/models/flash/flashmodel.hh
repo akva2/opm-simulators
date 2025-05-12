@@ -289,8 +289,9 @@ public:
     Scalar primaryVarWeight(unsigned globalDofIdx, unsigned pvIdx) const
     {
         Scalar tmp = EnergyModule::primaryVarWeight(*this, globalDofIdx, pvIdx);
-        if (tmp > 0)
+        if (tmp > 0) {
             return tmp;
+        }
 
         unsigned compIdx = pvIdx - Indices::cTot0Idx;
 
@@ -308,8 +309,9 @@ public:
     Scalar eqWeight(unsigned globalDofIdx, unsigned eqIdx) const
     {
         Scalar tmp = EnergyModule::eqWeight(*this, globalDofIdx, eqIdx);
-        if (tmp > 0)
+        if (tmp > 0) {
             return tmp;
+        }
 
         unsigned compIdx = eqIdx - Indices::conti0EqIdx;
 
