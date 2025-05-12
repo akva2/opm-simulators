@@ -39,10 +39,15 @@
 
 #include <opm/models/utils/propertysystem.hh>
 
+#include <algorithm>
+#include <cassert>
 #include <cmath>
+#include <istream>
 #include <memory>
+#include <ostream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace Opm {
 /*!
