@@ -221,8 +221,8 @@ public:
         if constexpr (enableSolvent) {
             const auto& extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
 
-            unsigned upIdx = extQuants.solventUpstreamIndex();
-            unsigned inIdx = extQuants.interiorIndex();
+            const unsigned upIdx = extQuants.solventUpstreamIndex();
+            const unsigned inIdx = extQuants.interiorIndex();
             const auto& up = elemCtx.intensiveQuantities(upIdx, timeIdx);
 
             if constexpr (blackoilConserveSurfaceVolume) {
@@ -336,7 +336,7 @@ public:
     static void serializeEntity(const Model& model, std::ostream& outstream, const DofEntity& dof)
     {
         if constexpr (enableSolvent) {
-            unsigned dofIdx = model.dofMapper().index(dof);
+            const unsigned dofIdx = model.dofMapper().index(dof);
 
             const PrimaryVariables& priVars = model.solution(/*timeIdx=*/0)[dofIdx];
             outstream << priVars[solventSaturationIdx];
@@ -347,7 +347,7 @@ public:
     static void deserializeEntity(Model& model, std::istream& instream, const DofEntity& dof)
     {
         if constexpr (enableSolvent) {
-            unsigned dofIdx = model.dofMapper().index(dof);
+            const unsigned dofIdx = model.dofMapper().index(dof);
 
             PrimaryVariables& priVars0 = model.solution(/*timeIdx=*/0)[dofIdx];
             PrimaryVariables& priVars1 = model.solution(/*timeIdx=*/1)[dofIdx];
@@ -378,7 +378,7 @@ public:
                                             unsigned scvIdx,
                                             unsigned timeIdx)
     {
-        unsigned satnumRegionIdx =
+        const unsigned satnumRegionIdx =
             elemCtx.problem().satnumRegionIndex(elemCtx, scvIdx, timeIdx);
         return params_.ssfnKrg_[satnumRegionIdx];
     }
@@ -387,7 +387,7 @@ public:
                                             unsigned scvIdx,
                                             unsigned timeIdx)
     {
-        unsigned satnumRegionIdx =
+        const unsigned satnumRegionIdx =
             elemCtx.problem().satnumRegionIndex(elemCtx, scvIdx, timeIdx);
         return params_.ssfnKrs_[satnumRegionIdx];
     }
@@ -396,7 +396,7 @@ public:
                                             unsigned scvIdx,
                                             unsigned timeIdx)
     {
-        unsigned satnumRegionIdx =
+        const unsigned satnumRegionIdx =
             elemCtx.problem().satnumRegionIndex(elemCtx, scvIdx, timeIdx);
         return params_.sof2Krn_[satnumRegionIdx];
     }
@@ -405,7 +405,7 @@ public:
                                          unsigned scvIdx,
                                          unsigned timeIdx)
     {
-        unsigned miscnumRegionIdx =
+        const unsigned miscnumRegionIdx =
             elemCtx.problem().miscnumRegionIndex(elemCtx, scvIdx, timeIdx);
         return params_.misc_[miscnumRegionIdx];
     }
@@ -414,7 +414,7 @@ public:
                                           unsigned scvIdx,
                                           unsigned timeIdx)
     {
-        unsigned miscnumRegionIdx =
+        const unsigned miscnumRegionIdx =
             elemCtx.problem().miscnumRegionIndex(elemCtx, scvIdx, timeIdx);
         return params_.pmisc_[miscnumRegionIdx];
     }
@@ -423,7 +423,7 @@ public:
                                              unsigned scvIdx,
                                              unsigned timeIdx)
     {
-        unsigned satnumRegionIdx =
+        const unsigned satnumRegionIdx =
             elemCtx.problem().satnumRegionIndex(elemCtx, scvIdx, timeIdx);
         return params_.msfnKrsg_[satnumRegionIdx];
     }
@@ -432,7 +432,7 @@ public:
                                             unsigned scvIdx,
                                             unsigned timeIdx)
     {
-        unsigned satnumRegionIdx =
+        const unsigned satnumRegionIdx =
             elemCtx.problem().satnumRegionIndex(elemCtx, scvIdx, timeIdx);
         return params_.msfnKro_[satnumRegionIdx];
     }
@@ -441,7 +441,7 @@ public:
                                             unsigned scvIdx,
                                             unsigned timeIdx)
     {
-        unsigned miscnumRegionIdx =
+        const unsigned miscnumRegionIdx =
             elemCtx.problem().miscnumRegionIndex(elemCtx, scvIdx, timeIdx);
         return params_.sorwmis_[miscnumRegionIdx];
     }
@@ -450,7 +450,7 @@ public:
                                             unsigned scvIdx,
                                             unsigned timeIdx)
     {
-        unsigned miscnumRegionIdx =
+        const unsigned miscnumRegionIdx =
             elemCtx.problem().miscnumRegionIndex(elemCtx, scvIdx, timeIdx);
         return params_.sgcwmis_[miscnumRegionIdx];
     }
@@ -459,25 +459,25 @@ public:
                                             unsigned scvIdx,
                                             unsigned timeIdx)
     {
-        unsigned miscnumRegionIdx =
+        const unsigned miscnumRegionIdx =
             elemCtx.problem().miscnumRegionIndex(elemCtx, scvIdx, timeIdx);
         return params_.tlPMixTable_[miscnumRegionIdx];
     }
 
-    static const Scalar& tlMixParamViscosity(const ElementContext& elemCtx,
-                                             unsigned scvIdx,
-                                             unsigned timeIdx)
+    static Scalar tlMixParamViscosity(const ElementContext& elemCtx,
+                                      unsigned scvIdx,
+                                      unsigned timeIdx)
     {
-        unsigned miscnumRegionIdx =
+        const unsigned miscnumRegionIdx =
             elemCtx.problem().miscnumRegionIndex(elemCtx, scvIdx, timeIdx);
         return params_.tlMixParamViscosity_[miscnumRegionIdx];
     }
 
-    static const Scalar& tlMixParamDensity(const ElementContext& elemCtx,
-                                           unsigned scvIdx,
-                                           unsigned timeIdx)
+    static Scalar tlMixParamDensity(const ElementContext& elemCtx,
+                                    unsigned scvIdx,
+                                    unsigned timeIdx)
     {
-        unsigned miscnumRegionIdx =
+        const unsigned miscnumRegionIdx =
             elemCtx.problem().miscnumRegionIndex(elemCtx, scvIdx, timeIdx);
         return params_.tlMixParamDensity_[miscnumRegionIdx];
     }
@@ -486,8 +486,8 @@ public:
     { return params_.isMiscible_; }
 
     template <class Value>
-    static const Value solubilityLimit(unsigned pvtIdx, const Value& temperature,
-                                       const Value& pressure, const Value& saltConcentration)
+    static Value solubilityLimit(unsigned pvtIdx, const Value& temperature,
+                                 const Value& pressure, const Value& saltConcentration)
     {
         if (!isSolubleInWater()) {
             return 0.0;
@@ -651,14 +651,14 @@ public:
            fs.setPressure(gasPhaseIdx, pmisc * pgMisc + (1.0 - pmisc) * pgImisc);
         }
 
-        Evaluation gasSolventSat = hydrocarbonSaturation_ + solventSaturation_;
+        const Evaluation gasSolventSat = hydrocarbonSaturation_ + solventSaturation_;
 
         if (gasSolventSat.value() < cutOff) { // avoid division by zero
             return;
         }
 
-        Evaluation Fhydgas = hydrocarbonSaturation_ / gasSolventSat;
-        Evaluation Fsolgas = solventSaturation_ / gasSolventSat;
+        const Evaluation Fhydgas = hydrocarbonSaturation_ / gasSolventSat;
+        const Evaluation Fsolgas = solventSaturation_ / gasSolventSat;
 
         // account for miscibility of oil and solvent
         if (SolventModule::isMiscible() && FluidSystem::phaseIsActive(oilPhaseIdx)) {
@@ -673,12 +673,12 @@ public:
                 pmisc.eval(p, /*extrapolate=*/true);
 
             // TODO adjust endpoints of sn and ssg
-            unsigned cellIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
+            const unsigned cellIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
             const auto& materialLawManager = elemCtx.problem().materialLawManager();
             const auto& scaledDrainageInfo =
                     materialLawManager->oilWaterScaledEpsInfoDrainage(cellIdx);
 
-            const Scalar& sogcr = scaledDrainageInfo.Sogcr;
+            const Scalar sogcr = scaledDrainageInfo.Sogcr;
             Evaluation sor = sogcr;
             if (FluidSystem::phaseIsActive(waterPhaseIdx)) {
                 const Evaluation& sw = fs.saturation(waterPhaseIdx);
@@ -686,7 +686,7 @@ public:
                 sor = miscibility *
                       sorwmis.eval(sw,  /*extrapolate=*/true) + (1.0 - miscibility) * sogcr;
             }
-            const Scalar& sgcr = scaledDrainageInfo.Sgcr;
+            const Scalar sgcr = scaledDrainageInfo.Sgcr;
             Evaluation sgc = sgcr;
             if (FluidSystem::phaseIsActive(waterPhaseIdx)) {
                 const Evaluation& sw = fs.saturation(waterPhaseIdx);
@@ -745,7 +745,7 @@ public:
                            unsigned timeIdx)
     {
         const auto& iq = asImp_();
-        unsigned pvtRegionIdx = iq.pvtRegionIndex();
+        const unsigned pvtRegionIdx = iq.pvtRegionIndex();
         const Evaluation& T = iq.fluidState().temperature(gasPhaseIdx);
         const Evaluation& p = iq.fluidState().pressure(gasPhaseIdx);
 
@@ -823,7 +823,7 @@ public:
     { return solventInvFormationVolumeFactor_; }
 
     // This could be stored pr pvtRegion instead
-    const Scalar& solventRefDensity() const
+    Scalar solventRefDensity() const
     { return solventRefDensity_; }
 
 private:
@@ -926,7 +926,7 @@ private:
         }
 
         Evaluation muGasEff = pow(muGas,1.0 - tlMixParamMu) * pow(muMixSolventGas, tlMixParamMu);
-        Evaluation muSolventEff = pow(muSolvent,1.0 - tlMixParamMu) * pow(muMixSolventGasOil, tlMixParamMu);
+        const Evaluation muSolventEff = pow(muSolvent,1.0 - tlMixParamMu) * pow(muMixSolventGasOil, tlMixParamMu);
 
         // Compute effective densities
         const Evaluation& rhoGas = fs.density(gasPhaseIdx);
@@ -995,7 +995,7 @@ private:
         }
 
         // compute invB from densities.
-        unsigned pvtRegionIdx = asImp_().pvtRegionIndex();
+        const unsigned pvtRegionIdx = asImp_().pvtRegionIndex();
         Evaluation bGasEff = rhoGasEff;
         if (FluidSystem::phaseIsActive(oilPhaseIdx)) {
             bGasEff /= (FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx) +
@@ -1114,7 +1114,7 @@ public:
     const Evaluation& solventInverseFormationVolumeFactor() const
     { throw std::runtime_error("solventInverseFormationVolumeFactor() called but solvents are disabled"); }
 
-    const Scalar& solventRefDensity() const
+    Scalar solventRefDensity() const
     { throw std::runtime_error("solventRefDensity() called but solvents are disabled"); }
 };
 
@@ -1163,8 +1163,8 @@ public:
         const auto& scvf = elemCtx.stencil(timeIdx).interiorFace(scvfIdx);
         const auto& faceNormal = scvf.normal();
 
-        unsigned i = scvf.interiorIndex();
-        unsigned j = scvf.exteriorIndex();
+        const unsigned i = scvf.interiorIndex();
+        const unsigned j = scvf.exteriorIndex();
 
         // calculate the "raw" pressure gradient
         DimEvalVector solventPGrad;
@@ -1197,7 +1197,7 @@ public:
             distVecIn -= posFace;
             distVecEx -= posFace;
             distVecTotal -= posIn;
-            Scalar absDistTotalSquared = distVecTotal.two_norm2();
+            const Scalar absDistTotalSquared = distVecTotal.two_norm2();
 
             // calculate the hydrostatic pressure at the integration point of the face
             auto rhoIn = intQuantsIn.solventDensity();
@@ -1266,26 +1266,26 @@ public:
     {
         const ExtensiveQuantities& extQuants = asImp_();
 
-        unsigned interiorDofIdx = extQuants.interiorIndex();
-        unsigned exteriorDofIdx = extQuants.exteriorIndex();
+        const unsigned interiorDofIdx = extQuants.interiorIndex();
+        const unsigned exteriorDofIdx = extQuants.exteriorIndex();
         assert(interiorDofIdx != exteriorDofIdx);
 
         const auto& intQuantsIn = elemCtx.intensiveQuantities(interiorDofIdx, timeIdx);
         const auto& intQuantsEx = elemCtx.intensiveQuantities(exteriorDofIdx, timeIdx);
 
-        unsigned I = elemCtx.globalSpaceIndex(interiorDofIdx, timeIdx);
-        unsigned J = elemCtx.globalSpaceIndex(exteriorDofIdx, timeIdx);
+        const unsigned I = elemCtx.globalSpaceIndex(interiorDofIdx, timeIdx);
+        const unsigned J = elemCtx.globalSpaceIndex(exteriorDofIdx, timeIdx);
 
-        Scalar thpres = elemCtx.problem().thresholdPressure(I, J);
-        Scalar trans = elemCtx.problem().transmissibility(elemCtx, interiorDofIdx, exteriorDofIdx);
-        Scalar g = elemCtx.problem().gravity()[dimWorld - 1];
+        const Scalar thpres = elemCtx.problem().thresholdPressure(I, J);
+        const Scalar trans = elemCtx.problem().transmissibility(elemCtx, interiorDofIdx, exteriorDofIdx);
+        const Scalar g = elemCtx.problem().gravity()[dimWorld - 1];
 
-        Scalar zIn = elemCtx.problem().dofCenterDepth(elemCtx, interiorDofIdx, timeIdx);
-        Scalar zEx = elemCtx.problem().dofCenterDepth(elemCtx, exteriorDofIdx, timeIdx);
-        Scalar distZ = zIn - zEx;
+        const Scalar zIn = elemCtx.problem().dofCenterDepth(elemCtx, interiorDofIdx, timeIdx);
+        const Scalar zEx = elemCtx.problem().dofCenterDepth(elemCtx, exteriorDofIdx, timeIdx);
+        const Scalar distZ = zIn - zEx;
 
         const Evaluation& rhoIn = intQuantsIn.solventDensity();
-        Scalar rhoEx = Toolbox::value(intQuantsEx.solventDensity());
+        const Scalar rhoEx = Toolbox::value(intQuantsEx.solventDensity());
         const Evaluation& rhoAvg = rhoIn * 0.5 + rhoEx * 0.5;
 
         const Evaluation& pressureInterior = intQuantsIn.fluidState().pressure(gasPhaseIdx);
@@ -1323,7 +1323,7 @@ public:
             return;
         }
 
-        Scalar faceArea = elemCtx.stencil(timeIdx).interiorFace(scvfIdx).area();
+        const Scalar faceArea = elemCtx.stencil(timeIdx).interiorFace(scvfIdx).area();
         const IntensiveQuantities& up = elemCtx.intensiveQuantities(solventUpstreamDofIdx_, timeIdx);
         if (solventUpstreamDofIdx_ == interiorDofIdx) {
             solventVolumeFlux_ = up.solventMobility() * (-trans / faceArea) * pressureDiffSolvent;
