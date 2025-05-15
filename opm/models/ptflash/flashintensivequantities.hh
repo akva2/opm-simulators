@@ -43,6 +43,9 @@
 #include <opm/models/ptflash/flashindices.hh>
 #include <opm/models/ptflash/flashparameters.hh>
 
+#include <array>
+#include <iostream>
+
 namespace Opm {
 
 /*!
