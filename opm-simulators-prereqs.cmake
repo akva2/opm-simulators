@@ -21,39 +21,26 @@ set (opm-simulators_CONFIG_VAR
   FLOW_INSTANTIATE_FLOAT
 )
 
-include(CheckAVX2)
-check_for_avx2()
+find_package(Boost COMPONENTS date_time REQUIRED)
+find_package(dune-common REQUIRED)
+find_package(dune-istl REQUIRED)
+find_package(BLAS REQUIRED)
+find_package(LAPACK REQUIRED)
+find_package(SuiteSparse COMPONENTS UMFPACK REQUIRED)
+find_package(opm-grid REQUIRED)
+find_package(fmt)
+find_package(HDF5)
+find_package(MPI)
+find_package(SuperLU)
 
-# dependencies
-set (opm-simulators_DEPS
-  # Various runtime library enhancements
-  "Boost 1.44.0
-    COMPONENTS date_time REQUIRED"
-  # DUNE prerequisites
-  "dune-common REQUIRED"
-  "dune-istl REQUIRED"
-  "dune-alugrid"
-  "dune-fem"
-  # matrix library
-  "BLAS REQUIRED"
-  "LAPACK REQUIRED"
-  # Look for MPI support
-  "MPI"
-  # Tim Davis' SuiteSparse archive
-  "SuiteSparse REQUIRED COMPONENTS UMFPACK"
-  # SuperLU direct solver
-  "SuperLU"
-  # ROCALUTION from ROCM framework
-  "rocalution"
-  # packages from ROCm framework
-  "rocblas"
-  "rocsparse"
-  # OPM dependency
-  "opm-common REQUIRED"
-  "opm-grid REQUIRED"
-  "Damaris 1.9"
-  "HDF5"
-  "fmt"
-)
-
-find_package_deps(opm-simulators)
+if(TARGET opmsimulators)
+else()
+  if(USE_GPU_BRIDGE)
+    find_package(rocalution)
+    find_package(rocblas)
+    find_package(rocsparse)
+  endif()
+  if(USE_DAMARIS_LIB)
+    find_package(Damaris 1.9)
+  endif()
+endif()

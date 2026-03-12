@@ -51,6 +51,8 @@ function(simulators_add_target_options)
     add_dependencies(${PARAM_TARGET} opmcommon)
   endif()
 
+  target_link_libraries(${PARAM_TARGET} PRIVATE opmcommon opmgrid)
+
   # We only wait for the hipification process if we are compiling HIP.
   # That is, we need to wait for the HIP header files to be generated
   # before the rest of the code can compile. HIP header file includes
@@ -129,6 +131,11 @@ macro(opm-simulators_prereqs_hook)
     set(HDF5_FOUND OFF)
     unset(HAVE_HDF5)
   endif()
+
+  target_link_libraries(opmsimulators
+    PUBLIC
+      opmgrid
+  )
 
   if(NOT TARGET fmt::fmt)
     include(DownloadFmt)
@@ -233,6 +240,9 @@ macro(opm-simulators_prereqs_hook)
   if(USE_GPU_BRIDGE)
     find_package(amgcl)
   endif()
+
+  include(CheckAVX2)
+  check_for_avx2()
 endmacro()
 
 macro(opm-simulators_sources_hook)
@@ -686,7 +696,6 @@ macro(opm-simulators_targets_hook)
   add_dependencies(moduleVersion opmsimulators)
 
   add_library(MainDispatchDynamic OBJECT opm/simulators/flow/MainDispatchDynamic.cpp)
-  target_link_libraries(MainDispatchDynamic PRIVATE opmcommon)
   simulators_add_target_options(TARGET MainDispatchDynamic)
 
   target_sources(test_outputdir PRIVATE $<TARGET_OBJECTS:moduleVersion>)
@@ -940,15 +949,19 @@ if(SIBLING_SEARCH AND NOT opm-common_DIR)
   get_filename_component(_modules_dir ${_parent_full_dir} DIRECTORY)
   if(IS_DIRECTORY ${_modules_dir}/opm-common/${_leaf_dir_name})
     set(opm-common_DIR ${_modules_dir}/opm-common/${_leaf_dir_name})
+    set(opm-grid_DIR ${_modules_dir}/opm-grid/${_leaf_dir_name})
   else()
     string(REPLACE ${PROJECT_NAME} opm-common _opm_common_leaf ${_leaf_dir_name})
     if(NOT _leaf_dir_name STREQUAL _opm_common_leaf
         AND IS_DIRECTORY ${_parent_full_dir}/${_opm_common_leaf})
       # We are using build directories named <prefix><module-name><postfix>
       set(opm-common_DIR ${_parent_full_dir}/${_opm_common_leaf})
+      string(REPLACE ${PROJECT_NAME} opm-grid _opm_grid_leaf ${_leaf_dir_name})
+      set(opm-grid_DIR ${_parent_full_dir}/${_opm_grid_leaf})
     elseif(IS_DIRECTORY ${_parent_full_dir}/opm-common)
       # All modules are in a common build dir
       set(opm-common_DIR "${_parent_full_dir}/opm-common")
+      set(opm-grid_DIR "${_parent_full_dir}/opm-grid")
     endif()
   endif()
 endif()
