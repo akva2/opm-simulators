@@ -73,6 +73,7 @@ list (APPEND MAIN_SOURCE_FILES
   flowexperimental/BlackOilEnergyIntensiveQuantitiesGlobalIndex.hpp
   flowexperimental/BlackOilIntensiveQuantitiesGlobalIndex.hpp
   flowexperimental/comp/EmptyModel.hpp
+  flowexperimental/comp/FlowProblemCompIC.hpp
   flowexperimental/comp/flowexp_comp.hpp
   flowexperimental/comp/wells/CompWellModel.hpp
   flowexperimental/comp/wells/CompWellModel_impl.hpp
@@ -975,6 +976,7 @@ list (APPEND PUBLIC_HEADER_FILES
   opm/simulators/flow/FlowMain.hpp
   opm/simulators/flow/FlowProblem.hpp
   opm/simulators/flow/FlowProblemBlackoil.hpp
+  opm/simulators/flow/FlowProblemBlackoilIC.hpp
   opm/simulators/flow/FlowProblemBlackoilProperties.hpp
   opm/simulators/flow/FlowProblemComp.hpp
   opm/simulators/flow/FlowProblemCompProperties.hpp

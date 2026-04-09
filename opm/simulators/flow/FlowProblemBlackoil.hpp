@@ -49,6 +49,7 @@
 
 #include <opm/simulators/flow/ActionHandler.hpp>
 #include <opm/simulators/flow/FlowProblem.hpp>
+#include <opm/simulators/flow/FlowProblemBlackoilIC.hpp>
 #include <opm/simulators/flow/FlowProblemBlackoilProperties.hpp>
 #include <opm/simulators/flow/FlowThresholdPressure.hpp>
 #include <opm/simulators/flow/MixingRateControls.hpp>
@@ -184,7 +185,7 @@ public:
      * \copydoc Doxygen::defaultProblemConstructor
      */
     explicit FlowProblemBlackoil(Simulator& simulator)
-        : FlowProblemType(simulator)
+        : FlowProblemType(simulator, std::make_unique<FlowProblemBlackoilIC<TypeTag>>())
         , thresholdPressures_(simulator)
         , mixControls_(simulator.vanguard().schedule())
         , actionHandler_(simulator.vanguard().eclState(),
@@ -749,13 +750,13 @@ public:
 
     // temporary solution to facilitate output of initial state from flow
     const InitialFluidState& initialFluidState(unsigned globalDofIdx) const
-    { return this->ic_.initialFluidState(globalDofIdx); }
+    { return this->ic_->initialFluidState(globalDofIdx); }
 
     std::vector<InitialFluidState>& initialFluidStates()
-    { return this->ic_.initialFluidStates_; }
+    { return this->ic_->initialFluidStates_; }
 
     const std::vector<InitialFluidState>& initialFluidStates() const
-    { return this->ic_.initialFluidStates_; }
+    { return this->ic_->initialFluidStates_; }
 
     const EclipseIO& eclIO() const
     { return eclWriter_->eclIO(); }
@@ -776,7 +777,7 @@ public:
             // index == 0: no boundary conditions for this
             // global cell and direction
             if (this->bcindex_(dir)[globalDofIdx] == 0)
-                return this->ic_.initialFluidState(globalDofIdx);
+                return this->ic_->initialFluidState(globalDofIdx);
 
             const auto& bc = bcprop[this->bcindex_(dir)[globalDofIdx]];
             if (bc.bctype == BCType::DIRICHLET )
@@ -813,7 +814,7 @@ public:
                         throw std::logic_error("you need to specify a valid component (OIL, WATER or GAS) when DIRICHLET type is set in BC");
                 }
                 fluidState.setTotalSaturation(1.0);
-                double pressure = this->ic_.initialFluidState(globalDofIdx).pressure(this->refPressurePhaseIdx_());
+                double pressure = this->ic_->initialFluidState(globalDofIdx).pressure(this->refPressurePhaseIdx_());
                 const auto pressure_input = bc.pressure;
                 if (pressure_input) {
                     pressure = *pressure_input;
@@ -835,7 +836,7 @@ public:
                         fluidState.setPressure(phaseIdx, pressure);
                 }
                 if constexpr (energyModuleType != EnergyModules::NoTemperature) {
-                    double temperature = this->ic_.initialFluidState(globalDofIdx).temperature(0); // we only have one temperature
+                    double temperature = this->ic_->initialFluidState(globalDofIdx).temperature(0); // we only have one temperature
                     const auto temperature_input = bc.temperature;
                     if(temperature_input)
                         temperature = *temperature_input;
@@ -876,7 +877,7 @@ public:
                 return fluidState;
             }
         }
-        return this->ic_.initialFluidState(globalDofIdx);
+        return this->ic_->initialFluidState(globalDofIdx);
     }
 
 
@@ -937,7 +938,7 @@ public:
         unsigned globalDofIdx = context.globalSpaceIndex(spaceIdx, timeIdx);
 
         values.setPvtRegionIndex(pvtRegionIndex(context, spaceIdx, timeIdx));
-        values.assignNaive(this->ic_.initialFluidState(globalDofIdx));
+        values.assignNaive(this->ic_->initialFluidState(globalDofIdx));
 
         SolventModule::assignPrimaryVars(values,
                                          enableSolvent ? this->solventSaturation_[globalDofIdx] : 0.0,
@@ -952,11 +953,11 @@ public:
         if constexpr (enableBrine) {
             if (enableSaltPrecipitation && values.primaryVarsMeaningBrine() == PrimaryVariables::BrineMeaning::Sp) {
                 values[Indices::saltConcentrationIdx] =
-                    this->ic_.initialFluidState(globalDofIdx).saltSaturation();
+                    this->ic_->initialFluidState(globalDofIdx).saltSaturation();
             }
             else {
                 values[Indices::saltConcentrationIdx] =
-                    this->ic_.initialFluidState(globalDofIdx).saltConcentration();
+                    this->ic_->initialFluidState(globalDofIdx).saltConcentration();
             }
         }
 
@@ -1038,7 +1039,7 @@ public:
         const auto& eclState = simulator.vanguard().eclState();
 
         std::size_t numElems = this->model().numGridDof();
-        this->ic_.initialFluidStates_.resize(numElems);
+        this->ic_->initialFluidStates_.resize(numElems);
         if constexpr (enableSolvent) {
             this->solventSaturation_.resize(numElems, 0.0);
             this->solventRsw_.resize(numElems, 0.0);
@@ -1067,7 +1068,7 @@ public:
         }
 
         for (std::size_t elemIdx = 0; elemIdx < numElems; ++elemIdx) {
-            auto& elemFluidState = this->ic_.initialFluidStates_[elemIdx];
+            auto& elemFluidState = this->ic_->initialFluidStates_[elemIdx];
             elemFluidState.setPvtRegionIndex(pvtRegionIndex(elemIdx));
             this->eclWriter_->outputModule().initHysteresisParams(simulator, elemIdx);
             this->eclWriter_->outputModule().assignToFluidState(elemFluidState, elemIdx);
@@ -1203,7 +1204,7 @@ protected:
         for(const auto& elem: elements(gridView, Dune::Partitions::interior)) {
             elemCtx.updatePrimaryStencil(elem);
             int elemIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/0, /*timeIdx=*/0);
-            const auto& dofFluidState = this->ic_.initialFluidState(elemIdx);
+            const auto& dofFluidState = this->ic_->initialFluidState(elemIdx);
             for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 if (!FluidSystem::phaseIsActive(phaseIdx))
                     continue;
@@ -1294,18 +1295,18 @@ protected:
 
     void readEquilInitialCondition_() override
     {
-        this->ic_.equilInitialCondition_(*this->materialLawManager_,
-                                         this->simulator(),
-                                         this->model().numGridDof());
+        this->ic_->equilInitialCondition_(*this->materialLawManager_,
+                                          this->simulator(),
+                                          this->model().numGridDof());
     }
 
     void readExplicitInitialCondition_() override
     {
-        this->ic_.explicitInitialCondition_(this->simulator().vanguard().eclState().fieldProps(),
-                                            *this->materialLawManager_,
-                                            this->model().numGridDof(),
-                                            [this](const unsigned idx)
-                                            { return this->pvtRegionIndex(idx); });
+        this->ic_->explicitInitialCondition_(this->simulator().vanguard().eclState().fieldProps(),
+                                             *this->materialLawManager_,
+                                             this->model().numGridDof(),
+                                             [this](const unsigned idx)
+                                             { return this->pvtRegionIndex(idx); });
     }
 
 

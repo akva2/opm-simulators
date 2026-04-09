@@ -142,6 +142,19 @@ public:
                                           false,
                                           enableSolvent,
                                           Indices::numPhases>;
+
+    using ScalarFluidState = BlackOilFluidState<Scalar,
+                                                FluidSystem,
+                                                energyModuleType != EnergyModules::NoTemperature,
+                                                energyModuleType == EnergyModules::FullyImplicitThermal,
+                                                compositionSwitchEnabled,
+                                                enableVapwat,
+                                                enableBrine,
+                                                enableSaltPrecipitation,
+                                                false,
+                                                enableSolvent,
+                                                Indices::numPhases>;
+
     using Problem = GetPropType<TypeTag, Properties::Problem>;
 
     BlackOilIntensiveQuantitiesGlobalIndex()

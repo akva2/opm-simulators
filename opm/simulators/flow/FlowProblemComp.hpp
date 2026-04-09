@@ -30,6 +30,7 @@
 #ifndef OPM_FLOW_PROBLEM_COMP_HPP
 #define OPM_FLOW_PROBLEM_COMP_HPP
 
+#include <flowexperimental/comp/FlowProblemCompIC.hpp>
 
 #include <opm/simulators/flow/FlowProblem.hpp>
 #include <opm/simulators/flow/FlowThresholdPressure.hpp>
@@ -43,8 +44,6 @@
 
 #include <algorithm>
 #include <functional>
-#include <set>
-#include <string>
 #include <vector>
 
 namespace Opm {
@@ -116,7 +115,7 @@ public:
      * \copydoc Doxygen::defaultProblemConstructor
      */
     explicit FlowProblemComp(Simulator& simulator)
-        : FlowProblemType(simulator)
+        : FlowProblemType(simulator, std::make_unique<FlowProblemCompIC<TypeTag>>())
         , thresholdPressures_(simulator)
     {
         eclWriter_ = std::make_unique<EclWriterType>(simulator);
@@ -328,7 +327,7 @@ public:
     void initial(PrimaryVariables& values, const Context& context, unsigned spaceIdx, unsigned timeIdx) const
     {
         const unsigned globalDofIdx = context.globalSpaceIndex(spaceIdx, timeIdx);
-        const auto& initial_fs = initialFluidStates_[globalDofIdx];
+        const auto& initial_fs = this->ic_->initialFluidStates_[globalDofIdx];
         Opm::CompositionalFluidState<Scalar, FluidSystem> fs;
         for (unsigned p = 0; p < numPhases; ++p) { // TODO: assuming the phaseidx continuous
             // pressure
@@ -342,7 +341,7 @@ public:
         }
 
 
-        if (!zmf_initialization_) {
+        if (!static_cast<const FlowProblemCompIC<TypeTag>&>(*this->ic_).zmf_initialization_) {
             for (unsigned p = 0; p < numPhases; ++p) {
                 for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
                     fs.setMoleFraction(p, compIdx, initial_fs.moleFraction(p, compIdx));
@@ -401,13 +400,13 @@ public:
     }
 
     const InitialFluidState& initialFluidState(unsigned globalDofIdx) const
-    { return initialFluidStates_[globalDofIdx]; }
+    { return this->ic_.initialFluidStates_[globalDofIdx]; }
 
     std::vector<InitialFluidState>& initialFluidStates()
-    { return initialFluidStates_; }
+    { return this->ic_.initialFluidStates_; }
 
     const std::vector<InitialFluidState>& initialFluidStates() const
-    { return initialFluidStates_; }
+    { return this->ic_.initialFluidStates_; }
 
     const FlowThresholdPressure<TypeTag>& thresholdPressure() const
     {
@@ -448,154 +447,9 @@ protected:
 
     void readExplicitInitialCondition_() override
     {
-        readExplicitInitialConditionCompositional_();
-    }
-
-    void readExplicitInitialConditionCompositional_()
-    {
-        const auto& simulator = this->simulator();
-        const auto& vanguard = simulator.vanguard();
-        const auto& eclState = vanguard.eclState();
-        const auto& fp = eclState.fieldProps();
-        const bool has_pressure = fp.has_double("PRESSURE");
-        if (!has_pressure)
-            throw std::runtime_error("The ECL input file requires the presence of the PRESSURE "
-                                     "keyword if the model is initialized explicitly");
-
-        const bool has_xmf = fp.has_double("XMF");
-        const bool has_ymf = fp.has_double("YMF");
-        const bool has_zmf = fp.has_double("ZMF");
-        if ( !has_zmf && !(has_xmf && has_ymf) ) {
-            throw std::runtime_error("The ECL input file requires the presence of ZMF or XMF and YMF "
-                                     "keyword if the model is initialized explicitly");
-        }
-
-        if (has_zmf && (has_xmf || has_ymf)) {
-            throw std::runtime_error("The ECL input file can not handle explicit initialization "
-                                     "with both ZMF and XMF or YMF");
-        }
-
-        if (has_xmf != has_ymf) {
-            throw std::runtime_error("The ECL input file needs XMF and YMF combined to do the explicit "
-                                     "initializtion when using XMF or YMF");
-        }
-
-        const bool has_temp = fp.has_double("TEMPI");
-
-        // const bool has_gas = fp.has_double("SGAS");
-        assert(fp.has_double("SGAS"));
-
-        std::size_t numDof = this->model().numGridDof();
-
-        initialFluidStates_.resize(numDof);
-
-        std::vector<double> waterSaturationData;
-        std::vector<double> gasSaturationData;
-        std::vector<double> soilData;
-        std::vector<double> pressureData;
-        std::vector<double> tempiData;
-
-        const bool water_active = FluidSystem::phaseIsActive(waterPhaseIdx);
-        const bool gas_active = FluidSystem::phaseIsActive(gasPhaseIdx);
-        const bool oil_active = FluidSystem::phaseIsActive(oilPhaseIdx);
-
-        if (water_active && Indices::numPhases > 2)
-            waterSaturationData = fp.get_double("SWAT");
-        else
-            waterSaturationData.resize(numDof);
-
-        pressureData = fp.get_double("PRESSURE");
-
-        if (has_temp) {
-            tempiData = fp.get_double("TEMPI");
-        } else {
-            ; // TODO: throw?
-        }
-
-        if (gas_active) // && FluidSystem::phaseIsActive(oilPhaseIdx))
-            gasSaturationData = fp.get_double("SGAS");
-        else
-            gasSaturationData.resize(numDof);
-
-        for (std::size_t dofIdx = 0; dofIdx < numDof; ++dofIdx) {
-            auto& dofFluidState = initialFluidStates_[dofIdx];
-            // dofFluidState.setPvtRegionIndex(pvtRegionIndex(dofIdx));
-
-            Scalar temperatureLoc = tempiData[dofIdx];
-            assert(std::isfinite(temperatureLoc) && temperatureLoc > 0);
-            dofFluidState.setTemperature(temperatureLoc);
-
-            if (gas_active) {
-                dofFluidState.setSaturation(FluidSystem::gasPhaseIdx,
-                                            gasSaturationData[dofIdx]);
-            }
-            if (oil_active) {
-                dofFluidState.setSaturation(FluidSystem::oilPhaseIdx,
-                                            1.0
-                                            - waterSaturationData[dofIdx]
-                                            - gasSaturationData[dofIdx]);
-            }
-            if (water_active) {
-                dofFluidState.setSaturation(FluidSystem::waterPhaseIdx,
-                                            waterSaturationData[dofIdx]);
-            }
-
-            //////
-            // set phase pressures
-            //////
-            const Scalar pressure = pressureData[dofIdx]; // oil pressure (or gas pressure for water-gas system or water pressure for single phase)
-
-            // TODO: zero capillary pressure for now
-            const std::array<Scalar, numPhases> pc = {0};
-            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                if (!FluidSystem::phaseIsActive(phaseIdx))
-                    continue;
-
-                if (Indices::oilEnabled)
-                    dofFluidState.setPressure(phaseIdx, pressure + (pc[phaseIdx] - pc[oilPhaseIdx]));
-                else if (Indices::gasEnabled)
-                    dofFluidState.setPressure(phaseIdx, pressure + (pc[phaseIdx] - pc[gasPhaseIdx]));
-                else if (Indices::waterEnabled)
-                    // single (water) phase
-                    dofFluidState.setPressure(phaseIdx, pressure);
-            }
-
-            if (has_xmf && has_ymf) {
-                const auto& xmfData = fp.get_double("XMF");
-                const auto& ymfData = fp.get_double("YMF");
-                for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-                    const std::size_t data_idx = compIdx * numDof + dofIdx;
-                    const Scalar xmf = xmfData[data_idx];
-                    const Scalar ymf = ymfData[data_idx];
-
-                    dofFluidState.setMoleFraction(FluidSystem::oilPhaseIdx, compIdx, xmf);
-                    dofFluidState.setMoleFraction(FluidSystem::gasPhaseIdx, compIdx, ymf);
-                }
-            }
-
-            if (has_zmf) {
-                zmf_initialization_ = true;
-                const auto& zmfData = fp.get_double("ZMF");
-                for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-                    const std::size_t data_idx = compIdx * numDof + dofIdx;
-                    const Scalar zmf = zmfData[data_idx];
-                    dofFluidState.setMoleFraction(compIdx, zmf);
-
-                    if (gas_active) {
-                        const auto ymf = (dofFluidState.saturation(FluidSystem::gasPhaseIdx) > 0.) ? zmf : Scalar{0};
-                        dofFluidState.setMoleFraction(FluidSystem::gasPhaseIdx, compIdx, ymf);
-                    }
-                    if (oil_active) {
-                        const auto xmf = (dofFluidState.saturation(FluidSystem::oilPhaseIdx) > 0.) ? zmf : Scalar{0};
-                        dofFluidState.setMoleFraction(FluidSystem::oilPhaseIdx, compIdx, xmf);
-                    }
-                }
-            }
-        }
     }
 
 private:
-
     void handleSolventBC(const BCProp::BCFace& /* bc */, RateVector& /* rate */) const override
     {
         throw std::logic_error("solvent is disabled for compositional modeling and you're trying to add solvent to BC");
@@ -622,10 +476,6 @@ private:
     }
 
     FlowThresholdPressure<TypeTag> thresholdPressures_;
-
-    std::vector<InitialFluidState> initialFluidStates_;
-
-    bool zmf_initialization_ {false};
 
     bool enableEclOutput_{false};
     std::unique_ptr<EclWriterType> eclWriter_;
