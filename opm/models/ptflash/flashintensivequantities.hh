@@ -99,6 +99,7 @@ class FlashIntensiveQuantities
 public:
     //! The type of the object returned by the fluidState() method
     using FluidState = CompositionalFluidState<Evaluation, FluidSystem, enableEnergy>;
+    using ScalarFluidState = CompositionalFluidState<Scalar, FluidSystem>;
 
     FlashIntensiveQuantities() = default;
 
