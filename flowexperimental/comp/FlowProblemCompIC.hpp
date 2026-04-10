@@ -25,35 +25,39 @@
  *
  * \copydoc Opm::FlowProblem
  */
-#ifndef OPM_FLOW_PROBLEM_IC_HPP
-#define OPM_FLOW_PROBLEM_IC_HPP
+#ifndef OPM_FLOW_PROBLEM_COMP_IC_HPP
+#define OPM_FLOW_PROBLEM_COMP_IC_HPP
 
-#include <opm/models/discretization/common/fvbaseproperties.hh>
-#include <opm/models/utils/propertysystem.hh>
+#include <opm/simulators/flow/FlowProblemIC.hpp>
 
-#include <vector>
+#include <stdexcept>
 
 namespace Opm {
+
+template<class TypeTag> class FlowProblemComp;
 
 /*!
  * \ingroup BlackOilSimulator
  *
- * \brief Handling of initial conditions for FlowProblem.
+ * \brief Handling of initial conditions for FlowProblemComp.
  */
 template <class TypeTag>
-class FlowProblemIC
+class FlowProblemCompIC : public FlowProblemIC<TypeTag>
 {
 public:
-    using IntensiveQuantities = GetPropType<TypeTag, Properties::IntensiveQuantities>;
-    using InitialFluidState = typename IntensiveQuantities::ScalarFluidState;
+    FlowProblemCompIC(FlowProblemComp<TypeTag>& problem)
+        : problem_(problem)
+    {}
 
-    //! \brief Returns a const reference to initial fluid state for an element.
-    const InitialFluidState& initialFluidState(const unsigned idx) const
-    { return initialFluidStates_[idx]; }
+protected:
+    //! \brief Sets up equilibrium initial conditions.
+    void equil_() override
+    {
+        throw std::logic_error("Equilibration is not supported by compositional modeling yet");
+    }
 
-    virtual void equil_() = 0;
-
-    std::vector<InitialFluidState> initialFluidStates_; //!< Vector of initial fluid states
+private:
+    FlowProblemComp<TypeTag>& problem_;
 };
 
 } // namespace Opm

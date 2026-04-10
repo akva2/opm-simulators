@@ -219,7 +219,8 @@ public:
     /*!
      * \copydoc Doxygen::defaultProblemConstructor
      */
-    explicit FlowProblem(Simulator& simulator)
+    FlowProblem(Simulator& simulator,
+                FlowProblemIC<TypeTag>& ic)
         : ParentType(simulator)
         , BaseType(simulator.vanguard().eclState(),
                    simulator.vanguard().schedule(),
@@ -237,6 +238,7 @@ public:
         , pffDofData_(simulator.gridView(), this->elementMapper())
         , tracerModel_(simulator)
         , temperatureModel_(simulator)
+        , ic_(ic)
     {
         if (! Parameters::Get<Parameters::CheckSatfuncConsistency>()) {
             // User did not enable the "new" saturation function consistency
@@ -1549,7 +1551,7 @@ protected:
         const auto& eclState = vanguard.eclState();
 
         if (eclState.getInitConfig().hasEquil())
-            readEquilInitialCondition_();
+            this->ic_.equil_();
         else
             readExplicitInitialCondition_();
 
@@ -1566,7 +1568,6 @@ protected:
         }
     }
 
-    virtual void readEquilInitialCondition_() = 0;
     virtual void readExplicitInitialCondition_() = 0;
 
     // update the hysteresis parameters of the material laws for the whole grid
@@ -1871,7 +1872,7 @@ protected:
     BCData<int> bcindex_;
     bool nonTrivialBoundaryConditions_ = false;
 
-    FlowProblemIC<TypeTag> ic_;
+    FlowProblemIC<TypeTag>& ic_;
     bool first_step_ = true;
 
     /// Whether or not the current episode will end at the end of the

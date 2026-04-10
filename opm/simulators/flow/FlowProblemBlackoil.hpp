@@ -49,6 +49,7 @@
 
 #include <opm/simulators/flow/ActionHandler.hpp>
 #include <opm/simulators/flow/FlowProblem.hpp>
+#include <opm/simulators/flow/FlowProblemBlackoilIC.hpp>
 #include <opm/simulators/flow/FlowProblemBlackoilProperties.hpp>
 #include <opm/simulators/flow/FlowThresholdPressure.hpp>
 #include <opm/simulators/flow/MixingRateControls.hpp>
@@ -184,8 +185,9 @@ public:
      * \copydoc Doxygen::defaultProblemConstructor
      */
     explicit FlowProblemBlackoil(Simulator& simulator)
-        : FlowProblemType(simulator)
+        : FlowProblemType(simulator, bic_)
         , thresholdPressures_(simulator)
+        , bic_(*this)
         , mixControls_(simulator.vanguard().schedule())
         , actionHandler_(simulator.vanguard().eclState(),
                          simulator.vanguard().schedule(),
@@ -1282,21 +1284,6 @@ protected:
         this->eclWriter_->endRestart();
     }
 
-    void readEquilInitialCondition_() override
-    {
-        const auto& simulator = this->simulator();
-
-        // initial condition corresponds to hydrostatic conditions.
-        EquilInitializer<TypeTag> equilInitializer(simulator, *(this->materialLawManager_));
-
-        std::size_t numElems = this->model().numGridDof();
-        this->ic_.initialFluidStates_.resize(numElems);
-        for (std::size_t elemIdx = 0; elemIdx < numElems; ++elemIdx) {
-            auto& elemFluidState = this->ic_.initialFluidStates_[elemIdx];
-            elemFluidState.assign(equilInitializer.initialFluidState(elemIdx));
-        }
-    }
-
     void readExplicitInitialCondition_() override
     {
         const auto& simulator = this->simulator();
@@ -1702,6 +1689,7 @@ protected:
     }
 
     FlowThresholdPressure<TypeTag> thresholdPressures_;
+    FlowProblemBlackoilIC<TypeTag> bic_;
 
     bool enableEclOutput_;
     std::unique_ptr<EclWriterType> eclWriter_;

@@ -30,6 +30,7 @@
 #ifndef OPM_FLOW_PROBLEM_COMP_HPP
 #define OPM_FLOW_PROBLEM_COMP_HPP
 
+#include <flowexperimental/comp/FlowProblemCompIC.hpp>
 
 #include <opm/simulators/flow/FlowProblem.hpp>
 #include <opm/simulators/flow/FlowThresholdPressure.hpp>
@@ -43,8 +44,6 @@
 
 #include <algorithm>
 #include <functional>
-#include <set>
-#include <string>
 #include <vector>
 
 namespace Opm {
@@ -116,8 +115,9 @@ public:
      * \copydoc Doxygen::defaultProblemConstructor
      */
     explicit FlowProblemComp(Simulator& simulator)
-        : FlowProblemType(simulator)
+        : FlowProblemType(simulator, cic_)
         , thresholdPressures_(simulator)
+        , cic_(*this)
     {
         eclWriter_ = std::make_unique<EclWriterType>(simulator);
         enableEclOutput_ = Parameters::Get<Parameters::EnableEclOutput>();
@@ -420,16 +420,11 @@ public:
         serializer(static_cast<FlowProblemType&>(*this));
         serializer(*eclWriter_);
     }
-protected:
 
+protected:
     void updateExplicitQuantities_(int /* episodeIdx*/, int /* timeStepSize */, bool /* first_step_after_restart */) override
     {
         // we do nothing here for now
-    }
-
-    void readEquilInitialCondition_() override
-    {
-        throw std::logic_error("Equilibration is not supported by compositional modeling yet");
     }
 
     void readEclRestartSolution_()
@@ -613,6 +608,7 @@ private:
     }
 
     FlowThresholdPressure<TypeTag> thresholdPressures_;
+    FlowProblemCompIC<TypeTag> cic_;
 
     bool zmf_initialization_ {false};
 
