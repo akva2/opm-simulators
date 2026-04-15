@@ -51,7 +51,11 @@ public:
     const InitialFluidState& initialFluidState(const unsigned idx) const
     { return initialFluidStates_[idx]; }
 
+    //! \brief Set up equilibrium initial conditions.
     virtual void equil_() = 0;
+
+    //! \brief Set up explicitly given initial conditions.
+    virtual void explicit_() = 0;
 
     std::vector<InitialFluidState> initialFluidStates_; //!< Vector of initial fluid states
 };

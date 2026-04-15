@@ -1550,10 +1550,12 @@ protected:
         const auto& vanguard = simulator.vanguard();
         const auto& eclState = vanguard.eclState();
 
-        if (eclState.getInitConfig().hasEquil())
+        if (eclState.getInitConfig().hasEquil()) {
             this->ic_.equil_();
-        else
-            readExplicitInitialCondition_();
+        }
+        else {
+            this->ic_.explicit_();
+        }
 
         //initialize min/max values
         std::size_t numElems = this->model().numGridDof();
@@ -1567,8 +1569,6 @@ protected:
                 this->minRefPressure_[elemIdx] = std::min(this->minRefPressure_[elemIdx], fs.pressure(refPressurePhaseIdx_()));
         }
     }
-
-    virtual void readExplicitInitialCondition_() = 0;
 
     // update the hysteresis parameters of the material laws for the whole grid
     bool updateHysteresis_()
