@@ -317,21 +317,16 @@ void FlowGenericVanguard::init()
 
         // compute the base name of the input file name
         const char directorySeparator = '/';
-        long int i;
-        for (i = fileName_.size(); i >= 0; -- i)
-            if (fileName_[i] == directorySeparator)
-                break;
-        std::string baseName = fileName_.substr(i + 1, fileName_.size());
+        const auto last_sep = fileName_.find_last_of(directorySeparator);
+        std::string baseName = fileName_.substr(last_sep + 1, fileName_.size());
 
         // remove the extension from the input file
-        for (i = baseName.size(); i >= 0; -- i)
-            if (baseName[i] == '.')
-                break;
+        const auto last_dot = baseName.find_last_of('.');
         std::string rawCaseName;
-        if (i < 0)
+        if (last_dot == std::string::npos)
             rawCaseName = baseName;
         else
-            rawCaseName = baseName.substr(0, i);
+            rawCaseName = baseName.substr(0, last_dot);
 
         // transform the result to ALL_UPPERCASE
         caseName_ = rawCaseName;
@@ -370,7 +365,7 @@ void FlowGenericVanguard::init()
     // Check whether allowing distribute wells makes sense
     if (enableDistributedWells() )
     {
-        int hasMsWell = false;
+        int hasMsWell = 0;
         const auto& comm = FlowGenericVanguard::comm();
 
         if (useMultisegmentWell_)
@@ -380,13 +375,13 @@ void FlowGenericVanguard::init()
                 const auto& wells = this->schedule().getWellsatEnd();
                 hasMsWell = std::ranges::any_of(wells,
                                                 [](const auto& well)
-                                                { return well.isMultiSegment(); });
+                                                { return well.isMultiSegment(); }) ? 1 : 0;
             }
         }
 
         hasMsWell = comm.max(hasMsWell);
 
-        if (hasMsWell)
+        if (hasMsWell != 0)
         {
             if (comm.rank() == 0)
             {
