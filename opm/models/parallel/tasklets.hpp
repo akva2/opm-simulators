@@ -95,7 +95,7 @@ class TaskletRunner
     class BarrierTasklet : public TaskletInterface
     {
     public:
-        explicit BarrierTasklet(unsigned numWorkers);
+        explicit BarrierTasklet(int numWorkers);
 
         void run() override;
 

@@ -36,7 +36,7 @@ namespace Opm {
 thread_local TaskletRunner* TaskletRunner::taskletRunner_ = nullptr;
 thread_local int TaskletRunner::workerThreadIndex_ = -1;
 
-TaskletRunner::BarrierTasklet::BarrierTasklet(unsigned numWorkers)
+TaskletRunner::BarrierTasklet::BarrierTasklet(int numWorkers)
     : TaskletInterface(/*refCount=*/numWorkers)
 {
     numWorkers_ = numWorkers;
