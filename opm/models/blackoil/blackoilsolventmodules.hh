@@ -37,6 +37,7 @@
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/SolventPvt.hpp>
 
+#include <opm/models/blackoil/blackoilmodules.hpp>
 #include <opm/models/blackoil/blackoilproperties.hh>
 #include <opm/models/blackoil/blackoilsolventparams.hpp>
 
@@ -54,7 +55,6 @@
 #include <istream>
 #include <memory>
 #include <ostream>
-#include <stdexcept>
 #include <string>
 
 namespace Opm {
@@ -524,14 +524,6 @@ private:
 template <class TypeTag>
 BlackOilSolventParams<typename BlackOilSolventModule<TypeTag, true>::Scalar>
 BlackOilSolventModule<TypeTag, true>::params_;
-
-template <class TypeTag>
-class BlackOilSolventModule<TypeTag, false>
-{
-};
-
-template <class TypeTag, bool enableSolventV>
-class BlackOilSolventIntensiveQuantities;
 
 /*!
  * \ingroup BlackOil
@@ -1129,14 +1121,6 @@ protected:
     Scalar solventRefDensity_;
 };
 
-template <class TypeTag>
-class BlackOilSolventIntensiveQuantities<TypeTag, false>
-{
-};
-
-template <class TypeTag, bool enableSolventV>
-class BlackOilSolventExtensiveQuantities;
-
 /*!
  * \ingroup BlackOil
  * \class Opm::BlackOilSolventExtensiveQuantities
@@ -1376,11 +1360,6 @@ private:
     Evaluation solventVolumeFlux_;
     unsigned solventUpstreamDofIdx_;
     unsigned solventDownstreamDofIdx_;
-};
-
-template <class TypeTag>
-class BlackOilSolventExtensiveQuantities<TypeTag, false>
-{
 };
 
 } // namespace Opm
