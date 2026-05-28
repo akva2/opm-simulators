@@ -36,6 +36,7 @@
 
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/gpuDecorators.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
 
@@ -44,13 +45,14 @@
 #include <opm/material/thermal/EnergyModuleType.hpp>
 
 #include <opm/models/discretization/common/fvbaseproperties.hh>
+#include <opm/models/blackoil/blackoilmoduleparams.hh>
 #include <opm/models/blackoil/blackoilmodules.hpp>
 #include <opm/models/blackoil/blackoilconvectivemixingmoduleparam.hpp>
 #include <opm/models/blackoil/blackoilproperties.hh>
-#include <opm/models/utils/signum.hh>
-#include <opm/models/blackoil/blackoilmoduleparams.hh>
 
-#include <opm/common/utility/gpuDecorators.hpp>
+#include <opm/models/discretization/common/fvbaseproperties.hh>
+
+#include <opm/models/utils/signum.hh>
 
 #include <array>
 
