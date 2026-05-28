@@ -32,7 +32,6 @@
 #include <opm/material/fluidstates/BlackOilFluidState.hpp>
 
 #include <opm/models/blackoil/blackoilmodules.hpp>
-#include <opm/models/blackoil/blackoilbrinemodules.hh>
 #include <opm/models/blackoil/blackoilconvectivemixingmodule.hh>
 #include <opm/models/blackoil/blackoildiffusionmodule.hh>
 #include <opm/models/blackoil/blackoilenergymodules.hh>
@@ -87,6 +86,7 @@ class BlackOilLocalResidual : public GetPropType<TypeTag, Properties::DiscLocalR
     static constexpr bool enableDiffusion = getPropValue<TypeTag, Properties::EnableDiffusion>();
     static constexpr bool enableConvectiveMixing = getPropValue<TypeTag, Properties::EnableConvectiveMixing>();
     static constexpr bool enableBioeffects = getPropValue<TypeTag, Properties::EnableBioeffects>();
+    static constexpr bool enableBrine = getPropValue<TypeTag, Properties::EnableBrine>();
 
     using Toolbox = MathToolbox<Evaluation>;
     using SolventModule = BlackOilSolventModule<TypeTag>;
@@ -94,7 +94,7 @@ class BlackOilLocalResidual : public GetPropType<TypeTag, Properties::DiscLocalR
     using PolymerModule = BlackOilPolymerModule<TypeTag>;
     using EnergyModule = BlackOilEnergyModule<TypeTag>;
     using FoamModule = BlackOilFoamModule<TypeTag>;
-    using BrineModule = BlackOilBrineModule<TypeTag>;
+    using BrineModule = BlackOilBrineModule<TypeTag, enableBrine>;
     using DiffusionModule = BlackOilDiffusionModule<TypeTag, enableDiffusion>;
     using BioeffectsModule = BlackOilBioeffectsModule<TypeTag, enableBioeffects>;
     using ConvectiveMixingModule = BlackOilConvectiveMixingModule<TypeTag, enableConvectiveMixing>;
@@ -190,7 +190,9 @@ public:
         FoamModule::addStorage(storage, intQuants);
 
         // deal with salt (if present)
-        BrineModule::addStorage(storage, intQuants);
+        if constexpr (enableBrine) {
+            BrineModule::addStorage(storage, intQuants);
+        }
 
         // deal with bioeffects (if present)
         if constexpr (enableBioeffects) {
@@ -243,7 +245,9 @@ public:
         FoamModule::computeFlux(flux, elemCtx, scvfIdx, timeIdx);
 
         // deal with salt (if present)
-        BrineModule::computeFlux(flux, elemCtx, scvfIdx, timeIdx);
+        if constexpr (enableBrine) {
+            BrineModule::computeFlux(flux, elemCtx, scvfIdx, timeIdx);
+        }
 
         // deal with bioeffects (if present)
         if constexpr (enableBioeffects) {
