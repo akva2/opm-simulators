@@ -34,9 +34,11 @@
 
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
 
+#include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/Valgrind.hpp>
 
-#include <opm/models/blackoil/blackoilbioeffectsmodules.hh>
+#include <opm/models/blackoil/blackoilmodules.hpp>
+#include <opm/models/common/multiphasebaseproperties.hh>
 #include <opm/models/discretization/common/fvbaseproperties.hh>
 
 #include <array>
@@ -101,13 +103,11 @@ class BlackOilDiffusionModule<TypeTag, /*enableDiffusion=*/true>
     using FluidSystem = GetPropType<TypeTag, Properties::FluidSystem>;
     using Indices = GetPropType<TypeTag, Properties::Indices>;
     using IntensiveQuantities = GetPropType<TypeTag, Properties::IntensiveQuantities>;
-    using BioeffectsModule = BlackOilBioeffectsModule<TypeTag>;
-    using BioeffectsParams = BlackOilBioeffectsParams<TypeTag>;
 
     enum { numPhases = FluidSystem::numPhases };
     enum { conti0EqIdx = Indices::conti0EqIdx };
 
-    enum { enableBioeffects = getPropValue<TypeTag, Properties::EnableBioeffects>() };
+    static constexpr bool enableBioeffects = getPropValue<TypeTag, Properties::EnableBioeffects>();
     enum { enableMICP = Indices::enableMICP };
 
     static constexpr unsigned contiMicrobialEqIdx = Indices::contiMicrobialEqIdx;
@@ -115,6 +115,7 @@ class BlackOilDiffusionModule<TypeTag, /*enableDiffusion=*/true>
     static constexpr unsigned waterPhaseIdx = FluidSystem::waterPhaseIdx;
     static constexpr unsigned contiUreaEqIdx = Indices::contiUreaEqIdx;
 
+    using BioeffectsModule = BlackOilBioeffectsModule<TypeTag, enableBioeffects>;
     using Toolbox = MathToolbox<Evaluation>;
 
 public:
@@ -279,32 +280,35 @@ public:
                                                const Evaluation& diffusivity,
                                                const EvaluationArray& effectiveBioDiffCoefficient)
     {
-        const auto& inFs = inIq.fluidState();
-        const auto& exFs = exIq.fluidState();
-        Evaluation diffR = 0.0;
+        if constexpr (enableBioeffects) {
+            using BioeffectsParams = BlackOilBioeffectsParams<TypeTag>;
+            const auto& inFs = inIq.fluidState();
+            const auto& exFs = exIq.fluidState();
+            Evaluation diffR = 0.0;
 
-        // The diffusion coefficients are given for mass concentrations
-        Evaluation bAvg = (inFs.saturation(waterPhaseIdx) * inFs.invB(waterPhaseIdx) +
-            Toolbox::value(exFs.saturation(waterPhaseIdx)) * Toolbox::value(exFs.invB(waterPhaseIdx))) / 2;
-        diffR = inIq.microbialConcentration() - Toolbox::value(exIq.microbialConcentration());
-        flux[contiMicrobialEqIdx] +=
-            bAvg *
-            diffR *
-            diffusivity *
-            effectiveBioDiffCoefficient[BioeffectsParams::micrDiffIdx];
-        if constexpr(enableMICP) {
-            diffR = inIq.oxygenConcentration() - Toolbox::value(exIq.oxygenConcentration());
-            flux[contiOxygenEqIdx] +=
+            // The diffusion coefficients are given for mass concentrations
+            Evaluation bAvg = (inFs.saturation(waterPhaseIdx) * inFs.invB(waterPhaseIdx) +
+                Toolbox::value(exFs.saturation(waterPhaseIdx)) * Toolbox::value(exFs.invB(waterPhaseIdx))) / 2;
+            diffR = inIq.microbialConcentration() - Toolbox::value(exIq.microbialConcentration());
+            flux[contiMicrobialEqIdx] +=
                 bAvg *
                 diffR *
                 diffusivity *
-                effectiveBioDiffCoefficient[BioeffectsParams::oxygDiffIdx];
-            diffR = inIq.ureaConcentration() - Toolbox::value(exIq.ureaConcentration());
-            flux[contiUreaEqIdx] +=
-                bAvg *
-                diffR *
-                diffusivity *
-                effectiveBioDiffCoefficient[BioeffectsParams::ureaDiffIdx];
+                effectiveBioDiffCoefficient[BioeffectsParams::micrDiffIdx];
+            if constexpr(enableMICP) {
+                diffR = inIq.oxygenConcentration() - Toolbox::value(exIq.oxygenConcentration());
+                flux[contiOxygenEqIdx] +=
+                    bAvg *
+                    diffR *
+                    diffusivity *
+                    effectiveBioDiffCoefficient[BioeffectsParams::oxygDiffIdx];
+                diffR = inIq.ureaConcentration() - Toolbox::value(exIq.ureaConcentration());
+                flux[contiUreaEqIdx] +=
+                    bAvg *
+                    diffR *
+                    diffusivity *
+                    effectiveBioDiffCoefficient[BioeffectsParams::ureaDiffIdx];
+            }
         }
     }
 
@@ -418,11 +422,12 @@ class BlackOilDiffusionIntensiveQuantities<TypeTag, /*enableDiffusion=*/true>
     using FluidSystem = GetPropType<TypeTag, Properties::FluidSystem>;
     using IntensiveQuantities = GetPropType<TypeTag, Properties::IntensiveQuantities>;
     using Indices = GetPropType<TypeTag, Properties::Indices>;
-    using BioeffectsModule = BlackOilBioeffectsModule<TypeTag>;
+
+    static constexpr bool enableBioeffects = getPropValue<TypeTag, Properties::EnableBioeffects>();
+    using BioeffectsModule = BlackOilBioeffectsModule<TypeTag, enableBioeffects>;
 
     enum { numPhases = FluidSystem::numPhases };
     enum { numComponents = FluidSystem::numComponents };
-    enum { enableBioeffects = getPropValue<TypeTag, Properties::EnableBioeffects>() };
     enum { enableMICP = Indices::enableMICP };
     enum { numBioInWat = Indices::numBioInWat };
 

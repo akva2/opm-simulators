@@ -31,7 +31,7 @@
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/fluidstates/BlackOilFluidState.hpp>
 
-#include <opm/models/blackoil/blackoilbioeffectsmodules.hh>
+#include <opm/models/blackoil/blackoilmodules.hpp>
 #include <opm/models/blackoil/blackoilbrinemodules.hh>
 #include <opm/models/blackoil/blackoilconvectivemixingmodule.hh>
 #include <opm/models/blackoil/blackoildiffusionmodule.hh>
@@ -86,6 +86,7 @@ class BlackOilLocalResidual : public GetPropType<TypeTag, Properties::DiscLocalR
     static constexpr bool enableFullyImplicitThermal = (getPropValue<TypeTag, Properties::EnergyModuleType>() == EnergyModules::FullyImplicitThermal);
     static constexpr bool enableDiffusion = getPropValue<TypeTag, Properties::EnableDiffusion>();
     static constexpr bool enableConvectiveMixing = getPropValue<TypeTag, Properties::EnableConvectiveMixing>();
+    static constexpr bool enableBioeffects = getPropValue<TypeTag, Properties::EnableBioeffects>();
 
     using Toolbox = MathToolbox<Evaluation>;
     using SolventModule = BlackOilSolventModule<TypeTag>;
@@ -95,7 +96,7 @@ class BlackOilLocalResidual : public GetPropType<TypeTag, Properties::DiscLocalR
     using FoamModule = BlackOilFoamModule<TypeTag>;
     using BrineModule = BlackOilBrineModule<TypeTag>;
     using DiffusionModule = BlackOilDiffusionModule<TypeTag, enableDiffusion>;
-    using BioeffectsModule = BlackOilBioeffectsModule<TypeTag>;
+    using BioeffectsModule = BlackOilBioeffectsModule<TypeTag, enableBioeffects>;
     using ConvectiveMixingModule = BlackOilConvectiveMixingModule<TypeTag, enableConvectiveMixing>;
 
 public:
@@ -192,7 +193,9 @@ public:
         BrineModule::addStorage(storage, intQuants);
 
         // deal with bioeffects (if present)
-        BioeffectsModule::addStorage(storage, intQuants);
+        if constexpr (enableBioeffects) {
+            BioeffectsModule::addStorage(storage, intQuants);
+        }
     }
 
     /*!
@@ -243,7 +246,9 @@ public:
         BrineModule::computeFlux(flux, elemCtx, scvfIdx, timeIdx);
 
         // deal with bioeffects (if present)
-        BioeffectsModule::computeFlux(flux, elemCtx, scvfIdx, timeIdx);
+        if constexpr (enableBioeffects) {
+            BioeffectsModule::computeFlux(flux, elemCtx, scvfIdx, timeIdx);
+        }
 
         // deal with diffusion (if present)
         DiffusionModule::addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
@@ -264,7 +269,9 @@ public:
         elemCtx.problem().source(source, elemCtx, dofIdx, timeIdx);
 
         // deal with MICP (if present)
-        BioeffectsModule::addSource(source, elemCtx, dofIdx, timeIdx);
+        if constexpr (enableBioeffects) {
+            BioeffectsModule::addSource(source, elemCtx, dofIdx, timeIdx);
+        }
 
         // scale the source term of the energy equation
         if constexpr (enableFullyImplicitThermal) {

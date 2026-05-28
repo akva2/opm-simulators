@@ -32,7 +32,7 @@
 
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
 
-#include <opm/models/blackoil/blackoilbioeffectsmodules.hh>
+#include <opm/models/blackoil/blackoilmodules.hpp>
 #include <opm/models/blackoil/blackoilboundaryratevector.hh>
 #include <opm/models/blackoil/blackoilbrinemodules.hh>
 #include <opm/models/blackoil/blackoildarcyfluxmodule.hh>
@@ -59,6 +59,8 @@
 #include <opm/models/io/vtkblackoilmodule.hpp>
 #include <opm/models/io/vtkcompositionmodule.hpp>
 #include <opm/models/io/vtkdiffusionmodule.hpp>
+
+#include <opm/models/utils/propertysystem.hh>
 
 #include <cassert>
 #include <istream>
@@ -359,6 +361,7 @@ private:
 
     static constexpr bool compositionSwitchEnabled = Indices::compositionSwitchIdx >= 0;
     static constexpr bool waterEnabled = Indices::waterEnabled;
+    static constexpr bool enableBioeffects = getPropValue<TypeTag, Properties::EnableBioeffects>();
 
     using SolventModule = BlackOilSolventModule<TypeTag>;
     using ExtboModule = BlackOilExtboModule<TypeTag>;
@@ -366,7 +369,7 @@ private:
     using EnergyModule = BlackOilEnergyModule<TypeTag>;
     using DiffusionModule = BlackOilDiffusionModule<TypeTag, enableDiffusion>;
     using DispersionModule = BlackOilDispersionModule<TypeTag, enableDispersion>;
-    using BioeffectsModule = BlackOilBioeffectsModule<TypeTag>;
+    using BioeffectsModule = BlackOilBioeffectsModule<TypeTag, enableBioeffects>;
 
 public:
     using LocalResidual = GetPropType<TypeTag, Properties::LocalResidual>;
@@ -389,7 +392,9 @@ public:
         PolymerModule::registerParameters();
         EnergyModule::registerParameters();
         DiffusionModule::registerParameters();
-        BioeffectsModule::registerParameters();
+        if constexpr (enableBioeffects) {
+            BioeffectsModule::registerParameters();
+        }
 
         // register runtime parameters of the VTK output modules
         VtkBlackOilModule<TypeTag>::registerParameters();
@@ -678,7 +683,9 @@ protected:
         SolventModule::registerOutputModules(asImp_(), this->simulator_);
         PolymerModule::registerOutputModules(asImp_(), this->simulator_);
         EnergyModule::registerOutputModules(asImp_(), this->simulator_);
-        BioeffectsModule::registerOutputModules(asImp_(), this->simulator_);
+        if constexpr (enableBioeffects) {
+            BioeffectsModule::registerOutputModules(asImp_(), this->simulator_);
+        }
 
         this->addOutputModule(std::make_unique<VtkBlackOilModule<TypeTag>>(this->simulator_));
         this->addOutputModule(std::make_unique<VtkCompositionModule<TypeTag>>(this->simulator_));
