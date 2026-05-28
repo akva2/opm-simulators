@@ -30,19 +30,22 @@
 
 #include <dune/common/fvector.hh>
 
+#include <opm/common/utility/gpuistl_if_available.hpp>
+#include <opm/input/eclipse/EclipseState/EclipseState.hpp>
+
 #include <opm/input/eclipse/Schedule/OilVaporizationProperties.hpp>
 #include <opm/input/eclipse/Schedule/Schedule.hpp>
 
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/Valgrind.hpp>
 
-#include <opm/models/blackoil/blackoilmodules.hpp>
 #include <opm/models/blackoil/blackoilconvectivemixingmoduleparam.hpp>
-#include <opm/models/blackoil/blackoilenergymodules.hh>
-#include <opm/models/common/multiphasebaseproperties.hh>
-#include <opm/models/discretization/common/fvbaseproperties.hh>
+#include <opm/models/blackoil/blackoilmodules.hpp>
+#include <opm/models/blackoil/blackoilproperties.hh>
 
-#include <opm/common/utility/gpuistl_if_available.hpp>
+#include <opm/models/common/multiphasebaseproperties.hh>
+
+#include <opm/models/discretization/common/fvbaseproperties.hh>
 
 #include <cstddef>
 
