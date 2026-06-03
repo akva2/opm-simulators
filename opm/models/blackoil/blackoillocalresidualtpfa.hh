@@ -100,9 +100,10 @@ class BlackOilLocalResidualTPFA : public GetPropType<TypeTag, Properties::DiscLo
     static constexpr bool enableSolvent = getPropValue<TypeTag, Properties::EnableSolvent>();
     static constexpr bool enableExtbo = getPropValue<TypeTag, Properties::EnableExtbo>();
     static constexpr bool enablePolymer = getPropValue<TypeTag, Properties::EnablePolymer>();
-    static constexpr bool enableFullyImplicitThermal
-        = (getPropValue<TypeTag, Properties::EnergyModuleType>()
-           == EnergyModules::FullyImplicitThermal);
+    static constexpr EnergyModules energyModuleType =
+        getPropValue<TypeTag, Properties::EnergyModuleType>();
+    static constexpr bool enableFullyImplicitThermal =
+        energyModuleType == EnergyModules::FullyImplicitThermal;
     static constexpr bool enableFoam = getPropValue<TypeTag, Properties::EnableFoam>();
     static constexpr bool enableBrine = getPropValue<TypeTag, Properties::EnableBrine>();
     static constexpr bool enableDiffusion = getPropValue<TypeTag, Properties::EnableDiffusion>();
@@ -120,7 +121,7 @@ class BlackOilLocalResidualTPFA : public GetPropType<TypeTag, Properties::DiscLo
     using ConvectiveMixingModule = BlackOilConvectiveMixingModule<TypeTag, enableConvectiveMixing>;
     using DiffusionModule = BlackOilDiffusionModule<TypeTag, enableDiffusion>;
     using DispersionModule = BlackOilDispersionModule<TypeTag, enableDispersion>;
-    using EnergyModule = BlackOilEnergyModule<TypeTag>;
+    using EnergyModule = BlackOilEnergyModule<TypeTag, energyModuleType>;
     using ExtboModule = BlackOilExtboModule<TypeTag, enableExtbo>;
     using FoamModule = BlackOilFoamModule<TypeTag, enableFoam>;
     using SolventModule = BlackOilSolventModule<TypeTag, enableSolvent>;
@@ -232,7 +233,9 @@ public:
         }
 
         // deal with energy (if present)
-        EnergyModule::addStorage(storage, intQuants);
+        if constexpr (enableFullyImplicitThermal) {
+            EnergyModule::addStorage(storage, intQuants);
+        }
 
         // deal with foam (if present)
         if constexpr (enableFoam) {
