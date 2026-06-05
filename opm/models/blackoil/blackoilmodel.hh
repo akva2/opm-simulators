@@ -350,7 +350,8 @@ private:
     enum { numComponents = FluidSystem::numComponents };
     enum { numEq = getPropValue<TypeTag, Properties::NumEq>() };
 
-    static constexpr bool compositionSwitchEnabled = Indices::compositionSwitchIdx >= 0;
+    static constexpr bool compositionSwitchEnabled =
+        Indices::compositionSwitchIdx != std::numeric_limits<unsigned>::max();
     static constexpr bool enableBioeffects = getPropValue<TypeTag, Properties::EnableBioeffects>();
     static constexpr bool enableDiffusion = getPropValue<TypeTag, Properties::EnableDiffusion>();
     static constexpr bool enableDispersion = getPropValue<TypeTag, Properties::EnableDispersion>();
@@ -429,7 +430,7 @@ public:
         else if (pvIdx == static_cast<int>(Indices::pressureSwitchIdx)) {
             return "pressure_switching";
         }
-        else if (static_cast<int>(pvIdx) == Indices::compositionSwitchIdx) {
+        else if (pvIdx == static_cast<int>(Indices::compositionSwitchIdx)) {
             return "composition_switching";
         }
 
@@ -549,7 +550,7 @@ public:
         }
 
         // if the primary variable is either the gas saturation, Rs or Rv
-        assert(int(Indices::compositionSwitchIdx) == int(pvIdx));
+        assert(Indices::compositionSwitchIdx == pvIdx);
 
         switch (this->solution(0)[globalDofIdx].primaryVarsMeaningGas()) {
         case PrimaryVariables::GasMeaning::Sg: return 1.0; // gas saturation
