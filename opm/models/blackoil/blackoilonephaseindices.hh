@@ -151,8 +151,8 @@ struct BlackOilOnePhaseIndices
         enablePolymer ? PVOffset + numPhases + numSolvents : std::numeric_limits<unsigned>::max();
 
     //! Index of the primary variable for the second polymer primary variable (molecular weight)
-    static constexpr int polymerMoleWeightIdx =
-        numPolymers > 1 ? polymerConcentrationIdx + 1 : -1000;
+    static constexpr unsigned polymerMoleWeightIdx =
+        numPolymers > 1 ? polymerConcentrationIdx + 1 : std::numeric_limits<unsigned>::max();
 
     //! Index of the primary variable for the first MICP component
     static constexpr int microbialConcentrationIdx =
