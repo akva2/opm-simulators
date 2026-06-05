@@ -167,8 +167,8 @@ struct BlackOilOnePhaseIndices
         numMICPs > 2 ? oxygenConcentrationIdx + 1 : std::numeric_limits<unsigned>::max();
 
     //! Index of the primary variable for the fourth MICP component
-    static constexpr int biofilmVolumeFractionIdx =
-        numMICPs > 3 ? ureaConcentrationIdx + 1 : -1000;
+    static constexpr unsigned biofilmVolumeFractionIdx =
+        numMICPs > 3 ? ureaConcentrationIdx + 1 : std::numeric_limits<unsigned>::max();
 
     //! Index of the primary variable for the fifth MICP component
     static constexpr int calciteVolumeFractionIdx =
