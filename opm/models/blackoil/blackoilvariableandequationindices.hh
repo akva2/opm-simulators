@@ -106,7 +106,7 @@ struct BlackOilVariableAndEquationIndices
      * Depending on the phases present, this variable is either interpreted as
      * water saturation or vapporized water in gas phase
      */
-    static constexpr int waterSwitchIdx = PVOffset + 0;
+    static constexpr unsigned waterSwitchIdx = PVOffset + 0;
 
     /*!
      * \brief Index of the switching variable which determines the pressure

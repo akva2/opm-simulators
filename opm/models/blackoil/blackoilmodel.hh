@@ -423,7 +423,7 @@ public:
      */
     std::string primaryVarName(int pvIdx) const
     {
-        if (pvIdx == Indices::waterSwitchIdx) {
+        if (pvIdx == static_cast<int>(Indices::waterSwitchIdx)) {
             return "water_switching";
         }
         else if (pvIdx == Indices::pressureSwitchIdx) {
@@ -510,7 +510,7 @@ public:
         }
 
         // saturations are always in the range [0, 1]!
-        if (int(Indices::waterSwitchIdx) == int(pvIdx)) {
+        if (Indices::waterSwitchIdx == pvIdx) {
             return 1.0;
         }
 
