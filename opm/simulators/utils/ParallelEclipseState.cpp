@@ -83,7 +83,7 @@ std::vector<double> ParallelFieldPropsManager::porv(bool global) const
         global_porv = m_manager.porv(true);
     }
 
-    std::size_t size = global_porv.size();
+    auto size = static_cast<int>(global_porv.size());
     m_comm.broadcast(&size, 1, 0);
     global_porv.resize(size);
     m_comm.broadcast(global_porv.data(), size, 0);
@@ -147,7 +147,7 @@ std::vector<int> ParallelFieldPropsManager::get_global_int(const std::string& ke
         OPM_THROW_NOLOG(std::runtime_error, "No integer property field: " + keyword);
     }
 
-    std::size_t size = result.size();
+    auto size = static_cast<int>(result.size());
     m_comm.broadcast(&size, 1, 0);
     result.resize(size);
     m_comm.broadcast(result.data(), size, 0);
@@ -199,7 +199,7 @@ std::vector<double> ParallelFieldPropsManager::get_global_double(const std::stri
         OPM_THROW_NOLOG(std::runtime_error, "No double property field: " + keyword);
     }
 
-    std::size_t size = result.size();
+    auto size = static_cast<int>(result.size());
     m_comm.broadcast(&size, 1, 0);
     result.resize(size);
     m_comm.broadcast(result.data(), size, 0);
@@ -297,7 +297,8 @@ void ParallelEclipseState::computeFipRegionStatistics()
                      this->fieldProps(),
                      [this](std::vector<int>& maxRegionID)
                      {
-                         this->m_comm.max(maxRegionID.data(), maxRegionID.size());
+                         this->m_comm.max(maxRegionID.data(),
+                                          static_cast<int>(maxRegionID.size()));
                      });
     }
 }
