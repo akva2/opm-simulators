@@ -805,76 +805,33 @@ namespace Opm {
         const auto rfunc =
             satfunc::getRawFunctionValues(tables, phases, rtep);
 
-        const TableContainer&  swofTables = tables.getSwofTables();
-        const SwofletTable&  swofletTables = tables.getSwofletTable();
-        const TableContainer&  sgofTables = tables.getSgofTables();
-        const SgofletTable&  sgofletTables = tables.getSgofletTable();
-        const TableContainer& slgofTables = tables.getSlgofTables();
-        const TableContainer&  sof3Tables = tables.getSof3Tables();
-
         // std::cout << "***************\nEnd-Points In all the Tables\n";
         for (std::size_t satnumIdx = 0; satnumIdx < numSatRegions; ++satnumIdx) {
-             this->unscaledEpsInfo_[satnumIdx]
-                 .extractUnscaled(rtep, rfunc, satnumIdx);
+            this->unscaledEpsInfo_[satnumIdx]
+                .extractUnscaled(rtep, rfunc, satnumIdx);
 
-             /// Consistency check.
-             if (unscaledEpsInfo_[satnumIdx].Sgu > (1. - unscaledEpsInfo_[satnumIdx].Swl)) {
+            /// Consistency check.
+            if (unscaledEpsInfo_[satnumIdx].Sgu > (1. - unscaledEpsInfo_[satnumIdx].Swl)) {
                  OpmLog::warning(fmt::format(
                     "In saturation table SATNUM = {}, Sgmax should not exceed 1-Swco.",
                     satnumIdx + 1
                 ));
-             }
-             if (unscaledEpsInfo_[satnumIdx].Sgl > (1. - unscaledEpsInfo_[satnumIdx].Swu)) {
-                 OpmLog::warning(fmt::format(
+            }
+            if (unscaledEpsInfo_[satnumIdx].Sgl > (1. - unscaledEpsInfo_[satnumIdx].Swu)) {
+                OpmLog::warning(fmt::format(
                     "In saturation table SATNUM = {}, Sgco should not exceed 1-Swmax.",
                     satnumIdx + 1
                 ));
-             }
+            }
 
-             // Krow(Sou) == Krog(Sou) for three-phase
-             // means Krow(Swco) == Krog(Sgco)
-             double krow_value = 1e20;
-             double krog_value = 1e-20;
-             if (fluidSystem_ == FluidSystem::BlackOil) {
-                if (satFamily_ == SaturationFunctionFamily::FamilyI) {
-                     if (!sgofTables.empty()) {
-                         const auto& table = sgofTables.getTable<SgofTable>(satnumIdx);
-                         krog_value = table.evaluate( "KROG" , unscaledEpsInfo_[satnumIdx].Sgl );
-                     }
-                     else if (!sgofletTables.empty()) {
-                         krog_value = sgofletTables[satnumIdx].krt2_relperm;
-                     }
-                     else {
-                         assert(!slgofTables.empty());
-                         const auto& table = slgofTables.getTable<SlgofTable>(satnumIdx);
-                         krog_value = table.evaluate( "KROG" , unscaledEpsInfo_[satnumIdx].Sgl );
-                     }
-                     if (!swofTables.empty()) {
-                         const auto& table = swofTables.getTable<SwofTable>(satnumIdx);
-                         krow_value = table.evaluate("KROW" , unscaledEpsInfo_[satnumIdx].Swl);
-                     }
-                     else {
-                         assert(!swofletTables.empty());
-                         krow_value = swofletTables[satnumIdx].krt2_relperm;
-                     }
-                 }
-                 if (satFamily_ == SaturationFunctionFamily::FamilyII) {
-                     assert(!sof3Tables.empty());
-                     const auto& table = sof3Tables.getTable<Sof3Table>(satnumIdx);
-                     const double Sou = 1.- unscaledEpsInfo_[satnumIdx].Swl - unscaledEpsInfo_[satnumIdx].Sgl;
+            // Krow(Sou) == Krog(Sou) for three-phase
+            // means Krow(Swco) == Krog(Sgco)
+            if (fluidSystem_ == FluidSystem::BlackOil) {
+                blackoilChecks(eclState, satnumIdx);
+            }
 
-                     krow_value = table.evaluate("KROW" , Sou);
-                     krog_value = table.evaluate("KROG" , Sou);
-                 }
-                 if (krow_value != krog_value) {
-                     OpmLog::warning(fmt::format(
-                         "In saturation table SATNUM = {}, Krow(Somax) should be equal to Krog(Somax).",
-                         satnumIdx + 1
-                    ));
-                 }
-             }
-             // Krw(Sw=0)=Krg(Sg=0)=Krow(So=0)=Krog(So=0)=0.
-             // Mobile fluid requirements
+            // Krw(Sw=0)=Krg(Sg=0)=Krow(So=0)=Krog(So=0)=0.
+            // Mobile fluid requirements
             if (((unscaledEpsInfo_[satnumIdx].Sowcr + unscaledEpsInfo_[satnumIdx].Swcr)-1) >= 0) {
                 OpmLog::warning(fmt::format(
                     "In saturation table SATNUM = {}, Sowcr + Swcr should be less than 1.",
@@ -890,6 +847,57 @@ namespace Opm {
                     satnumIdx + 1
                 ));
             }
+        }
+    }
+
+    void RelpermDiagnostics::blackoilChecks(const EclipseState& eclState,
+                                            const std::size_t satnumIdx)
+    {
+        const auto& tables = eclState.getTableManager();
+        const TableContainer&  sgofTables = tables.getSgofTables();
+        const SgofletTable&  sgofletTables = tables.getSgofletTable();
+        const TableContainer& slgofTables = tables.getSlgofTables();
+        const TableContainer&  swofTables = tables.getSwofTables();
+        const SwofletTable&  swofletTables = tables.getSwofletTable();
+        const TableContainer&  sof3Tables = tables.getSof3Tables();
+
+        // Krow(Sou) == Krog(Sou) for three-phase
+        // means Krow(Swco) == Krog(Sgco)
+        double krow_value = 1e20;
+        double krog_value = 1e-20;
+        if (!sgofTables.empty()) {
+            const auto& table = sgofTables.getTable<SgofTable>(satnumIdx);
+            krog_value = table.evaluate( "KROG" , unscaledEpsInfo_[satnumIdx].Sgl );
+        }
+        else if (!sgofletTables.empty()) {
+            krog_value = sgofletTables[satnumIdx].krt2_relperm;
+        }
+        else {
+            assert(!slgofTables.empty());
+            const auto& table = slgofTables.getTable<SlgofTable>(satnumIdx);
+            krog_value = table.evaluate( "KROG" , unscaledEpsInfo_[satnumIdx].Sgl );
+        }
+        if (!swofTables.empty()) {
+            const auto& table = swofTables.getTable<SwofTable>(satnumIdx);
+            krow_value = table.evaluate("KROW" , unscaledEpsInfo_[satnumIdx].Swl);
+        }
+        else {
+            assert(!swofletTables.empty());
+            krow_value = swofletTables[satnumIdx].krt2_relperm;
+        }
+        if (satFamily_ == SaturationFunctionFamily::FamilyII) {
+            assert(!sof3Tables.empty());
+            const auto& table = sof3Tables.getTable<Sof3Table>(satnumIdx);
+            const double Sou = 1.- unscaledEpsInfo_[satnumIdx].Swl - unscaledEpsInfo_[satnumIdx].Sgl;
+
+            krow_value = table.evaluate("KROW" , Sou);
+            krog_value = table.evaluate("KROG" , Sou);
+        }
+        if (krow_value != krog_value) {
+            OpmLog::warning(fmt::format(
+                "In saturation table SATNUM = {}, Krow(Somax) should be equal to Krog(Somax).",
+                satnumIdx + 1
+            ));
         }
     }
 
