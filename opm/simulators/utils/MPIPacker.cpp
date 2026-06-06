@@ -23,12 +23,9 @@
 #include <opm/input/eclipse/EclipseState/IOConfig/FIPConfig.hpp>
 
 #include <bitset>
-#include <cstdint>
 #include <ctime>
 #include <stdexcept>
 #include <string>
-#include <type_traits>
-
 
 namespace Opm::Mpi::detail {
 
