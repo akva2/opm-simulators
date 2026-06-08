@@ -36,13 +36,13 @@
 namespace Opm
 {
     AdaptiveSimulatorTimer::
-    AdaptiveSimulatorTimer( const boost::posix_time::ptime simulation_start_time,
-                            const double step_length,
-                            const double elapsed_time,
-                            const double last_step_taken,
-                            const int report_step,
-                            const double max_time_step )
-        : start_date_time_{ std::make_shared<boost::posix_time::ptime>(simulation_start_time) }
+    AdaptiveSimulatorTimer(const boost::posix_time::ptime simulation_start_time,
+                           const double step_length,
+                           const double elapsed_time,
+                           const double last_step_taken,
+                           const std::size_t report_step,
+                           const double max_time_step )
+        : start_date_time_{ std::make_unique<boost::posix_time::ptime>(simulation_start_time) }
         , start_time_{ elapsed_time }
         , total_time_{ start_time_ + step_length }
         , report_step_{ report_step }
@@ -60,9 +60,23 @@ namespace Opm
         provideTimeStepEstimate( last_step_taken );
     }
 
+    AdaptiveSimulatorTimer::AdaptiveSimulatorTimer(const AdaptiveSimulatorTimer& other)
+        : start_date_time_(std::make_unique<boost::posix_time::ptime>(*other.start_date_time_))
+        , start_time_{ other.start_time_ }
+        , total_time_{ other.total_time_}
+        , report_step_{ other.report_step_ }
+        , max_time_step_{ other.max_time_step_ }
+        , current_time_{ other.current_time_ }
+        , dt_{ other.dt_ }
+        , current_step_{ other.current_step_ }
+        , steps_{other.steps_}
+        , last_step_failed_{ other.last_step_failed_ }
+    {
+    }
+
     bool AdaptiveSimulatorTimer::initialStep () const
     {
-        return ( report_step_ == 0 ) && ( current_step_ == 0 );
+        return (report_step_ == 0) && (current_step_ == 0);
     }
 
     AdaptiveSimulatorTimer& AdaptiveSimulatorTimer::operator++ ()
@@ -82,13 +96,12 @@ namespace Opm
         // apply max time step if it was set
         dt_ = std::min( dt_estimate, max_time_step_ );
         assert(dt_ > 0);
-        if( remaining > 0 ) {
-
+        if (remaining > 0) {
             // set new time step (depending on remaining time)
-            if( 1.05 * dt_ > remaining ) {
+            if (1.05 * dt_ > remaining) {
                 dt_ = remaining;
                 // check max time step again and use half remaining if too large
-                if( dt_ > max_time_step_ ) {
+                if (dt_ > max_time_step_) {
                     dt_ = 0.5 * remaining;
                 }
                 assert(dt_ > 0);
@@ -97,8 +110,7 @@ namespace Opm
 
             // check for half interval step to avoid very small step at the end
             // remaining *= 0.5;
-
-            if( 1.5 * dt_ > remaining ) {
+            if (1.5 * dt_ > remaining) {
                 dt_ = 0.5 * remaining;
                 assert(dt_ > 0);
                 return;
@@ -106,15 +118,15 @@ namespace Opm
         }
     }
 
-    int AdaptiveSimulatorTimer::
+    std::size_t AdaptiveSimulatorTimer::
     currentStepNum () const { return current_step_; }
 
-    int AdaptiveSimulatorTimer::
+    std::size_t AdaptiveSimulatorTimer::
     reportStepNum () const { return report_step_; }
 
     double AdaptiveSimulatorTimer::currentStepLength () const
     {
-      assert(dt_ > 0);
+        assert(dt_ > 0);
         return dt_;
     }
 
@@ -126,22 +138,31 @@ namespace Opm
 
     double AdaptiveSimulatorTimer::stepLengthTaken() const
     {
-        assert( ! steps_.empty() );
+        assert(!steps_.empty());
         return steps_.back();
     }
 
+    double AdaptiveSimulatorTimer::totalTime() const
+    {
+        return total_time_;
+    }
 
+    double AdaptiveSimulatorTimer::simulationTimeElapsed() const
+    {
+        return current_time_;
+    }
 
-    double AdaptiveSimulatorTimer::totalTime() const { return total_time_; }
-
-    double AdaptiveSimulatorTimer::simulationTimeElapsed() const { return current_time_; }
-
-    bool AdaptiveSimulatorTimer::done () const { return (current_time_ >= total_time_) ; }
+    bool AdaptiveSimulatorTimer::done () const
+    {
+        return (current_time_ >= total_time_) ;
+    }
 
     double AdaptiveSimulatorTimer::averageStepLength() const
     {
-        const int size = steps_.size();
-        if( size == 0 ) return 0.0;
+        const auto size = steps_.size();
+        if (size == 0) {
+            return 0.0;
+        }
 
         const double sum = std::accumulate(steps_.begin(), steps_.end(), 0.0);
         return sum / double(size);
@@ -150,14 +171,18 @@ namespace Opm
     /// \brief return max step length used so far
     double AdaptiveSimulatorTimer::maxStepLength () const
     {
-        if (steps_.empty()) return 0.0;
+        if (steps_.empty()) {
+            return 0.0;
+        }
         return *std::ranges::max_element(steps_);
     }
 
     /// \brief return min step length used so far
     double AdaptiveSimulatorTimer::minStepLength () const
     {
-        if (steps_.empty()) return 0.0;
+        if (steps_.empty()) {
+            return 0.0;
+        }
         return *std::ranges::min_element(steps_);
     }
 
@@ -165,12 +190,17 @@ namespace Opm
     void AdaptiveSimulatorTimer::
     report(std::ostream& os) const
     {
-        os << "Sub steps started at time = " <<  unit::convert::to( start_time_, unit::day ) << " (days)" << std::endl;
-        for (std::size_t i = 0; i < steps_.size(); ++i)
-        {
-            os << " step[ " << i << " ] = " << unit::convert::to( steps_[ i ], unit::day ) << " (days)" << std::endl;
+        os << "Sub steps started at time = "
+           << unit::convert::to(start_time_, unit::day)
+           << " (days)" << std::endl;
+        for (std::size_t i = 0; i < steps_.size(); ++i) {
+            os << " step[ " << i << " ] = "
+               << unit::convert::to(steps_[i], unit::day)
+               << " (days)" << std::endl;
         }
-        os << "sub steps end time = " << unit::convert::to( simulationTimeElapsed(), unit::day ) << " (days)" << std::endl;
+        os << "sub steps end time = "
+           << unit::convert::to(simulationTimeElapsed(), unit::day)
+           << " (days)" << std::endl;
     }
 
     boost::posix_time::ptime AdaptiveSimulatorTimer::startDateTime() const
@@ -179,12 +209,10 @@ namespace Opm
     }
 
     /// return copy of object
-    std::unique_ptr< SimulatorTimerInterface >
+    std::unique_ptr<SimulatorTimerInterface>
     AdaptiveSimulatorTimer::clone() const
     {
         return std::make_unique<AdaptiveSimulatorTimer>(*this);
     }
-
-
 
 } // namespace Opm

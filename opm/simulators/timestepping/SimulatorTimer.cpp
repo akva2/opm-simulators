@@ -30,16 +30,7 @@
 #include <numeric>
 #include <ostream>
 
-namespace Opm
-{
-
-    /// Default constructor.
-    SimulatorTimer::SimulatorTimer()
-        : current_step_(0),
-          current_time_(0.0),
-          start_date_(2012,1,1)    // A really arbitrary default starting value?!
-    {
-    }
+namespace Opm {
 
     SimulatorTimer SimulatorTimer::serializationTestObject()
     {
@@ -63,7 +54,7 @@ namespace Opm
         const double stepsize = Opm::unit::convert::from(stepsize_days, Opm::unit::day);
         timesteps_.clear();
         timesteps_.resize(num_psteps, stepsize);
-        total_time_ = num_psteps*stepsize;
+        total_time_ = num_psteps * stepsize;
     }
 
     /// Use the SimulatorTimer as a shim around opm-parser's Opm::TimeMap
@@ -86,13 +77,13 @@ namespace Opm
     }
 
     /// Total number of steps.
-    int SimulatorTimer::numSteps() const
+    std::size_t SimulatorTimer::numSteps() const
     {
         return timesteps_.size();
     }
 
     /// Current step number.
-    int SimulatorTimer::currentStepNum() const
+    std::size_t SimulatorTimer::currentStepNum() const
     {
         return current_step_;
     }
@@ -103,7 +94,6 @@ namespace Opm
         current_step_ = step;
         current_time_ = std::accumulate(timesteps_.begin(), timesteps_.begin() + step, 0.0);
     }
-
 
     /// Current step length.
     double SimulatorTimer::currentStepLength() const
@@ -129,7 +119,6 @@ namespace Opm
         return boost::posix_time::ptime(start_date_);
     }
 
-
     /// Total time.
     double SimulatorTimer::totalTime() const
     {
@@ -148,10 +137,14 @@ namespace Opm
     /// Print a report with current and total time etc.
     void SimulatorTimer::report(std::ostream& os) const
     {
-        os << "\n\n---------------    Simulation step number " << currentStepNum() << "    ---------------"
-           << "\n      Current time (days)     " << Opm::unit::convert::to(simulationTimeElapsed(), Opm::unit::day)
-           << "\n      Current stepsize (days) " << Opm::unit::convert::to(currentStepLength(), Opm::unit::day)
-           << "\n      Total time (days)       " << Opm::unit::convert::to(totalTime(), Opm::unit::day)
+        os << "\n\n---------------    Simulation step number "
+           << currentStepNum() << "    ---------------"
+           << "\n      Current time (days)     "
+           << unit::convert::to(simulationTimeElapsed(), unit::day)
+           << "\n      Current stepsize (days) "
+           << unit::convert::to(currentStepLength(), unit::day)
+           << "\n      Total time (days)       "
+           << unit::convert::to(totalTime(), unit::day)
            << "\n" << std::endl;
     }
 
@@ -167,7 +160,7 @@ namespace Opm
     /// Return true if op++() has been called numSteps() times.
     bool SimulatorTimer::done() const
     {
-        return int(timesteps_.size()) == current_step_;
+        return timesteps_.size() == current_step_;
     }
 
     /// return copy of object

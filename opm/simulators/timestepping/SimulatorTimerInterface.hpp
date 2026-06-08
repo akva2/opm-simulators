@@ -22,30 +22,27 @@
 
 #include <memory>
 
-namespace boost { namespace posix_time { class ptime; } }
+namespace boost::posix_time { class ptime; }
 
-namespace Opm
-{
-
-    class ParameterGroup;
+namespace Opm {
 
     /// Interface class for SimulatorTimer objects, to be improved.
     class SimulatorTimerInterface
     {
     protected:
         /// Default constructor, protected to not allow explicit instances of this class.
-        SimulatorTimerInterface() {}
+        SimulatorTimerInterface() = default;
 
     public:
         /// destructor
-        virtual ~SimulatorTimerInterface() {}
+        virtual ~SimulatorTimerInterface() = default;
 
         // -----------------------------------------------------------
         // Pure virtual functions to be implemented by derived classes
         // -----------------------------------------------------------
 
         /// advance time by currentStepLength
-        virtual void advance() = 0 ;
+        virtual void advance() = 0;
 
         /// return copy of current timer instance
         virtual std::unique_ptr< SimulatorTimerInterface > clone () const = 0;
@@ -60,7 +57,7 @@ namespace Opm
         /// has been completed from the start of the run. The time
         /// after initialization but before the simulation has started
         /// is timestep number zero.
-        virtual int currentStepNum() const = 0;
+        virtual std::size_t currentStepNum() const = 0;
 
         /// Return true if timer indicates that simulation of timer interval is finished
         virtual bool done() const = 0;
@@ -106,10 +103,8 @@ namespace Opm
         virtual double reportStepLengthTaken () const { return stepLengthTaken(); }
 
         /// Current report step number. This might differ from currentStepNum in case of sub stepping
-        virtual int reportStepNum() const { return currentStepNum(); }
-
+        virtual std::size_t reportStepNum() const { return currentStepNum(); }
     };
-
 
 } // namespace Opm
 

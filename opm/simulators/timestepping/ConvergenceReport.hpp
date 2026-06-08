@@ -458,8 +458,8 @@ namespace Opm
 
     struct StepReport
     {
-        int report_step;
-        int current_step;
+        std::size_t report_step;
+        std::size_t current_step;
         std::vector<ConvergenceReport> report;
     };
 

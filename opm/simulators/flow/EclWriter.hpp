@@ -921,7 +921,7 @@ private:
         this->outputModule_->outputMSWLog(simStep);
     }
 
-    int initialStep() const
+    std::size_t initialStep() const
     {
         const auto& initConfig = this->eclState().cfg().init();
 

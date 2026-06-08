@@ -17,12 +17,12 @@
 #include <set>
 #include <sstream>
 
-namespace Opm {
-namespace detail {
+namespace Opm::detail {
 
 void logTimer(const AdaptiveSimulatorTimer& substepTimer)
 {
     std::ostringstream ss;
+    // not a leak, ref-counted by std::locale
     boost::posix_time::time_facet* facet = new boost::posix_time::time_facet("%d-%b-%Y");
     ss.imbue(std::locale(std::locale::classic(), facet));
     ss << "\nStarting time step " << substepTimer.currentStepNum() << ", stepsize "
@@ -64,15 +64,15 @@ consistentlyFailingWells(const std::vector<StepReport>& sr, bool requireRepeated
     OpmLog::debug(msg.str());
 
     // Check the last few step reports.
-    const int num_steps = 3;
-    const int rep_step = sr.back().report_step;
-    const int sub_step = sr.back().current_step;
-    const int sr_size = sr.size();
+    const std::size_t num_steps = 3;
+    const auto rep_step = sr.back().report_step;
+    const auto sub_step = sr.back().current_step;
+    const auto sr_size = sr.size();
     for (const auto& wf : wfs) {
         failing_wells.insert(wf.wellName());
     }
     if (requireRepeatedFailures && sr_size >= num_steps) {
-        for (int s = 1; s < num_steps; ++s) {
+        for (std::size_t s = 1; s < num_steps; ++s) {
             const auto& srep = sr[sr_size - 1 - s];
             // Report must be from same report step and substep, otherwise we have
             // not chopped/retried enough times on this step.
@@ -171,7 +171,7 @@ createController(const UnitSystem& unitSystem)
 {
     const double tol =  Parameters::Get<Parameters::TimeStepControlTolerance>();
     const auto& comm = FlowGenericVanguard::comm();
-    const bool verbose = Parameters::Get<Parameters::TimeStepVerbosity>() && (comm.rank() == 0);
+    const bool verbose = Parameters::Get<Parameters::TimeStepVerbosity>() > 0 && (comm.rank() == 0);
     using RetVal = std::tuple<TimeStepControlType, std::unique_ptr<TimeStepControlInterface>, bool>;
     using Func = std::function<RetVal()>;
     const auto creators = std::unordered_map<std::string, Func> {
@@ -289,5 +289,4 @@ createController(const UnitSystem& unitSystem)
     return it->second();
 }
 
-} // namespace detail
-} // namespace Opm
+} // namespace Opm::detail

@@ -42,9 +42,6 @@ namespace Opm
         using SimulatorTimerInterface::currentDateTime;
         using SimulatorTimerInterface::currentPosixTime;
 
-        /// Default constructor.
-        SimulatorTimer();
-
         static SimulatorTimer serializationTestObject();
 
         /// Initialize from parameters. Accepts the following:
@@ -59,13 +56,13 @@ namespace Opm
         bool initialStep() const override;
 
         /// Total number of steps.
-        int numSteps() const;
+        std::size_t numSteps() const;
 
         /// Current step number. This is the number of timesteps that
         /// has been completed from the start of the run. The time
         /// after initialization but before the simulation has started
         /// is timestep number zero.
-        int currentStepNum() const override;
+        std::size_t currentStepNum() const override;
 
         /// Set current step number.
         void setCurrentStepNum(int step);
@@ -134,10 +131,11 @@ namespace Opm
 
     private:
         std::vector<double> timesteps_;
-        int current_step_;
-        double current_time_;
-        double total_time_;
-        boost::gregorian::date start_date_;
+        std::size_t current_step_{};
+        double current_time_{};
+        double total_time_{};
+        // A really arbitrary default starting value?!
+        boost::gregorian::date start_date_{2012,1,1};
     };
 
 
